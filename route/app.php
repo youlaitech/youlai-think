@@ -11,9 +11,20 @@
 use think\facade\Route;
 
 Route::group('api/v1', function () {
+    Route::get('auth/captcha', [\app\controller\AuthController::class, 'captcha']);
     Route::post('auth/login', [\app\controller\AuthController::class, 'login']);
+    Route::post('auth/login/sms', [\app\controller\AuthController::class, 'loginBySms']);
+    Route::post('auth/sms/code', [\app\controller\AuthController::class, 'sendLoginSmsCode']);
+    Route::post('auth/login/wechat', [\app\controller\AuthController::class, 'loginByWechat']);
+    Route::post('auth/wx/miniapp/code-login', [\app\controller\AuthController::class, 'loginByWxMiniAppCode']);
+    Route::post('auth/wx/miniapp/phone-login', [\app\controller\AuthController::class, 'loginByWxMiniAppPhone']);
     Route::delete('auth/logout', [\app\controller\AuthController::class, 'logout']);
     Route::post('auth/refresh-token', [\app\controller\AuthController::class, 'refreshToken']);
+
+    Route::group('files', function () {
+        Route::post('', [\app\controller\FileController::class, 'upload']);
+        Route::delete('', [\app\controller\FileController::class, 'delete']);
+    })->middleware(['auth', 'demo']);
 
     Route::group('users', function () {
         Route::get('me', [\app\controller\UserController::class, 'me']);
@@ -118,6 +129,7 @@ Route::group('api/v1', function () {
         Route::get(':roleId/form', [\app\controller\RoleController::class, 'form'])->pattern(['roleId' => '\\d+'])->middleware('perm:sys:role:update');
         Route::post('', [\app\controller\RoleController::class, 'create'])->middleware('perm:sys:role:create');
         Route::put(':id', [\app\controller\RoleController::class, 'update'])->pattern(['id' => '\\d+'])->middleware('perm:sys:role:update');
+        Route::put(':roleId/status', [\app\controller\RoleController::class, 'updateStatus'])->pattern(['roleId' => '\\d+'])->middleware('perm:sys:role:update');
         Route::delete(':ids', [\app\controller\RoleController::class, 'delete'])->middleware('perm:sys:role:delete');
 
         Route::get(':roleId/menuIds', [\app\controller\RoleController::class, 'menuIds'])->pattern(['roleId' => '\\d+']);

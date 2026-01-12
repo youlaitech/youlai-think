@@ -16,6 +16,77 @@ use app\service\AuthService;
  */
 final class AuthController extends ApiController
 {
+    public function captcha(): \think\Response
+    {
+        $data = (new AuthService())->getCaptcha();
+        return $this->ok($data);
+    }
+
+    public function sendLoginSmsCode(): \think\Response
+    {
+        $mobile = trim((string) $this->request->param('mobile', ''));
+        if ($mobile === '') {
+            $json = $this->getJsonBody();
+            $mobile = trim((string) ($json['mobile'] ?? ''));
+        }
+
+        if ($mobile === '') {
+            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+        }
+
+        (new AuthService())->sendSmsLoginCode($mobile);
+        return $this->ok();
+    }
+
+    public function loginBySms(): \think\Response
+    {
+        $mobile = trim((string) $this->request->param('mobile', ''));
+        $code = trim((string) $this->request->param('code', ''));
+
+        if ($mobile === '' || $code === '') {
+            $json = $this->getJsonBody();
+            $mobile = $mobile !== '' ? $mobile : trim((string) ($json['mobile'] ?? ''));
+            $code = $code !== '' ? $code : trim((string) ($json['code'] ?? ''));
+        }
+
+        if ($mobile === '' || $code === '') {
+            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+        }
+
+        $token = (new AuthService())->loginBySms($mobile, $code);
+        return $this->ok($token->toArray());
+    }
+
+    public function loginByWechat(): \think\Response
+    {
+        $code = trim((string) $this->request->param('code', ''));
+        if ($code === '') {
+            $json = $this->getJsonBody();
+            $code = trim((string) ($json['code'] ?? ''));
+        }
+
+        if ($code === '') {
+            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+        }
+
+        $token = (new AuthService())->loginByWechat($code);
+        return $this->ok($token->toArray());
+    }
+
+    public function loginByWxMiniAppCode(): \think\Response
+    {
+        $data = $this->mergeJsonParams();
+        $token = (new AuthService())->loginByWxMiniAppCode($data);
+        return $this->ok($token->toArray());
+    }
+
+    public function loginByWxMiniAppPhone(): \think\Response
+    {
+        $data = $this->mergeJsonParams();
+        $token = (new AuthService())->loginByWxMiniAppPhone($data);
+        return $this->ok($token->toArray());
+    }
+
     /**
      * 登录
      *
@@ -28,12 +99,18 @@ final class AuthController extends ApiController
 
         $username = trim((string) ($params['username'] ?? ''));
         $password = (string) ($params['password'] ?? '');
+        $captchaId = trim((string) ($params['captchaId'] ?? ''));
+        $captchaCode = trim((string) ($params['captchaCode'] ?? ''));
 
         if ($username === '' || $password === '') {
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
-        $token = (new AuthService())->login($username, $password);
+        if ($captchaId === '' || $captchaCode === '') {
+            throw new BusinessException(ResultCode::USER_VERIFICATION_CODE_ERROR);
+        }
+
+        $token = (new AuthService())->login($username, $password, $captchaId, $captchaCode);
         return $this->ok($token->toArray());
     }
 

@@ -16,7 +16,7 @@ final class RoleService
         $pageNum = $pageNum > 0 ? $pageNum : 1;
         $pageSize = $pageSize > 0 ? $pageSize : 10;
 
-        $query = Role::where('is_deleted', 0);
+        $query = Role::where('is_deleted', 0)->whereNotIn('code', ['ROOT', 'ADMIN']);
 
         if ($keywords !== null && trim($keywords) !== '') {
             $kw = '%' . trim($keywords) . '%';
@@ -55,6 +55,7 @@ final class RoleService
     {
         $rows = Db::name('sys_role')
             ->where('is_deleted', 0)
+            ->whereNotIn('code', ['ROOT', 'ADMIN'])
             ->order('sort', 'asc')
             ->field('id,name')
             ->select()
@@ -147,6 +148,25 @@ final class RoleService
         return true;
     }
 
+    public function updateRoleStatus(int $roleId, int $status): bool
+    {
+        if (!in_array($status, [0, 1], true)) {
+            throw new BusinessException(ResultCode::PARAMETER_FORMAT_MISMATCH);
+        }
+
+        $role = Role::where('id', $roleId)->where('is_deleted', 0)->find();
+        if ($role === null) {
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '角色不存在');
+        }
+
+        $role->save([
+            'status' => $status,
+            'update_time' => date('Y-m-d H:i:s'),
+        ]);
+
+        return true;
+    }
+
     public function deleteRoles(string $ids): bool
     {
         $ids = trim($ids);
@@ -165,6 +185,11 @@ final class RoleService
 
         if (empty($idList)) {
             throw new BusinessException(ResultCode::INVALID_USER_INPUT);
+        }
+
+        $hasUsers = Db::name('sys_user_role')->whereIn('role_id', $idList)->count();
+        if ($hasUsers > 0) {
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '角色已分配用户，无法删除');
         }
 
         Role::whereIn('id', $idList)->update([

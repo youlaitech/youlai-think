@@ -37,6 +37,32 @@ final class UserService
         return $row->toArray();
     }
 
+    public function getUserByMobile(string $mobile): ?array
+    {
+        $row = User::where('mobile', $mobile)
+            ->where('is_deleted', 0)
+            ->find();
+
+        if ($row === null) {
+            return null;
+        }
+
+        return $row->toArray();
+    }
+
+    public function getUserByOpenid(string $openid): ?array
+    {
+        $row = User::where('openid', $openid)
+            ->where('is_deleted', 0)
+            ->find();
+
+        if ($row === null) {
+            return null;
+        }
+
+        return $row->toArray();
+    }
+
     /**
      * 获取用户下拉选项。
      */
@@ -439,6 +465,8 @@ final class UserService
             'update_time' => date('Y-m-d H:i:s'),
         ]);
 
+        $this->bumpUserSecurityVersion($userId);
+
         return true;
     }
 
@@ -545,6 +573,8 @@ final class UserService
             'update_time' => date('Y-m-d H:i:s'),
         ]);
 
+        $this->bumpUserSecurityVersion($userId);
+
         return true;
     }
 
@@ -559,7 +589,7 @@ final class UserService
         }
 
         $code = (string) random_int(100000, 999999);
-        $key = RedisKey::format('youlai:sms:code:{}', $mobile);
+        $key = RedisKey::format('captcha:mobile:{}', $mobile);
         RedisClient::get()->setex($key, 300, $code);
         return true;
     }
@@ -575,7 +605,7 @@ final class UserService
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
-        $key = RedisKey::format('youlai:sms:code:{}', $mobile);
+        $key = RedisKey::format('captcha:mobile:{}', $mobile);
         $cached = (string) (RedisClient::get()->get($key) ?? '');
         if ($cached === '' || $cached !== $code) {
             throw new BusinessException(ResultCode::USER_VERIFICATION_CODE_ERROR);
@@ -600,7 +630,7 @@ final class UserService
         }
 
         $code = (string) random_int(100000, 999999);
-        $key = RedisKey::format('youlai:email:code:{}', $email);
+        $key = RedisKey::format('captcha:email:{}', $email);
         RedisClient::get()->setex($key, 300, $code);
         return true;
     }
@@ -616,7 +646,7 @@ final class UserService
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
-        $key = RedisKey::format('youlai:email:code:{}', $email);
+        $key = RedisKey::format('captcha:email:{}', $email);
         $cached = (string) (RedisClient::get()->get($key) ?? '');
         if ($cached === '' || $cached !== $code) {
             throw new BusinessException(ResultCode::USER_VERIFICATION_CODE_ERROR);
@@ -857,6 +887,22 @@ final class UserService
         $bin = (string) ob_get_clean();
         $spreadsheet->disconnectWorksheets();
         return $bin;
+    }
+
+    private function bumpUserSecurityVersion(int $userId): void
+    {
+        if ($userId <= 0) {
+            return;
+        }
+
+        $keys = (array) (config('security.redis.keys') ?? []);
+        $pattern = (string) ($keys['user_security_version'] ?? 'auth:user:security_version:{}');
+        $key = RedisKey::format($pattern, $userId);
+
+        $redis = RedisClient::get();
+        $current = (int) ($redis->get($key) ?: 1);
+        $next = $current + 1;
+        $redis->set($key, (string) $next);
     }
 
     /**

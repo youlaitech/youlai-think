@@ -53,6 +53,22 @@ final class RoleController extends ApiController
         return $this->ok();
     }
 
+    public function updateStatus(int $roleId): \think\Response
+    {
+        $status = $this->request->param('status');
+        if ($status === null || $status === '') {
+            $json = $this->getJsonBody();
+            $status = is_array($json) ? ($json['status'] ?? null) : null;
+        }
+
+        if ($status === null || $status === '') {
+            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+        }
+
+        (new RoleService())->updateRoleStatus($roleId, (int) $status);
+        return $this->ok();
+    }
+
     public function menuIds(int $roleId): \think\Response
     {
         $list = (new RoleService())->getRoleMenuIds($roleId);
