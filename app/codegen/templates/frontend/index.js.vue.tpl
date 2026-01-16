@@ -91,35 +91,34 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 defineOptions({
   name: "{{entityName}}",
   inheritAttrs: false,
 });
 
 import {{entityName}}API from "@/api/{{moduleName}}/{{entityKebab}}";
-import type { {{entityName}}Item, {{entityName}}Form, {{entityName}}QueryParams } from "@/types/api/{{entityKebab}}";
 
 const queryFormRef = ref();
 const dataFormRef = ref();
 
 const loading = ref(false);
-const removeIds = ref<string[]>([]);
+const removeIds = ref([]);
 const total = ref(0);
 
-const queryParams = reactive<{{entityName}}QueryParams>({
+const queryParams = reactive({
   pageNum: 1,
   pageSize: 10,
 });
 
-const pageData = ref<{{entityName}}Item[]>([]);
+const pageData = ref([]);
 
 const dialog = reactive({
   title: "",
   visible: false,
 });
 
-const formData = reactive<{{entityName}}Form>({});
+const formData = reactive({});
 
 const rules = reactive({
 {{rules}}
@@ -143,11 +142,11 @@ function handleResetQuery() {
   handleQuery();
 }
 
-function handleSelectionChange(selection: any) {
-  removeIds.value = selection.map((item: any) => String(item.id));
+function handleSelectionChange(selection) {
+  removeIds.value = selection.map((item) => String(item.id));
 }
 
-function handleOpenDialog(id?: string) {
+function handleOpenDialog(id) {
   dialog.visible = true;
   if (id) {
     dialog.title = "修改{{businessName}}";
@@ -160,13 +159,13 @@ function handleOpenDialog(id?: string) {
 }
 
 function handleSubmit() {
-  dataFormRef.value?.validate((valid: boolean) => {
+  dataFormRef.value?.validate((valid) => {
     if (!valid) {
       return;
     }
 
     loading.value = true;
-    const id = (formData as any).id as string | undefined;
+    const id = formData.id;
     const action = id ? {{entityName}}API.update(id, formData) : {{entityName}}API.create(formData);
     action
       .then(() => {
@@ -182,10 +181,10 @@ function handleCloseDialog() {
   dialog.visible = false;
   dataFormRef.value?.resetFields();
   dataFormRef.value?.clearValidate();
-  (formData as any).id = undefined;
+  formData.id = undefined;
 }
 
-function handleDelete(id?: string) {
+function handleDelete(id) {
   const ids = [id || removeIds.value].join(",");
   if (!ids) {
     ElMessage.warning("请勾选删除项");

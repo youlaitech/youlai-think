@@ -401,7 +401,7 @@ ORDER BY ORDINAL_POSITION ASC
     /**
      * 代码预览
      */
-    public function getCodegenPreviewData(string $tableName, string $pageType = 'classic'): array
+    public function getCodegenPreviewData(string $tableName, string $pageType = 'classic', string $type = 'ts'): array
     {
         $config = $this->getGenConfigFormData($tableName);
         $finalPageType = (string) ($config['pageType'] ?? 'classic');
@@ -409,6 +409,7 @@ ORDER BY ORDINAL_POSITION ASC
             $finalPageType = $pageType;
         }
         $finalPageType = $finalPageType === 'curd' ? 'curd' : 'classic';
+        $frontendType = strtolower(trim($type)) === 'js' ? 'js' : 'ts';
 
         $entityName = (string) ($config['entityName'] ?? $this->toPascalCase($tableName));
         $moduleName = (string) ($config['moduleName'] ?? self::DEFAULT_MODULE_NAME);
@@ -425,6 +426,19 @@ ORDER BY ORDINAL_POSITION ASC
         $tableNameFinal = (string) ($config['tableName'] ?? $tableName);
         $fieldSql = $this->buildFieldSql($fieldConfigs);
         $fieldsTs = $this->buildFieldsTs($fieldConfigs);
+        $listFieldsTs = $this->buildListFieldsTs($fieldConfigs);
+        $formFieldsTs = $this->buildFormFieldsTs($fieldConfigs);
+        $queryFieldsTs = $this->buildQueryFieldsTs($fieldConfigs);
+        $searchFormItems = $this->buildSearchFormItems($fieldConfigs);
+        $tableColumns = $this->buildTableColumns($fieldConfigs);
+        $formItems = $this->buildFormItems($fieldConfigs);
+        $rules = $this->buildFormRules($fieldConfigs);
+        $searchSlotsCurd = $this->buildCurdSearchSlots($fieldConfigs);
+        $listSlotsCurd = $this->buildCurdListSlots($fieldConfigs);
+        $formSlotsCurd = $this->buildCurdFormSlots($fieldConfigs);
+        $searchConfigItemsCurd = $this->buildCurdSearchConfigItems($fieldConfigs);
+        $contentColsCurd = $this->buildCurdContentCols($fieldConfigs);
+        $modalFormItemsCurd = $this->buildCurdModalFormItems($fieldConfigs);
         $vars = [
             'tableName' => $tableNameFinal,
             'entityName' => $entityName,
@@ -434,6 +448,23 @@ ORDER BY ORDINAL_POSITION ASC
             'pageType' => $finalPageType,
             'fieldSql' => $fieldSql,
             'fieldsTs' => $fieldsTs,
+            'listFieldsTs' => $listFieldsTs,
+            'formFieldsTs' => $formFieldsTs,
+            'queryFieldsTs' => $queryFieldsTs,
+            'searchFormItems' => $searchFormItems,
+            'tableColumns' => $tableColumns,
+            'formItems' => $formItems,
+            'rules' => $rules,
+            'searchSlotsCurd' => $searchSlotsCurd,
+            'listSlotsCurd' => $listSlotsCurd,
+            'formSlotsCurd' => $formSlotsCurd,
+            'searchConfigItemsCurd' => $searchConfigItemsCurd,
+            'contentColsCurd' => $contentColsCurd,
+            'modalFormItemsCurd' => $modalFormItemsCurd,
+            'softDeleteWhere' => $this->buildSoftDeleteWhere($fieldConfigs),
+            'createDataMerge' => $this->buildCreateDataMerge($fieldConfigs),
+            'updateDataMerge' => $this->buildUpdateDataMerge($fieldConfigs),
+            'deleteBody' => $this->buildDeleteBody($fieldConfigs),
         ];
 
         $previews[] = [
@@ -460,22 +491,34 @@ ORDER BY ORDINAL_POSITION ASC
             'content' => $this->renderFromTemplate('backend/route.php.tpl', $vars),
         ];
 
+        $apiTpl = $this->resolveFrontendTemplatePath('frontend/api.ts.tpl', $frontendType);
+        $apiExt = $this->resolveFrontendExtension('api', $frontendType);
         $previews[] = [
             'path' => self::DEFAULT_FRONTEND_APP_NAME . '/src/api/' . $moduleName,
-            'fileName' => $entityKebab . '.ts',
-            'content' => $this->renderFromTemplate('frontend/api.ts.tpl', $vars),
+            'fileName' => $entityKebab . $apiExt,
+            'content' => $this->renderFromTemplate($apiTpl, $vars),
         ];
 
-        $previews[] = [
-            'path' => self::DEFAULT_FRONTEND_APP_NAME . '/src/types/api',
-            'fileName' => $entityKebab . '.ts',
-            'content' => $this->renderFromTemplate('frontend/types.ts.tpl', $vars),
-        ];
+        if ($frontendType !== 'js') {
+            $previews[] = [
+                'path' => self::DEFAULT_FRONTEND_APP_NAME . '/src/types/api',
+                'fileName' => $entityKebab . '.ts',
+                'content' => $this->renderFromTemplate('frontend/types.ts.tpl', $vars),
+            ];
+        }
 
+        $viewTpl = $this->resolveFrontendTemplatePath('frontend/index.vue.tpl', $frontendType);
+        if ($finalPageType === 'curd') {
+            if ($viewTpl === 'frontend/index.js.vue.tpl') {
+                $viewTpl = 'frontend/index.curd.js.vue.tpl';
+            } elseif ($viewTpl === 'frontend/index.vue.tpl') {
+                $viewTpl = 'frontend/index.curd.vue.tpl';
+            }
+        }
         $previews[] = [
             'path' => self::DEFAULT_FRONTEND_APP_NAME . '/src/views/' . $moduleName . '/' . $entityKebab,
             'fileName' => 'index.vue',
-            'content' => $this->renderFromTemplate('frontend/index.vue.tpl', $vars),
+            'content' => $this->renderFromTemplate($viewTpl, $vars),
         ];
 
         return $previews;
@@ -484,7 +527,7 @@ ORDER BY ORDINAL_POSITION ASC
     /**
      * 下载代码 zip
      */
-    public function downloadZip(array $tableNames, string $pageType = 'classic'): array
+    public function downloadZip(array $tableNames, string $pageType = 'classic', string $type = 'ts'): array
     {
         $tableNames = array_values(array_filter(array_map('trim', $tableNames), fn($v) => $v !== ''));
         if (empty($tableNames)) {
@@ -503,7 +546,7 @@ ORDER BY ORDINAL_POSITION ASC
         }
 
         foreach ($tableNames as $tableName) {
-            $list = $this->getCodegenPreviewData($tableName, $pageType);
+            $list = $this->getCodegenPreviewData($tableName, $pageType, $type);
             foreach ($list as $item) {
                 $path = (string) ($item['path'] ?? '');
                 $fileName = (string) ($item['fileName'] ?? '');
@@ -539,6 +582,31 @@ ORDER BY ORDINAL_POSITION ASC
         return $this->renderer->render($tpl, $vars);
     }
 
+    private function resolveFrontendTemplatePath(string $relativePath, string $frontendType): string
+    {
+        if ($frontendType !== 'js') {
+            return $relativePath;
+        }
+        if ($relativePath === 'frontend/api.ts.tpl') {
+            return 'frontend/api.js.tpl';
+        }
+        if ($relativePath === 'frontend/index.vue.tpl') {
+            return 'frontend/index.js.vue.tpl';
+        }
+        return $relativePath;
+    }
+
+    private function resolveFrontendExtension(string $templateName, string $frontendType): string
+    {
+        if ($frontendType !== 'js') {
+            return '.ts';
+        }
+        if ($templateName === 'api') {
+            return '.js';
+        }
+        return '.ts';
+    }
+
     private function buildFieldSql(array $fieldConfigs): string
     {
         $selectFields = [];
@@ -555,6 +623,72 @@ ORDER BY ORDINAL_POSITION ASC
             }
         }
         return !empty($selectFields) ? implode(',', $selectFields) : '*';
+    }
+
+    private function buildSoftDeleteWhere(array $fieldConfigs): string
+    {
+        return $this->hasColumn($fieldConfigs, 'is_deleted') ? "->where('is_deleted', 0)" : '';
+    }
+
+    private function buildCreateDataMerge(array $fieldConfigs): string
+    {
+        $hasCreate = $this->hasColumn($fieldConfigs, 'create_time');
+        $hasUpdate = $this->hasColumn($fieldConfigs, 'update_time');
+        $hasDeleted = $this->hasColumn($fieldConfigs, 'is_deleted');
+        if (!$hasCreate && !$hasUpdate && !$hasDeleted) {
+            return '';
+        }
+
+        $lines = ["        \$now = date('Y-m-d H:i:s');"];
+        if ($hasCreate) {
+            $lines[] = "        \$data['create_time'] = \$now;";
+        }
+        if ($hasUpdate) {
+            $lines[] = "        \$data['update_time'] = \$now;";
+        }
+        if ($hasDeleted) {
+            $lines[] = "        \$data['is_deleted'] = 0;";
+        }
+        return implode("\n", $lines) . "\n";
+    }
+
+    private function buildUpdateDataMerge(array $fieldConfigs): string
+    {
+        if (!$this->hasColumn($fieldConfigs, 'update_time')) {
+            return '';
+        }
+
+        return "        \$data['update_time'] = date('Y-m-d H:i:s');\n";
+    }
+
+    private function buildDeleteBody(array $fieldConfigs): string
+    {
+        if (!$this->hasColumn($fieldConfigs, 'is_deleted')) {
+            return "        Db::name('{{tableName}}')->whereIn('id', \$idList)->delete();";
+        }
+
+        $payload = "        \$payload = ['is_deleted' => 1";
+        if ($this->hasColumn($fieldConfigs, 'update_time')) {
+            $payload .= ", 'update_time' => date('Y-m-d H:i:s')";
+        }
+        $payload .= "];\n";
+        $payload .= "        Db::name('{{tableName}}')->whereIn('id', \$idList)->update(\$payload);";
+        return $payload;
+    }
+
+    private function hasColumn(array $fieldConfigs, string $columnName): bool
+    {
+        $target = strtolower($columnName);
+        foreach ($fieldConfigs as $fc) {
+            if (!is_array($fc)) {
+                continue;
+            }
+            $name = strtolower((string) ($fc['columnName'] ?? ''));
+            if ($name === $target) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private function buildFieldsTs(array $fieldConfigs): string
@@ -578,6 +712,472 @@ ORDER BY ORDINAL_POSITION ASC
         }
 
         return !empty($lines) ? implode("\n", $lines) : '  id?: string;';
+    }
+
+    private function buildListFieldsTs(array $fieldConfigs): string
+    {
+        $lines = [];
+        foreach ($fieldConfigs as $fc) {
+            if (!is_array($fc) || ($fc['isShowInList'] ?? 0) != 1) {
+                continue;
+            }
+            $name = trim((string) ($fc['fieldName'] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+            $comment = trim((string) ($fc['fieldComment'] ?? ''));
+            $type = (string) ($fc['fieldType'] ?? 'string');
+            $tsType = $this->tsTypeByPhpType($type);
+            if ($comment !== '') {
+                $lines[] = "  /** {$comment} */";
+            }
+            $lines[] = "  {$name}?: {$tsType};";
+        }
+
+        return !empty($lines) ? implode("\n", $lines) : '  id?: string;';
+    }
+
+    private function buildFormFieldsTs(array $fieldConfigs): string
+    {
+        $lines = [];
+        foreach ($fieldConfigs as $fc) {
+            if (!is_array($fc) || ($fc['isShowInForm'] ?? 0) != 1) {
+                continue;
+            }
+            $name = trim((string) ($fc['fieldName'] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+            $comment = trim((string) ($fc['fieldComment'] ?? ''));
+            $type = (string) ($fc['fieldType'] ?? 'string');
+            $tsType = $this->tsTypeByPhpType($type);
+            if ($comment !== '') {
+                $lines[] = "  /** {$comment} */";
+            }
+            $lines[] = "  {$name}?: {$tsType};";
+        }
+
+        return !empty($lines) ? implode("\n", $lines) : '  id?: string;';
+    }
+
+    private function buildQueryFieldsTs(array $fieldConfigs): string
+    {
+        $lines = [];
+        foreach ($fieldConfigs as $fc) {
+            if (!is_array($fc) || ($fc['isShowInQuery'] ?? 0) != 1) {
+                continue;
+            }
+            $name = trim((string) ($fc['fieldName'] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+            $comment = trim((string) ($fc['fieldComment'] ?? ''));
+            $type = (string) ($fc['fieldType'] ?? 'string');
+            $tsType = $this->tsTypeByPhpType($type);
+            $queryType = (int) ($fc['queryType'] ?? 0);
+            if ($comment !== '') {
+                $lines[] = "  /** {$comment} */";
+            }
+            if ($this->isDateFormType((int) ($fc['formType'] ?? 0)) && $queryType === 4) {
+                $lines[] = "  {$name}?: [string, string];";
+            } else {
+                $lines[] = "  {$name}?: {$tsType};";
+            }
+        }
+
+        return !empty($lines) ? implode("\n", $lines) : '  keywords?: string;';
+    }
+
+    private function buildSearchFormItems(array $fieldConfigs): string
+    {
+        $lines = [];
+        foreach ($fieldConfigs as $fc) {
+            if (!is_array($fc) || ($fc['isShowInQuery'] ?? 0) != 1) {
+                continue;
+            }
+            $label = trim((string) ($fc['fieldComment'] ?? ''));
+            $label = $label !== '' ? $label : (string) ($fc['fieldName'] ?? '');
+            $fieldName = (string) ($fc['fieldName'] ?? '');
+            if ($fieldName === '') {
+                continue;
+            }
+            $formType = (int) ($fc['formType'] ?? 1);
+            $dictType = trim((string) ($fc['dictType'] ?? ''));
+            $queryType = (int) ($fc['queryType'] ?? 0);
+
+            $lines[] = "        <el-form-item label=\"{$label}\" prop=\"{$fieldName}\">";
+            if ($dictType !== '') {
+                $lines[] = "          <DictSelect v-model=\"queryParams.{$fieldName}\" code=\"{$dictType}\" />";
+            } elseif ($this->isDateFormType($formType)) {
+                if ($queryType === 4) {
+                    $lines[] = "          <el-date-picker";
+                    $lines[] = "            v-model=\"queryParams.{$fieldName}\"";
+                    $lines[] = "            type=\"daterange\"";
+                    $lines[] = "            range-separator=\"~\"";
+                    $lines[] = "            start-placeholder=\"开始时间\"";
+                    $lines[] = "            end-placeholder=\"结束时间\"";
+                    $lines[] = "            value-format=\"YYYY-MM-DD\"";
+                    $lines[] = "          />";
+                } else {
+                    $type = $formType === 9 ? 'datetime' : 'date';
+                    $format = $formType === 9 ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD';
+                    $lines[] = "          <el-date-picker";
+                    $lines[] = "            v-model=\"queryParams.{$fieldName}\"";
+                    $lines[] = "            type=\"{$type}\"";
+                    $lines[] = "            placeholder=\"{$label}\"";
+                    $lines[] = "            value-format=\"{$format}\"";
+                    $lines[] = "          />";
+                }
+            } elseif ($formType === 5) {
+                $lines[] = "          <el-input-number v-model=\"queryParams.{$fieldName}\" placeholder=\"{$label}\" />";
+            } elseif ($formType === 6) {
+                $lines[] = "          <el-switch v-model=\"queryParams.{$fieldName}\" :active-value=\"1\" :inactive-value=\"0\" />";
+            } else {
+                $lines[] = "          <el-input v-model=\"queryParams.{$fieldName}\" placeholder=\"{$label}\" clearable @keyup.enter=\"handleQuery()\" />";
+            }
+            $lines[] = "        </el-form-item>";
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function buildTableColumns(array $fieldConfigs): string
+    {
+        $lines = [];
+        foreach ($fieldConfigs as $fc) {
+            if (!is_array($fc) || ($fc['isShowInList'] ?? 0) != 1) {
+                continue;
+            }
+            $label = trim((string) ($fc['fieldComment'] ?? ''));
+            $label = $label !== '' ? $label : (string) ($fc['fieldName'] ?? '');
+            $fieldName = (string) ($fc['fieldName'] ?? '');
+            if ($fieldName === '') {
+                continue;
+            }
+            $dictType = trim((string) ($fc['dictType'] ?? ''));
+            if ($dictType !== '') {
+                $lines[] = "        <el-table-column label=\"{$label}\" width=\"150\" align=\"center\">";
+                $lines[] = "          <template #default=\"scope\">";
+                $lines[] = "            <DictTag v-model=\"scope.row.{$fieldName}\" code=\"{$dictType}\" />";
+                $lines[] = "          </template>";
+                $lines[] = "        </el-table-column>";
+            } else {
+                $lines[] = "        <el-table-column";
+                $lines[] = "          key=\"{$fieldName}\"";
+                $lines[] = "          label=\"{$label}\"";
+                $lines[] = "          prop=\"{$fieldName}\"";
+                $lines[] = "          min-width=\"150\"";
+                $lines[] = "          align=\"center\"";
+                $lines[] = "        />";
+            }
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function buildFormItems(array $fieldConfigs): string
+    {
+        $lines = [];
+        foreach ($fieldConfigs as $fc) {
+            if (!is_array($fc)) {
+                continue;
+            }
+            $formType = (int) ($fc['formType'] ?? 1);
+            if (($fc['isShowInForm'] ?? 0) != 1 || $formType === 10) {
+                continue;
+            }
+            $label = trim((string) ($fc['fieldComment'] ?? ''));
+            $label = $label !== '' ? $label : (string) ($fc['fieldName'] ?? '');
+            $fieldName = (string) ($fc['fieldName'] ?? '');
+            if ($fieldName === '') {
+                continue;
+            }
+            $dictType = trim((string) ($fc['dictType'] ?? ''));
+
+            $lines[] = "        <el-form-item label=\"{$label}\" prop=\"{$fieldName}\">";
+            if ($dictType !== '') {
+                $type = 'select';
+                if ($formType === 3) {
+                    $type = 'radio';
+                } elseif ($formType === 4) {
+                    $type = 'checkbox';
+                }
+                $lines[] = "          <DictSelect v-model=\"formData.{$fieldName}\" code=\"{$dictType}\" type=\"{$type}\" />";
+            } elseif ($this->isDateFormType($formType)) {
+                $type = $formType === 9 ? 'datetime' : 'date';
+                $format = $formType === 9 ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD';
+                $lines[] = "          <el-date-picker";
+                $lines[] = "            v-model=\"formData.{$fieldName}\"";
+                $lines[] = "            type=\"{$type}\"";
+                $lines[] = "            placeholder=\"{$label}\"";
+                $lines[] = "            value-format=\"{$format}\"";
+                $lines[] = "          />";
+            } elseif ($formType === 5) {
+                $lines[] = "          <el-input-number v-model=\"formData.{$fieldName}\" placeholder=\"{$label}\" />";
+            } elseif ($formType === 6) {
+                $lines[] = "          <el-switch v-model=\"formData.{$fieldName}\" :active-value=\"1\" :inactive-value=\"0\" />";
+            } elseif ($formType === 7) {
+                $lines[] = "          <el-input type=\"textarea\" v-model=\"formData.{$fieldName}\" placeholder=\"{$label}\" />";
+            } else {
+                $lines[] = "          <el-input v-model=\"formData.{$fieldName}\" placeholder=\"{$label}\" />";
+            }
+            $lines[] = "        </el-form-item>";
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function buildFormRules(array $fieldConfigs): string
+    {
+        $lines = [];
+        foreach ($fieldConfigs as $fc) {
+            if (!is_array($fc) || ($fc['isShowInForm'] ?? 0) != 1 || ($fc['isRequired'] ?? 0) != 1) {
+                continue;
+            }
+            $fieldName = (string) ($fc['fieldName'] ?? '');
+            if ($fieldName === '') {
+                continue;
+            }
+            $label = trim((string) ($fc['fieldComment'] ?? ''));
+            $label = $label !== '' ? $label : $fieldName;
+            $lines[] = "  {$fieldName}: [{ required: true, message: \"请输入{$label}\", trigger: \"blur\" }],";
+        }
+
+        return !empty($lines) ? implode("\n", $lines) : '';
+    }
+
+    private function buildCurdSearchSlots(array $fieldConfigs): string
+    {
+        $lines = [];
+        foreach ($fieldConfigs as $fc) {
+            if (!is_array($fc) || ($fc['isShowInQuery'] ?? 0) != 1) {
+                continue;
+            }
+            $dictType = trim((string) ($fc['dictType'] ?? ''));
+            if ($dictType === '') {
+                continue;
+            }
+            $fieldName = (string) ($fc['fieldName'] ?? '');
+            if ($fieldName === '') {
+                continue;
+            }
+            $type = $this->dictSelectType((int) ($fc['formType'] ?? 0));
+            $lines[] = "      <template #{$fieldName}=\"scope\">";
+            $lines[] = "        <DictSelect v-model=\"scope.formData[scope.prop]\" code=\"{$dictType}\" type=\"{$type}\" v-bind=\"scope.attrs\" />";
+            $lines[] = "      </template>";
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function buildCurdListSlots(array $fieldConfigs): string
+    {
+        $lines = [];
+        foreach ($fieldConfigs as $fc) {
+            if (!is_array($fc) || ($fc['isShowInList'] ?? 0) != 1) {
+                continue;
+            }
+            $dictType = trim((string) ($fc['dictType'] ?? ''));
+            if ($dictType === '') {
+                continue;
+            }
+            $fieldName = (string) ($fc['fieldName'] ?? '');
+            if ($fieldName === '') {
+                continue;
+            }
+            $lines[] = "      <template #{$fieldName}=\"scope\">";
+            $lines[] = "        <DictTag v-model=\"scope.row[scope.prop]\" code=\"{$dictType}\" />";
+            $lines[] = "      </template>";
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function buildCurdFormSlots(array $fieldConfigs): string
+    {
+        $lines = [];
+        foreach ($fieldConfigs as $fc) {
+            if (!is_array($fc) || ($fc['isShowInForm'] ?? 0) != 1 || (int) ($fc['formType'] ?? 0) === 10) {
+                continue;
+            }
+            $dictType = trim((string) ($fc['dictType'] ?? ''));
+            if ($dictType === '') {
+                continue;
+            }
+            $fieldName = (string) ($fc['fieldName'] ?? '');
+            if ($fieldName === '') {
+                continue;
+            }
+            $type = $this->dictSelectType((int) ($fc['formType'] ?? 0));
+            $lines[] = "      <template #{$fieldName}=\"scope\">";
+            $lines[] = "        <DictSelect v-model=\"scope.formData[scope.prop]\" code=\"{$dictType}\" type=\"{$type}\" v-bind=\"scope.attrs\" />";
+            $lines[] = "      </template>";
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function buildCurdSearchConfigItems(array $fieldConfigs): string
+    {
+        $lines = [];
+        foreach ($fieldConfigs as $fc) {
+            if (!is_array($fc) || ($fc['isShowInQuery'] ?? 0) != 1) {
+                continue;
+            }
+            $label = trim((string) ($fc['fieldComment'] ?? ''));
+            $label = $label !== '' ? $label : (string) ($fc['fieldName'] ?? '');
+            $fieldName = (string) ($fc['fieldName'] ?? '');
+            if ($fieldName === '') {
+                continue;
+            }
+            $dictType = trim((string) ($fc['dictType'] ?? ''));
+            $formType = (int) ($fc['formType'] ?? 1);
+
+            $lines[] = "    {";
+            if ($dictType !== '') {
+                $lines[] = "      type: \"custom\",";
+                $lines[] = "      slotName: \"{$fieldName}\",";
+            } else {
+                $lines[] = "      type: \"{$this->curdSearchType($formType)}\",";
+            }
+            $lines[] = "      label: \"{$label}\",";
+            $lines[] = "      prop: \"{$fieldName}\",";
+            $lines[] = "      attrs: {";
+            $lines[] = "        placeholder: \"{$label}\",";
+            if ($this->isDateFormType($formType)) {
+                $lines[] = "        type: \"daterange\",";
+                $lines[] = "        \"range-separator\": \"~\",";
+                $lines[] = "        \"start-placeholder\": \"开始时间\",";
+                $lines[] = "        \"end-placeholder\": \"截止时间\",";
+                $lines[] = "        \"value-format\": \"YYYY-MM-DD\",";
+            }
+            $lines[] = "        clearable: true,";
+            $lines[] = "        style: { width: \"200px\" },";
+            $lines[] = "      },";
+            $lines[] = "    },";
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function buildCurdContentCols(array $fieldConfigs): string
+    {
+        $lines = [];
+        foreach ($fieldConfigs as $fc) {
+            if (!is_array($fc) || ($fc['isShowInList'] ?? 0) != 1) {
+                continue;
+            }
+            $label = trim((string) ($fc['fieldComment'] ?? ''));
+            $label = $label !== '' ? $label : (string) ($fc['fieldName'] ?? '');
+            $fieldName = (string) ($fc['fieldName'] ?? '');
+            if ($fieldName === '') {
+                continue;
+            }
+            $dictType = trim((string) ($fc['dictType'] ?? ''));
+            if ($dictType !== '') {
+                $lines[] = "    { label: \"{$label}\", prop: \"{$fieldName}\", templet: \"custom\", slotName: \"{$fieldName}\" },";
+            } else {
+                $lines[] = "    { label: \"{$label}\", prop: \"{$fieldName}\" },";
+            }
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function buildCurdModalFormItems(array $fieldConfigs): string
+    {
+        $lines = [];
+        foreach ($fieldConfigs as $fc) {
+            if (!is_array($fc) || ($fc['isShowInForm'] ?? 0) != 1 || (int) ($fc['formType'] ?? 0) === 10) {
+                continue;
+            }
+            $label = trim((string) ($fc['fieldComment'] ?? ''));
+            $label = $label !== '' ? $label : (string) ($fc['fieldName'] ?? '');
+            $fieldName = (string) ($fc['fieldName'] ?? '');
+            if ($fieldName === '') {
+                continue;
+            }
+            $dictType = trim((string) ($fc['dictType'] ?? ''));
+            $formType = (int) ($fc['formType'] ?? 1);
+            $required = ((int) ($fc['isRequired'] ?? 0)) === 1;
+
+            $lines[] = "    {";
+            if ($dictType !== '') {
+                $lines[] = "      type: \"custom\",";
+                $lines[] = "      slotName: \"{$fieldName}\",";
+            } else {
+                $lines[] = "      type: \"{$this->curdFormType($formType)}\",";
+            }
+            $lines[] = "      label: \"{$label}\",";
+            $lines[] = "      prop: \"{$fieldName}\",";
+            $lines[] = "      attrs: {";
+            if ($this->isDateFormType($formType)) {
+                $lines[] = "        type: \"" . ($formType === 9 ? "datetime" : "date") . "\",";
+                $lines[] = "        \"value-format\": \"" . ($formType === 9 ? "YYYY-MM-DD HH:mm:ss" : "YYYY-MM-DD") . "\",";
+            }
+            $lines[] = "        placeholder: \"{$label}\",";
+            $lines[] = "        style: { width: \"100%\" },";
+            $lines[] = "      },";
+            if ($required) {
+                $lines[] = "      rules: [{ required: true, message: \"{$label}不能为空\", trigger: \"change\" }],";
+            }
+            $lines[] = "    },";
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function dictSelectType(int $formType): string
+    {
+        if ($formType === 3) {
+            return 'radio';
+        }
+        if ($formType === 4) {
+            return 'checkbox';
+        }
+        return 'select';
+    }
+
+    private function curdSearchType(int $formType): string
+    {
+        if ($formType === 5) {
+            return 'input-number';
+        }
+        if ($this->isDateFormType($formType)) {
+            return 'date-picker';
+        }
+        return 'input';
+    }
+
+    private function curdFormType(int $formType): string
+    {
+        if ($formType === 2) {
+            return 'select';
+        }
+        if ($formType === 3) {
+            return 'radio';
+        }
+        if ($formType === 4) {
+            return 'checkbox';
+        }
+        if ($formType === 5) {
+            return 'input-number';
+        }
+        if ($formType === 6) {
+            return 'switch';
+        }
+        if ($formType === 7) {
+            return 'input';
+        }
+        if ($this->isDateFormType($formType)) {
+            return 'date-picker';
+        }
+        return 'input';
+    }
+
+    private function isDateFormType(int $formType): bool
+    {
+        return $formType === 8 || $formType === 9;
     }
 
     private function tsTypeByPhpType(string $phpType): string

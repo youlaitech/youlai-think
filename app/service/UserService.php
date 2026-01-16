@@ -37,6 +37,19 @@ final class UserService
         return $row->toArray();
     }
 
+    public function getUserByEmail(string $email): ?array
+    {
+        $row = User::where('email', $email)
+            ->where('is_deleted', 0)
+            ->find();
+
+        if ($row === null) {
+            return null;
+        }
+
+        return $row->toArray();
+    }
+
     public function getUserByMobile(string $mobile): ?array
     {
         $row = User::where('mobile', $mobile)
@@ -71,6 +84,13 @@ final class UserService
         $rows = Db::name('sys_user')
             ->where('is_deleted', 0)
             ->where('status', 1)
+            ->whereNotIn('id', function ($sub) {
+                $sub->name('sys_user_role')
+                    ->alias('ur')
+                    ->join('sys_role r', 'ur.role_id = r.id')
+                    ->where('r.code', 'ROOT')
+                    ->field('ur.user_id');
+            })
             ->order('id', 'desc')
             ->field('id,nickname')
             ->select()
@@ -150,6 +170,15 @@ final class UserService
             ->alias('u')
             ->leftJoin('sys_dept d', 'u.dept_id = d.id')
             ->where('u.is_deleted', 0);
+
+        // root 用户（ROOT 角色）不在用户列表中展示
+        $q = $q->whereNotIn('u.id', function ($sub) {
+            $sub->name('sys_user_role')
+                ->alias('ur')
+                ->join('sys_role r', 'ur.role_id = r.id')
+                ->where('r.code', 'ROOT')
+                ->field('ur.user_id');
+        });
 
         // 数据权限：1-所有数据 2-部门及子部门 3-本部门 4-本人
         if (is_array($authUser)) {
@@ -519,20 +548,24 @@ final class UserService
             throw new BusinessException(ResultCode::INVALID_USER_INPUT, '用户不存在');
         }
 
-        $nickname = isset($data['nickname']) ? trim((string) $data['nickname']) : '';
-        $avatar = isset($data['avatar']) ? trim((string) $data['avatar']) : null;
-        $gender = $data['gender'] ?? null;
-
-        if ($nickname === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+        $updates = [];
+        if (array_key_exists('nickname', $data)) {
+            $updates['nickname'] = trim((string) $data['nickname']);
+        }
+        if (array_key_exists('avatar', $data)) {
+            $updates['avatar'] = trim((string) $data['avatar']);
+        }
+        if (array_key_exists('gender', $data)) {
+            $gender = $data['gender'];
+            $updates['gender'] = $gender === null || $gender === '' ? null : (int) $gender;
         }
 
-        Db::name('sys_user')->where('id', $userId)->update([
-            'nickname' => $nickname,
-            'avatar' => $avatar,
-            'gender' => $gender === null || $gender === '' ? null : (int) $gender,
-            'update_time' => date('Y-m-d H:i:s'),
-        ]);
+        if (empty($updates)) {
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '请至少修改一项');
+        }
+
+        $updates['update_time'] = date('Y-m-d H:i:s');
+        Db::name('sys_user')->where('id', $userId)->update($updates);
 
         return true;
     }
@@ -568,6 +601,10 @@ final class UserService
             throw new BusinessException(ResultCode::USER_PASSWORD_ERROR);
         }
 
+        if (password_verify($newPassword, $hash)) {
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '新密码不能与原密码相同');
+        }
+
         Db::name('sys_user')->where('id', $userId)->update([
             'password' => password_hash($newPassword, PASSWORD_BCRYPT),
             'update_time' => date('Y-m-d H:i:s'),
@@ -601,14 +638,33 @@ final class UserService
     {
         $mobile = trim((string) ($data['mobile'] ?? ''));
         $code = trim((string) ($data['code'] ?? ''));
-        if ($mobile === '' || $code === '') {
+        $password = (string) ($data['password'] ?? '');
+        if ($mobile === '' || $code === '' || $password === '') {
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+        }
+
+        $row = Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->find();
+        if (!$row) {
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '用户不存在');
+        }
+        $hash = (string) ($row['password'] ?? '');
+        if ($hash === '' || !password_verify($password, $hash)) {
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '当前密码错误');
         }
 
         $key = RedisKey::format('captcha:mobile:{}', $mobile);
         $cached = (string) (RedisClient::get()->get($key) ?? '');
         if ($cached === '' || $cached !== $code) {
             throw new BusinessException(ResultCode::USER_VERIFICATION_CODE_ERROR);
+        }
+
+        $exists = Db::name('sys_user')
+            ->where('mobile', $mobile)
+            ->where('is_deleted', 0)
+            ->where('id', '<>', $userId)
+            ->find();
+        if ($exists) {
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '手机号已被其他账号绑定');
         }
 
         Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->update([
@@ -642,8 +698,18 @@ final class UserService
     {
         $email = trim((string) ($data['email'] ?? ''));
         $code = trim((string) ($data['code'] ?? ''));
-        if ($email === '' || $code === '') {
+        $password = (string) ($data['password'] ?? '');
+        if ($email === '' || $code === '' || $password === '') {
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+        }
+
+        $row = Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->find();
+        if (!$row) {
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '用户不存在');
+        }
+        $hash = (string) ($row['password'] ?? '');
+        if ($hash === '' || !password_verify($password, $hash)) {
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '当前密码错误');
         }
 
         $key = RedisKey::format('captcha:email:{}', $email);
@@ -652,11 +718,80 @@ final class UserService
             throw new BusinessException(ResultCode::USER_VERIFICATION_CODE_ERROR);
         }
 
+        $exists = Db::name('sys_user')
+            ->where('email', $email)
+            ->where('is_deleted', 0)
+            ->where('id', '<>', $userId)
+            ->find();
+        if ($exists) {
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '邮箱已被其他账号绑定');
+        }
+
         Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->update([
             'email' => $email,
             'update_time' => date('Y-m-d H:i:s'),
         ]);
         RedisClient::get()->del([$key]);
+        return true;
+    }
+
+    public function unbindMobile(int $userId, array $data): bool
+    {
+        $password = (string) ($data['password'] ?? '');
+        if ($password === '') {
+            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+        }
+
+        $row = Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->find();
+        if (!$row) {
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '用户不存在');
+        }
+
+        $mobile = trim((string) ($row['mobile'] ?? ''));
+        if ($mobile === '') {
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '当前账号未绑定手机号');
+        }
+
+        $hash = (string) ($row['password'] ?? '');
+        if ($hash === '' || !password_verify($password, $hash)) {
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '当前密码错误');
+        }
+
+        Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->update([
+            'mobile' => null,
+            'update_time' => date('Y-m-d H:i:s'),
+        ]);
+
+        return true;
+    }
+
+    public function unbindEmail(int $userId, array $data): bool
+    {
+        $password = (string) ($data['password'] ?? '');
+        if ($password === '') {
+            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+        }
+
+        $row = Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->find();
+        if (!$row) {
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '用户不存在');
+        }
+
+        $email = trim((string) ($row['email'] ?? ''));
+        if ($email === '') {
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '当前账号未绑定邮箱');
+        }
+
+        $hash = (string) ($row['password'] ?? '');
+        if ($hash === '' || !password_verify($password, $hash)) {
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '当前密码错误');
+        }
+
+        Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->update([
+            'email' => null,
+            'update_time' => date('Y-m-d H:i:s'),
+        ]);
+
         return true;
     }
 

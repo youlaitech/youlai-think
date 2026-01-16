@@ -5,7 +5,7 @@
 use think\facade\Route;
 
 Route::group('api/v1/{{entityKebab}}', function () {
-    Route::get('page', [\\app\\controller\\{{entityName}}Controller::class, 'page']);
+    Route::get('', [\\app\\controller\\{{entityName}}Controller::class, 'page']);
     Route::get(':id/form', [\\app\\controller\\{{entityName}}Controller::class, 'form'])->pattern(['id' => '\\d+']);
     Route::post('', [\\app\\controller\\{{entityName}}Controller::class, 'create']);
     Route::put(':id', [\\app\\controller\\{{entityName}}Controller::class, 'update'])->pattern(['id' => '\\d+']);

@@ -49,8 +49,10 @@ Route::group('api/v1', function () {
         Route::put('password', [\app\controller\UserController::class, 'changePassword']);
         Route::post('mobile/code', [\app\controller\UserController::class, 'sendMobileCode']);
         Route::put('mobile', [\app\controller\UserController::class, 'bindOrChangeMobile']);
+        Route::delete('mobile', [\app\controller\UserController::class, 'unbindMobile']);
         Route::post('email/code', [\app\controller\UserController::class, 'sendEmailCode']);
         Route::put('email', [\app\controller\UserController::class, 'bindOrChangeEmail']);
+        Route::delete('email', [\app\controller\UserController::class, 'unbindEmail']);
     })->middleware(['auth', 'dataScope', 'demo']);
 
     Route::group('depts', function () {

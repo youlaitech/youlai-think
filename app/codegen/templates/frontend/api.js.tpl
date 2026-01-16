@@ -1,28 +1,27 @@
 import request from "@/utils/request";
-import type { {{entityName}}QueryParams, {{entityName}}Item, {{entityName}}Form } from "@/types/api/{{entityKebab}}";
 
 const BASE_URL = "/api/v1/{{entityKebab}}";
 
 const {{entityKebab}}API = {
   /** 分页 */
-  getPage(queryParams: {{entityName}}QueryParams) {
-    return request<any, PageResult<{{entityName}}Item>>({
+  getPage(params) {
+    return request({
       url: `${BASE_URL}`,
       method: "get",
-      params: queryParams,
+      params,
     });
   },
 
   /** 表单 */
-  getForm(id: string) {
-    return request<any, {{entityName}}Form>({
+  getForm(id) {
+    return request({
       url: `${BASE_URL}/${id}/form`,
       method: "get",
     });
   },
 
   /** 新增 */
-  create(data: {{entityName}}Form) {
+  create(data) {
     return request({
       url: `${BASE_URL}`,
       method: "post",
@@ -31,7 +30,7 @@ const {{entityKebab}}API = {
   },
 
   /** 修改 */
-  update(id: string, data: {{entityName}}Form) {
+  update(id, data) {
     return request({
       url: `${BASE_URL}/${id}`,
       method: "put",
@@ -40,7 +39,7 @@ const {{entityKebab}}API = {
   },
 
   /** 删除 */
-  deleteByIds(ids: string) {
+  deleteByIds(ids) {
     return request({
       url: `${BASE_URL}/${ids}`,
       method: "delete",

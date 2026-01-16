@@ -16,7 +16,7 @@ final class RoleService
         $pageNum = $pageNum > 0 ? $pageNum : 1;
         $pageSize = $pageSize > 0 ? $pageSize : 10;
 
-        $query = Role::where('is_deleted', 0)->whereNotIn('code', ['ROOT', 'ADMIN']);
+        $query = Role::where('is_deleted', 0)->whereNotIn('code', ['ROOT']);
 
         if ($keywords !== null && trim($keywords) !== '') {
             $kw = '%' . trim($keywords) . '%';
@@ -55,7 +55,7 @@ final class RoleService
     {
         $rows = Db::name('sys_role')
             ->where('is_deleted', 0)
-            ->whereNotIn('code', ['ROOT', 'ADMIN'])
+            ->whereNotIn('code', ['ROOT'])
             ->order('sort', 'asc')
             ->field('id,name')
             ->select()

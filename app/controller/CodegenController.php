@@ -55,7 +55,8 @@ final class CodegenController extends ApiController
     public function preview(string $tableName): \think\Response
     {
         $pageType = (string) $this->request->param('pageType', 'classic');
-        $list = (new CodegenService())->getCodegenPreviewData($tableName, $pageType);
+        $type = (string) $this->request->param('type', 'ts');
+        $list = (new CodegenService())->getCodegenPreviewData($tableName, $pageType, $type);
         return $this->ok($list);
     }
 
@@ -65,9 +66,10 @@ final class CodegenController extends ApiController
     public function download(string $tableName): \think\Response
     {
         $pageType = (string) $this->request->param('pageType', 'classic');
+        $type = (string) $this->request->param('type', 'ts');
         $tableNames = array_values(array_filter(array_map('trim', explode(',', $tableName)), fn($v) => $v !== ''));
 
-        $ret = (new CodegenService())->downloadZip($tableNames, $pageType);
+        $ret = (new CodegenService())->downloadZip($tableNames, $pageType, $type);
         $bin = (string) ($ret['bin'] ?? '');
         $fileName = (string) ($ret['fileName'] ?? ($tableName . '.zip'));
 

@@ -168,7 +168,7 @@ final class UserController extends ApiController
         $userId = $this->getAuthUserId();
         $data = $this->mergeJsonParams();
         (new UserService())->updateUserProfile($userId, $data);
-        return $this->ok();
+        return $this->ok(true);
     }
 
     /**
@@ -182,7 +182,7 @@ final class UserController extends ApiController
         $userId = $this->getAuthUserId();
         $data = $this->mergeJsonParams();
         (new UserService())->changeCurrentUserPassword($userId, $data);
-        return $this->ok();
+        return $this->ok(true);
     }
 
     /**
@@ -198,7 +198,7 @@ final class UserController extends ApiController
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
         (new UserService())->sendMobileCode($mobile);
-        return $this->ok();
+        return $this->ok(true);
     }
 
     /**
@@ -212,7 +212,15 @@ final class UserController extends ApiController
         $userId = $this->getAuthUserId();
         $data = $this->mergeJsonParams();
         (new UserService())->bindOrChangeMobile($userId, $data);
-        return $this->ok();
+        return $this->ok(true);
+    }
+
+    public function unbindMobile(): \think\Response
+    {
+        $userId = $this->getAuthUserId();
+        $data = $this->mergeJsonParams();
+        (new UserService())->unbindMobile($userId, $data);
+        return $this->ok(true);
     }
 
     /**
@@ -228,7 +236,7 @@ final class UserController extends ApiController
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
         (new UserService())->sendEmailCode($email);
-        return $this->ok();
+        return $this->ok(true);
     }
 
     /**
@@ -242,7 +250,15 @@ final class UserController extends ApiController
         $userId = $this->getAuthUserId();
         $data = $this->mergeJsonParams();
         (new UserService())->bindOrChangeEmail($userId, $data);
-        return $this->ok();
+        return $this->ok(true);
+    }
+
+    public function unbindEmail(): \think\Response
+    {
+        $userId = $this->getAuthUserId();
+        $data = $this->mergeJsonParams();
+        (new UserService())->unbindEmail($userId, $data);
+        return $this->ok(true);
     }
 
     /**

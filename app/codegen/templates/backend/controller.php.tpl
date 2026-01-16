@@ -58,28 +58,4 @@ final class {{entityName}}Controller extends ApiController
         (new {{entityName}}Service())->delete($ids);
         return $this->ok();
     }
-
-    private function mergeJsonParams(): array
-    {
-        $params = $this->request->param();
-        $json = $this->getJsonBody();
-        if (!empty($json)) {
-            $params = array_merge($params, $json);
-        }
-        return $params;
-    }
-
-    private function getJsonBody(): array
-    {
-        $raw = (string) file_get_contents('php://input');
-        if ($raw === '' && method_exists($this->request, 'getInput')) {
-            $raw = (string) $this->request->getInput();
-        }
-        if ($raw === '') {
-            return [];
-        }
-
-        $data = json_decode($raw, true);
-        return is_array($data) ? $data : [];
-    }
 }
