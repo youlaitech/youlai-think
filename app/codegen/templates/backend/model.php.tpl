@@ -7,7 +7,7 @@ namespace app\model;
 use think\Model;
 
 /**
- * {{entityName}} 模型
+ * {{businessName}} 模型
  */
 final class {{entityName}} extends Model
 {

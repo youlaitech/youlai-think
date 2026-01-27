@@ -467,44 +467,50 @@ ORDER BY ORDINAL_POSITION ASC
             'deleteBody' => $this->buildDeleteBody($fieldConfigs),
         ];
 
-        $previews[] = [
-            'path' => self::DEFAULT_BACKEND_APP_NAME . '/app/model',
-            'fileName' => $entityName . '.php',
-            'content' => $this->renderFromTemplate('backend/model.php.tpl', $vars),
-        ];
+        $previews[] = $this->buildPreviewItem(
+            self::DEFAULT_BACKEND_APP_NAME . '/app/model',
+            $entityName . '.php',
+            $this->renderFromTemplate('backend/model.php.tpl', $vars),
+            'backend'
+        );
 
-        $previews[] = [
-            'path' => self::DEFAULT_BACKEND_APP_NAME . '/app/service',
-            'fileName' => $entityName . 'Service.php',
-            'content' => $this->renderFromTemplate('backend/service.php.tpl', $vars),
-        ];
+        $previews[] = $this->buildPreviewItem(
+            self::DEFAULT_BACKEND_APP_NAME . '/app/service',
+            $entityName . 'Service.php',
+            $this->renderFromTemplate('backend/service.php.tpl', $vars),
+            'backend'
+        );
 
-        $previews[] = [
-            'path' => self::DEFAULT_BACKEND_APP_NAME . '/app/controller',
-            'fileName' => $entityName . 'Controller.php',
-            'content' => $this->renderFromTemplate('backend/controller.php.tpl', $vars),
-        ];
+        $previews[] = $this->buildPreviewItem(
+            self::DEFAULT_BACKEND_APP_NAME . '/app/controller',
+            $entityName . 'Controller.php',
+            $this->renderFromTemplate('backend/controller.php.tpl', $vars),
+            'backend'
+        );
 
-        $previews[] = [
-            'path' => self::DEFAULT_BACKEND_APP_NAME . '/route',
-            'fileName' => $entityKebab . '.php',
-            'content' => $this->renderFromTemplate('backend/route.php.tpl', $vars),
-        ];
+        $previews[] = $this->buildPreviewItem(
+            self::DEFAULT_BACKEND_APP_NAME . '/route',
+            $entityKebab . '.php',
+            $this->renderFromTemplate('backend/route.php.tpl', $vars),
+            'backend'
+        );
 
         $apiTpl = $this->resolveFrontendTemplatePath('frontend/api.ts.tpl', $frontendType);
         $apiExt = $this->resolveFrontendExtension('api', $frontendType);
-        $previews[] = [
-            'path' => self::DEFAULT_FRONTEND_APP_NAME . '/src/api/' . $moduleName,
-            'fileName' => $entityKebab . $apiExt,
-            'content' => $this->renderFromTemplate($apiTpl, $vars),
-        ];
+        $previews[] = $this->buildPreviewItem(
+            self::DEFAULT_FRONTEND_APP_NAME . '/src/api/' . $moduleName,
+            $entityKebab . $apiExt,
+            $this->renderFromTemplate($apiTpl, $vars),
+            'frontend'
+        );
 
         if ($frontendType !== 'js') {
-            $previews[] = [
-                'path' => self::DEFAULT_FRONTEND_APP_NAME . '/src/types/api',
-                'fileName' => $entityKebab . '.ts',
-                'content' => $this->renderFromTemplate('frontend/types.ts.tpl', $vars),
-            ];
+            $previews[] = $this->buildPreviewItem(
+                self::DEFAULT_FRONTEND_APP_NAME . '/src/types/api',
+                $entityKebab . '.ts',
+                $this->renderFromTemplate('frontend/types.ts.tpl', $vars),
+                'frontend'
+            );
         }
 
         $viewTpl = $this->resolveFrontendTemplatePath('frontend/index.vue.tpl', $frontendType);
@@ -515,11 +521,12 @@ ORDER BY ORDINAL_POSITION ASC
                 $viewTpl = 'frontend/index.curd.vue.tpl';
             }
         }
-        $previews[] = [
-            'path' => self::DEFAULT_FRONTEND_APP_NAME . '/src/views/' . $moduleName . '/' . $entityKebab,
-            'fileName' => 'index.vue',
-            'content' => $this->renderFromTemplate($viewTpl, $vars),
-        ];
+        $previews[] = $this->buildPreviewItem(
+            self::DEFAULT_FRONTEND_APP_NAME . '/src/views/' . $moduleName . '/' . $entityKebab,
+            'index.vue',
+            $this->renderFromTemplate($viewTpl, $vars),
+            'frontend'
+        );
 
         return $previews;
     }
@@ -605,6 +612,22 @@ ORDER BY ORDINAL_POSITION ASC
             return '.js';
         }
         return '.ts';
+    }
+
+    private function buildPreviewItem(string $path, string $fileName, string $content, string $scope): array
+    {
+        return [
+            'path' => $path,
+            'fileName' => $fileName,
+            'content' => $content,
+            'scope' => $scope,
+            'language' => $this->resolveLanguage($fileName),
+        ];
+    }
+
+    private function resolveLanguage(string $fileName): string
+    {
+        return strtolower((string) pathinfo($fileName, PATHINFO_EXTENSION));
     }
 
     private function buildFieldSql(array $fieldConfigs): string
@@ -703,11 +726,10 @@ ORDER BY ORDINAL_POSITION ASC
                 continue;
             }
             $comment = trim((string) ($fc['fieldComment'] ?? ''));
+            $comment = $comment !== '' ? $comment : $name;
             $type = (string) ($fc['fieldType'] ?? 'string');
             $tsType = $this->tsTypeByPhpType($type);
-            if ($comment !== '') {
-                $lines[] = "  /** {$comment} */";
-            }
+            $lines[] = "  /** {$comment} */";
             $lines[] = "  {$name}?: {$tsType};";
         }
 
@@ -726,11 +748,10 @@ ORDER BY ORDINAL_POSITION ASC
                 continue;
             }
             $comment = trim((string) ($fc['fieldComment'] ?? ''));
+            $comment = $comment !== '' ? $comment : $name;
             $type = (string) ($fc['fieldType'] ?? 'string');
             $tsType = $this->tsTypeByPhpType($type);
-            if ($comment !== '') {
-                $lines[] = "  /** {$comment} */";
-            }
+            $lines[] = "  /** {$comment} */";
             $lines[] = "  {$name}?: {$tsType};";
         }
 
@@ -749,11 +770,10 @@ ORDER BY ORDINAL_POSITION ASC
                 continue;
             }
             $comment = trim((string) ($fc['fieldComment'] ?? ''));
+            $comment = $comment !== '' ? $comment : $name;
             $type = (string) ($fc['fieldType'] ?? 'string');
             $tsType = $this->tsTypeByPhpType($type);
-            if ($comment !== '') {
-                $lines[] = "  /** {$comment} */";
-            }
+            $lines[] = "  /** {$comment} */";
             $lines[] = "  {$name}?: {$tsType};";
         }
 
@@ -772,12 +792,11 @@ ORDER BY ORDINAL_POSITION ASC
                 continue;
             }
             $comment = trim((string) ($fc['fieldComment'] ?? ''));
+            $comment = $comment !== '' ? $comment : $name;
             $type = (string) ($fc['fieldType'] ?? 'string');
             $tsType = $this->tsTypeByPhpType($type);
             $queryType = (int) ($fc['queryType'] ?? 0);
-            if ($comment !== '') {
-                $lines[] = "  /** {$comment} */";
-            }
+            $lines[] = "  /** {$comment} */";
             if ($this->isDateFormType((int) ($fc['formType'] ?? 0)) && $queryType === 4) {
                 $lines[] = "  {$name}?: [string, string];";
             } else {

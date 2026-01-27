@@ -178,12 +178,14 @@ final class MenuService
         if ($type === 'C') {
             $component = 'Layout';
         } elseif ($isExternalLink) {
+            // 外链不挂载组件
             $component = null;
         }
 
         $paramsMap = null;
         $params = $data['params'] ?? null;
         if (is_array($params) && !empty($params)) {
+            // 把前端 key/value 列表压成 JSON
             $m = [];
             foreach ($params as $p) {
                 if (!is_array($p)) {
@@ -223,6 +225,7 @@ final class MenuService
             $entity['create_time'] = date('Y-m-d H:i:s');
         }
 
+        // tree_path 用于后续树形结构计算
         $treePath = $this->generateMenuTreePath($parentId);
         $entity['tree_path'] = $treePath;
 

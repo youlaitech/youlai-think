@@ -24,6 +24,7 @@ final class FileService
             $originalName = 'file';
         }
 
+        // 保留原始扩展名，缺省用 bin
         $ext = pathinfo($originalName, PATHINFO_EXTENSION);
         $ext = $ext !== '' ? strtolower($ext) : 'bin';
 
@@ -31,6 +32,7 @@ final class FileService
         $storageRoot = rtrim(app()->getRootPath() . 'public/storage', "/\\");
         $targetDir = $storageRoot . DIRECTORY_SEPARATOR . $folder;
 
+        // 按日期分目录，便于管理
         if (!is_dir($targetDir) && !mkdir($targetDir, 0777, true) && !is_dir($targetDir)) {
             throw new BusinessException(ResultCode::UPLOAD_FILE_EXCEPTION, '创建上传目录失败');
         }
@@ -41,6 +43,7 @@ final class FileService
         $saved = false;
         if (is_object($file) && method_exists($file, 'move')) {
             try {
+                // 优先走框架的 move
                 $file->move($targetDir, $fileName);
                 $saved = true;
             } catch (\Throwable) {
@@ -49,6 +52,7 @@ final class FileService
         }
 
         if (!$saved) {
+            // fallback 到系统临时文件路径
             $tmpPath = null;
             if (is_object($file) && method_exists($file, 'getPathname')) {
                 $tmpPath = (string) $file->getPathname();
@@ -85,6 +89,7 @@ final class FileService
             }
         }
 
+        // 统一裁剪成 storage 下的相对路径
         $path = $filePath;
         $storagePrefix = '/storage/';
         if (str_starts_with($path, $storagePrefix)) {
@@ -92,6 +97,7 @@ final class FileService
         }
 
         $path = ltrim($path, '/\\');
+        // 避免路径穿越
         if ($path === '' || str_contains($path, '..')) {
             return false;
         }
