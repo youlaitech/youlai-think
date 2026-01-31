@@ -21,7 +21,7 @@
 
 ## 📢 项目简介
 
-`youlai-think` 是 `vue3-element-admin` 配套的 PHP 后端实现，基于 ThinkPHP 8, PHP 8, JWT, Redis, MySQL 构建，是 **youlai 全家桶** 的重要组成部分。
+**[youlai-think](https://gitee.com/youlaiorg/youlai-think)** 是 `vue3-element-admin` 配套的 PHP 后端实现，基于 ThinkPHP 8, PHP 8, JWT, Redis, MySQL 构建，是 **youlai 全家桶** 的重要组成部分。
 
 - **🚀 轻量高效**: 基于 ThinkPHP 8 框架，提供简单、高效的 Web API 开发体验。
 - **🔐 双重认证**: 支持 JWT 和 Redis Token 两种会话模式，可根据业务需求灵活切换。
@@ -36,12 +36,6 @@
 | vue3 前端 | [vue3-element-admin](https://gitee.com/youlaiorg/vue3-element-admin) | [vue3-element-admin](https://github.com/youlaitech/vue3-element-admin) | [vue3-element-admin](https://gitcode.com/youlai/vue3-element-admin) |
 | uni-app 移动端 | [vue-uniapp-template](https://gitee.com/youlaiorg/vue-uniapp-template) | [vue-uniapp-template](https://github.com/youlaitech/vue-uniapp-template) | [vue-uniapp-template](https://gitcode.com/youlai/vue-uniapp-template) |
 
-## 📚 项目文档
-
-| 文档名称 | 访问地址 |
-| --- | --- |
-| 项目介绍与使用指南 | [https://www.youlai.tech/youlai-think](https://www.youlai.tech/youlai-think) |
-
 ## 📁 项目目录
 
 <details>
@@ -49,20 +43,16 @@
 
 ```text
 youlai-think/
-├─ app/                       # 核心业务源码
-│  ├─ controller/             # 控制器（API 接口）
-│  ├─ service/                # 业务服务层
+├─ app/                       # 应用核心目录
+│  ├─ controller/             # 控制器 (用户/角色/菜单等)
+│  ├─ service/                # 业务服务
 │  ├─ model/                  # 数据模型
-│  ├─ middleware/             # 中间件
-│  └─ common/                 # 公共能力（响应/异常/工具）
-├─ config/                    # 配置目录
+│  ├─ common/                 # 公共模块(认证/权限/异常)
+│  └─ ...                     # 其他(中间件/验证器等)
+├─ config/                    # 配置文件
+├─ public/                    # Web 入口目录
 ├─ route/                     # 路由定义
-│  └─ app.php                 # API 路由注册
-├─ public/                    # 站点根目录
-├─ sql/                       # 数据库脚本
-│  └─ mysql/
-│     └─ youlai_admin.sql     # 建库 / 建表 / 初始化数据
-├─ tests/                     # 测试（如有）
+├─ runtime/                   # 运行时缓存
 ├─ .env                       # 环境变量
 └─ composer.json              # 依赖管理
 ```
@@ -73,37 +63,47 @@ youlai-think/
 
 ### 1. 环境准备
 
-| 要求 | 说明 | 安装指引 |
+| 技术 | 版本/说明 | 安装文档 |
 | --- | --- | --- |
-| **PHP 8** | 推荐 8.1+ | [官方下载](https://www.php.net/downloads) |
-| **MySQL** | 5.7+ 或 8.x | 业务数据存储，必需安装：[Windows](https://youlai.blog.csdn.net/article/details/133272887) / [Linux](https://youlai.blog.csdn.net/article/details/130398179) |
-| **Redis** | 7.x 稳定版 | 会话缓存，必需安装：[Windows](https://youlai.blog.csdn.net/article/details/133410293) / [Linux](https://youlai.blog.csdn.net/article/details/130439335) |
-| **Composer** | 依赖管理 | [官方下载](https://getcomposer.org/download/) |
+| **PHP** | `8.0` 或更高版本 | [Windows (XAMPP)](https://www.apachefriends.org/index.html) / [macOS (brew)](https://formulae.brew.sh/formula/php) |
+| **MySQL** | `5.7` 或 `8.x` | [Windows](https://youlai.blog.csdn.net/article/details/133272887) / [Linux](https://youlai.blog.csdn.net/article/details/130398179) |
+| **Redis** | `7.x` | [Windows](https://youlai.blog.csdn.net/article/details/133410293) / [Linux](https://youlai.blog.csdn.net/article/details/130439335) |
+| **Composer** | `2.x` | [官方下载](https://getcomposer.org/) |
 
-> ⚠️ **重要提示**：MySQL 与 Redis 为项目启动必需依赖，请确保服务已启动。
+> 💡 **提示**：项目启动依赖 MySQL 和 Redis。为方便快速体验，若本地未配置，项目会默认连接 [youlai](https://www.youlai.tech) 的线上公共环境。
 
-### 2. 数据库初始化
+### 2. 开发工具
 
-推荐使用 **Navicat**、**DBeaver** 或 **MySQL Workbench** 执行 `sql/mysql/youlai_admin.sql` 脚本，完成数据库和基础数据的初始化。
+**PhpStorm** (推荐):
 
-### 3. 修改配置
+- JetBrains 官方出品的专业 PHP IDE，开箱即用。
 
-复制 `.example.env` 为 `.env`，并根据实际情况修改 MySQL 和 Redis 的连接信息。
+**VS Code**:
 
-### 4. 启动项目
+- **PHP Intelephense**: 提供代码智能提示、补全、格式化等核心功能。
+- **PHP Debug**: Xdebug 调试支持。
+
+### 3. 启动项目
 
 ```bash
-# 安装依赖
+# 1. 克隆项目
+git clone https://gitee.com/youlaiorg/youlai-think.git
+cd youlai-think
+
+# 2. 安装依赖
 composer install
 
-# 启动服务
+# 3. 初始化数据库
+#    请使用数据库客户端执行 sql/mysql/youlai_admin.sql
+
+# 4. 修改配置
+#    复制 .example.env 为 .env，并修改 MySQL/Redis 连接信息
+
+# 5. 启动服务
 php think run
 ```
 
-启动成功后，你可以使用 API 工具（如 Postman）测试登录接口：
-
-- **URL**: `POST` http://localhost:8000/api/v1/auth/login
-- **账号**: `admin` / **密码**: `123456`
+启动成功后，访问 `http://localhost:8000`，如看到 ThinkPHP 欢迎页面即表示成功。
 
 ## 🤝 前端整合
 
