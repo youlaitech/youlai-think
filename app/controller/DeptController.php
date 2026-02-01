@@ -6,16 +6,24 @@ namespace app\controller;
 
 use app\common\controller\ApiController;
 use app\service\DeptService;
+use OpenApi\Annotations as OA;
 
 /**
- * 部门接口 /api/v1/depts
- *
- * 部门树 下拉选项 增删改查
+ * @OA\Tag(name="05.部门接口")
  */
 final class DeptController extends ApiController
 {
     /**
      * 部门列表（树形）
+     *
+     * @OA\Get(
+     *     path="/api/v1/depts",
+     *     summary="部门列表",
+     *     tags={"05.部门接口"},
+     *     @OA\Parameter(name="keywords", in="query", description="关键字", required=false),
+     *     @OA\Parameter(name="status", in="query", description="状态", required=false),
+     *     @OA\Response(response=200, description="OK")
+     * )
      *
      * @return \think\Response
      */
@@ -33,6 +41,13 @@ final class DeptController extends ApiController
     /**
      * 部门下拉选项
      *
+     * @OA\Get(
+     *     path="/api/v1/depts/options",
+     *     summary="部门下拉列表",
+     *     tags={"05.部门接口"},
+     *     @OA\Response(response=200, description="OK")
+     * )
+     *
      * @return \think\Response
      */
     public function options(): \think\Response
@@ -44,6 +59,14 @@ final class DeptController extends ApiController
 
     /**
      * 部门表单数据
+     *
+     * @OA\Get(
+     *     path="/api/v1/depts/{deptId}/form",
+     *     summary="获取部门表单数据",
+     *     tags={"05.部门接口"},
+     *     @OA\Parameter(name="deptId", in="path", description="部门ID", required=true),
+     *     @OA\Response(response=200, description="OK")
+     * )
      *
      * @param int $deptId 部门ID
      * @return \think\Response
@@ -57,6 +80,14 @@ final class DeptController extends ApiController
     /**
      * 新增部门
      *
+     * @OA\Post(
+     *     path="/api/v1/depts",
+     *     summary="新增部门",
+     *     tags={"05.部门接口"},
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response=200, description="OK")
+     * )
+     *
      * @return \think\Response
      */
     public function create(): \think\Response
@@ -68,6 +99,15 @@ final class DeptController extends ApiController
 
     /**
      * 修改部门
+     *
+     * @OA\Put(
+     *     path="/api/v1/depts/{deptId}",
+     *     summary="修改部门",
+     *     tags={"05.部门接口"},
+     *     @OA\Parameter(name="deptId", in="path", description="部门ID", required=true),
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response=200, description="OK")
+     * )
      *
      * @param int $deptId 部门ID
      * @return \think\Response
@@ -82,6 +122,14 @@ final class DeptController extends ApiController
 
     /**
      * 删除部门（批量）
+     *
+     * @OA\Delete(
+     *     path="/api/v1/depts/{ids}",
+     *     summary="删除部门",
+     *     tags={"05.部门接口"},
+     *     @OA\Parameter(name="ids", in="path", description="部门ID，多个以英文逗号(,)分割", required=true),
+     *     @OA\Response(response=200, description="OK")
+     * )
      *
      * @param string $ids 逗号分隔ID列表
      * @return \think\Response

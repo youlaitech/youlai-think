@@ -7,5 +7,28 @@ use think\App;
 // 加载基础文件
 require __DIR__ . '/vendor/autoload.php';
 
+// 默认将内置开发服务器绑定到 IPv6（兼容 localhost 解析到 ::1 的情况）。
+$argv = $_SERVER['argv'] ?? $GLOBALS['argv'] ?? [];
+$runIndex = array_search('run', $argv, true);
+if ($runIndex !== false) {
+    $hasHost = false;
+    foreach ($argv as $arg) {
+        if ($arg === '-H' || $arg === '--host' || str_starts_with($arg, '--host=') || str_starts_with($arg, '-H')) {
+            $hasHost = true;
+            break;
+        }
+    }
+
+    if (!$hasHost) {
+        $defaultHost = getenv('APP_HOST') ?: getenv('SERVER_HOST') ?: '::';
+        if (str_contains($defaultHost, ':') && !str_starts_with($defaultHost, '[')) {
+            $defaultHost = '[' . $defaultHost . ']';
+        }
+        array_splice($argv, $runIndex + 1, 0, ['-H', $defaultHost]);
+        $_SERVER['argv'] = $argv;
+        $GLOBALS['argv'] = $argv;
+    }
+}
+
 // 应用初始化
 (new App())->console->run();

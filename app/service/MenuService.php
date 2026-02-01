@@ -64,12 +64,14 @@ final class MenuService
         }
 
         $menuRows = [];
+        // 超级管理员直接拉取全部菜单（排除按钮权限）
         if (in_array('ROOT', $roles, true)) {
             $rows = Menu::where('type', '<>', 'B')->order('sort', 'asc')->select();
             foreach ($rows as $row) {
                 $menuRows[] = $row->toArray();
             }
         } else {
+            // 按角色关联菜单，去重后构建路由树
             $rows = Db::name('sys_role_menu')
                 ->alias('rm')
                 ->join('sys_role r', 'rm.role_id = r.id')
@@ -362,10 +364,18 @@ final class MenuService
     {
         $id = (int) ($menu['id'] ?? 0);
         $routePath = (string) ($menu['route_path'] ?? '');
+        // 外链菜单不走前端路由组件
         $externalLink = preg_match('/^https?:\/\//i', $routePath) === 1;
 
+        $component = $menu['component'] ?? null;
+        if (is_string($component) && $component !== '') {
+            $component = str_replace('\\', '/', $component);
+        }
+
+        $type = (string) ($menu['type'] ?? '');
         $routeName = (string) ($menu['route_name'] ?? '');
         if ($routeName === '') {
+            // 外链用固定前缀，普通菜单按路径生成路由名
             $routeName = $externalLink ? ('ext-' . $id) : $this->guessRouteNameFromPath($routePath);
         }
 
@@ -376,7 +386,8 @@ final class MenuService
             'alwaysShow' => ((int) ($menu['always_show'] ?? 0)) === 1,
         ];
 
-        if ((string) ($menu['type'] ?? '') === 'M' && ((int) ($menu['keep_alive'] ?? 0)) === 1) {
+        // 目录不需要 keepAlive，只有菜单类型且启用时才设置
+        if ($type === 'M' && ((int) ($menu['keep_alive'] ?? 0)) === 1) {
             $meta['keepAlive'] = true;
         }
 
@@ -384,13 +395,14 @@ final class MenuService
         if ($paramsJson !== '') {
             $decoded = json_decode($paramsJson, true);
             if (is_array($decoded) && !empty($decoded)) {
+                // params 透传到前端路由 meta
                 $meta['params'] = $decoded;
             }
         }
 
         return [
             'path' => $routePath,
-            'component' => $externalLink ? null : ($menu['component'] ?? null),
+            'component' => $externalLink ? null : $component,
             'redirect' => $menu['redirect'] ?? null,
             'name' => $routeName,
             'meta' => $this->filterNulls($meta),
@@ -404,18 +416,16 @@ final class MenuService
             return '';
         }
 
-        $p = trim($p, '/');
-        $parts = explode('/', $p);
-        $last = $parts[count($parts) - 1] ?? '';
-        if ($last === '') {
-            $last = $p;
+        $p = preg_replace_callback('/-([a-zA-Z0-9])/', static function (array $matches): string {
+            return strtoupper($matches[1]);
+        }, $p);
+
+        $first = $p[0] ?? '';
+        if ($first !== '' && ctype_alpha($first)) {
+            $p = strtoupper($first) . substr($p, 1);
         }
 
-        $last = str_replace(['-', '_'], ' ', $last);
-        $last = ucwords($last);
-        $last = str_replace(' ', '', $last);
-
-        return $last;
+        return $p;
     }
 
     private function generateMenuTreePath(int $parentId): string

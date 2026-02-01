@@ -8,6 +8,7 @@ final class PhpDeprecationMiddleware
 {
     public function handle($request, \Closure $next)
     {
+        // 屏蔽弃用警告，避免污染日志
         error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
         $previous = set_error_handler(static function (

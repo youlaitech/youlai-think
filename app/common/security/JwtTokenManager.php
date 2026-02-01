@@ -33,6 +33,7 @@ final class JwtTokenManager implements TokenManager
         $redis = RedisClient::get();
         $keys = $cfg['redis']['keys'] ?? [];
 
+        // 安全版本用于强制失效历史 token
         $securityVersionKey = RedisKey::format((string) ($keys['user_security_version'] ?? 'auth:user:security_version:{}'), $userId);
         $securityVersion = (int) ($redis->get($securityVersionKey) ?: 1);
         if ($securityVersion <= 0) {
@@ -43,6 +44,7 @@ final class JwtTokenManager implements TokenManager
         $secret = (string) ($jwtCfg['secret'] ?? 'change-me');
         $issuer = (string) ($jwtCfg['issuer'] ?? 'youlai-think');
 
+        // access token 载荷
         $accessPayload = [
             'iss' => $issuer,
             'iat' => $now,
@@ -56,6 +58,7 @@ final class JwtTokenManager implements TokenManager
             JwtClaimConstants::SECURITY_VERSION => $securityVersion,
         ];
 
+        // refresh token 载荷
         $refreshPayload = [
             'iss' => $issuer,
             'iat' => $now,
@@ -74,9 +77,11 @@ final class JwtTokenManager implements TokenManager
         $oldAccess = $redis->get($userAccessKey);
         $oldRefresh = $redis->get($userRefreshKey);
 
+        // 记录当前用户最新 token
         $redis->setex($userAccessKey, $accessTtl, $accessToken);
         $redis->setex($userRefreshKey, $refreshTtl, $refreshToken);
 
+        // 旧 token 进入黑名单，防止并发登录复用
         if (!empty($oldAccess)) {
             $this->blacklistToken((string) $oldAccess, $accessTtl);
         }
@@ -132,6 +137,7 @@ final class JwtTokenManager implements TokenManager
             throw new BusinessException(ResultCode::REFRESH_TOKEN_INVALID);
         }
 
+        // refresh 只补最小用户信息
         $userAuthInfo = [
             'userId' => $userId,
             'deptId' => $user['dept_id'] ?? null,
@@ -157,11 +163,13 @@ final class JwtTokenManager implements TokenManager
             }
         }
 
+        // 提升安全版本，统一踢出旧 token
         if ($userId !== null && $userId > 0) {
             $securityVersionKey = RedisKey::format((string) ($keys['user_security_version'] ?? 'auth:user:security_version:{}'), $userId);
             $redis->incr($securityVersionKey);
         }
 
+        // 手动加入黑名单，防止立即复用
         if (!empty($accessToken)) {
             $this->blacklistToken($accessToken, 86400);
         }
@@ -173,6 +181,7 @@ final class JwtTokenManager implements TokenManager
 
     private function decodeAndValidate(string $token, bool $checkBlacklist = true): array
     {
+        // 黑名单校验优先于 JWT 解码
         if ($checkBlacklist && $this->isBlacklisted($token)) {
             throw new BusinessException(ResultCode::ACCESS_TOKEN_INVALID);
         }

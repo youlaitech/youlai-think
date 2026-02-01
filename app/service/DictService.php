@@ -59,14 +59,14 @@ final class DictService
     {
         $rows = Db::name('sys_dict')
             ->where('is_deleted', 0)
-            ->order('sort', 'asc')
-            ->field('dict_code,dict_name')
+            ->order('id', 'asc')
+            ->field('dict_code,name')
             ->select()
             ->toArray();
         $list = [];
         foreach ($rows as $row) {
             $dictCode = (string) ($row['dict_code'] ?? '');
-            $name = (string) ($row['dict_name'] ?? '');
+            $name = (string) ($row['name'] ?? '');
             if ($dictCode === '' || $name === '') {
                 continue;
             }

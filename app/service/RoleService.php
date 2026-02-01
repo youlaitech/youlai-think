@@ -187,6 +187,7 @@ final class RoleService
             throw new BusinessException(ResultCode::INVALID_USER_INPUT);
         }
 
+        // 已分配用户的角色不允许删除
         $hasUsers = Db::name('sys_user_role')->whereIn('role_id', $idList)->count();
         if ($hasUsers > 0) {
             throw new BusinessException(ResultCode::INVALID_USER_INPUT, '角色已分配用户，无法删除');
@@ -220,6 +221,7 @@ final class RoleService
         }
         $ids = array_values(array_unique(array_filter($ids, fn($v) => $v > 0)));
 
+        // 先清空旧关联，再写入新菜单权限
         Db::transaction(function () use ($roleId, $ids) {
             Db::name('sys_role_menu')->where('role_id', $roleId)->delete();
 

@@ -16,6 +16,7 @@ final class AuthenticationToken
 
     public function toArray(): array
     {
+        // 统一返回给前端的 token 结构
         return [
             'tokenType' => $this->tokenType,
             'accessToken' => $this->accessToken,

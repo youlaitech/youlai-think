@@ -16,6 +16,7 @@ final class PageResult
 
     public static function success(array $list, int $total, int $pageNum, int $pageSize): self
     {
+        // 统一分页结构，page 节点用于前端分页组件
         return new self(
             ResultCode::SUCCESS->getCode(),
             $list,

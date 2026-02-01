@@ -18,6 +18,8 @@ final class RedisClient
 
         $cfg = config('security.redis');
 
+        // 仅在首次调用时初始化连接
+
         $parameters = [
             'scheme' => 'tcp',
             'host' => $cfg['host'] ?? '127.0.0.1',

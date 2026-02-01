@@ -8,16 +8,22 @@ use app\common\controller\ApiController;
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
 use app\service\UserService;
+use OpenApi\Annotations as OA;
 
 /**
- * 用户接口 /api/v1/users
- *
- * 用户查询与管理
+ * @OA\Tag(name="02.用户接口")
  */
 final class UserController extends ApiController
 {
     /**
      * 获取当前登录用户信息
+     *
+     * @OA\Get(
+     *     path="/api/v1/users/me",
+     *     summary="获取当前登录用户信息",
+     *     tags={"02.用户接口"},
+     *     @OA\Response(response=200, description="OK")
+     * )
      *
      * @return \think\Response
      * @throws BusinessException 认证信息缺失或令牌无效时抛出
@@ -33,6 +39,16 @@ final class UserController extends ApiController
     /**
      * 用户分页列表
      *
+     * @OA\Get(
+     *     path="/api/v1/users",
+     *     summary="用户列表",
+     *     tags={"02.用户接口"},
+     *     @OA\Parameter(name="pageNum", in="query", description="页码", required=false),
+     *     @OA\Parameter(name="pageSize", in="query", description="每页数量", required=false),
+     *     @OA\Parameter(name="keywords", in="query", description="关键字", required=false),
+     *     @OA\Response(response=200, description="OK")
+     * )
+     *
      * @return \think\Response
      */
     public function page(): \think\Response
@@ -44,6 +60,14 @@ final class UserController extends ApiController
 
     /**
      * 获取用户表单数据
+     *
+     * @OA\Get(
+     *     path="/api/v1/users/{userId}/form",
+     *     summary="获取用户表单数据",
+     *     tags={"02.用户接口"},
+     *     @OA\Parameter(name="userId", in="path", description="用户ID", required=true),
+     *     @OA\Response(response=200, description="OK")
+     * )
      *
      * @param int $userId 用户ID
      * @return \think\Response
@@ -57,6 +81,14 @@ final class UserController extends ApiController
     /**
      * 新增用户
      *
+     * @OA\Post(
+     *     path="/api/v1/users",
+     *     summary="新增用户",
+     *     tags={"02.用户接口"},
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response=200, description="OK")
+     * )
+     *
      * @return \think\Response
      */
     public function create(): \think\Response
@@ -68,6 +100,15 @@ final class UserController extends ApiController
 
     /**
      * 修改用户
+     *
+     * @OA\Put(
+     *     path="/api/v1/users/{id}",
+     *     summary="修改用户",
+     *     tags={"02.用户接口"},
+     *     @OA\Parameter(name="id", in="path", description="用户ID", required=true),
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response=200, description="OK")
+     * )
      *
      * @param int $id 用户ID
      * @return \think\Response
@@ -82,6 +123,14 @@ final class UserController extends ApiController
     /**
      * 删除用户（批量）
      *
+     * @OA\Delete(
+     *     path="/api/v1/users/{ids}",
+     *     summary="删除用户",
+     *     tags={"02.用户接口"},
+     *     @OA\Parameter(name="ids", in="path", description="用户ID，多个以英文逗号(,)分割", required=true),
+     *     @OA\Response(response=200, description="OK")
+     * )
+     *
      * @param string $ids 逗号分隔ID列表
      * @return \think\Response
      */
@@ -93,6 +142,15 @@ final class UserController extends ApiController
 
     /**
      * 重置指定用户密码
+     *
+     * @OA\Put(
+     *     path="/api/v1/users/{id}/password/reset",
+     *     summary="重置指定用户密码",
+     *     tags={"02.用户接口"},
+     *     @OA\Parameter(name="id", in="path", description="用户ID", required=true),
+     *     @OA\Parameter(name="password", in="query", description="新密码", required=true),
+     *     @OA\Response(response=200, description="OK")
+     * )
      *
      * @param int $id 用户ID
      * @return \think\Response
@@ -106,12 +164,22 @@ final class UserController extends ApiController
             $password = (string) ($json['password'] ?? '');
         }
 
+        // 兼容 query/body 传参，避免前端传参方式不一致
         (new UserService())->resetUserPassword($id, $password);
         return $this->ok();
     }
 
     /**
      * 修改用户状态
+     *
+     * @OA\Patch(
+     *     path="/api/v1/users/{userId}/status",
+     *     summary="修改用户状态",
+     *     tags={"02.用户接口"},
+     *     @OA\Parameter(name="userId", in="path", description="用户ID", required=true),
+     *     @OA\Parameter(name="status", in="query", description="用户状态(1:启用;0:禁用)", required=true),
+     *     @OA\Response(response=200, description="OK")
+     * )
      *
      * @param int $userId 用户ID
      * @return \think\Response
@@ -129,12 +197,20 @@ final class UserController extends ApiController
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
+        // 明确转为整型，避免前端字符串状态导致校验偏差
         (new UserService())->updateUserStatus($userId, (int) $status);
         return $this->ok();
     }
 
     /**
      * 用户下拉选项
+     *
+     * @OA\Get(
+     *     path="/api/v1/users/options",
+     *     summary="获取用户下拉选项",
+     *     tags={"02.用户接口"},
+     *     @OA\Response(response=200, description="OK")
+     * )
      *
      * @return \think\Response
      */
@@ -146,6 +222,13 @@ final class UserController extends ApiController
 
     /**
      * 个人中心用户信息
+     *
+     * @OA\Get(
+     *     path="/api/v1/users/profile",
+     *     summary="获取个人中心用户信息",
+     *     tags={"02.用户接口"},
+     *     @OA\Response(response=200, description="OK")
+     * )
      *
      * @return \think\Response
      * @throws BusinessException 认证信息缺失或令牌无效时抛出
@@ -159,6 +242,14 @@ final class UserController extends ApiController
 
     /**
      * 个人中心修改用户信息
+     *
+     * @OA\Put(
+     *     path="/api/v1/users/profile",
+     *     summary="个人中心修改用户信息",
+     *     tags={"02.用户接口"},
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response=200, description="OK")
+     * )
      *
      * @return \think\Response
      * @throws BusinessException 认证信息缺失或令牌无效时抛出
@@ -174,6 +265,14 @@ final class UserController extends ApiController
     /**
      * 当前用户修改密码
      *
+     * @OA\Put(
+     *     path="/api/v1/users/password",
+     *     summary="当前用户修改密码",
+     *     tags={"02.用户接口"},
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response=200, description="OK")
+     * )
+     *
      * @return \think\Response
      * @throws BusinessException 认证信息缺失或令牌无效时抛出
      */
@@ -187,6 +286,14 @@ final class UserController extends ApiController
 
     /**
      * 发送短信验证码（绑定或更换手机号）
+     *
+     * @OA\Post(
+     *     path="/api/v1/users/mobile/code",
+     *     summary="发送短信验证码（绑定或更换手机号）",
+     *     tags={"02.用户接口"},
+     *     @OA\Parameter(name="mobile", in="query", description="手机号码", required=true),
+     *     @OA\Response(response=200, description="OK")
+     * )
      *
      * @return \think\Response
      * @throws BusinessException 参数缺失时抛出
@@ -204,6 +311,14 @@ final class UserController extends ApiController
     /**
      * 绑定或更换手机号
      *
+     * @OA\Put(
+     *     path="/api/v1/users/mobile",
+     *     summary="绑定或更换手机号",
+     *     tags={"02.用户接口"},
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response=200, description="OK")
+     * )
+     *
      * @return \think\Response
      * @throws BusinessException 认证信息缺失或令牌无效时抛出
      */
@@ -215,6 +330,15 @@ final class UserController extends ApiController
         return $this->ok(true);
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/api/v1/users/mobile",
+     *     summary="解绑手机号",
+     *     tags={"02.用户接口"},
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response=200, description="OK")
+     * )
+     */
     public function unbindMobile(): \think\Response
     {
         $userId = $this->getAuthUserId();
@@ -225,6 +349,14 @@ final class UserController extends ApiController
 
     /**
      * 发送邮箱验证码（绑定或更换邮箱）
+     *
+     * @OA\Post(
+     *     path="/api/v1/users/email/code",
+     *     summary="发送邮箱验证码（绑定或更换邮箱）",
+     *     tags={"02.用户接口"},
+     *     @OA\Parameter(name="email", in="query", description="邮箱地址", required=true),
+     *     @OA\Response(response=200, description="OK")
+     * )
      *
      * @return \think\Response
      * @throws BusinessException 参数缺失时抛出
@@ -242,6 +374,14 @@ final class UserController extends ApiController
     /**
      * 绑定或更换邮箱
      *
+     * @OA\Put(
+     *     path="/api/v1/users/email",
+     *     summary="绑定或更换邮箱",
+     *     tags={"02.用户接口"},
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response=200, description="OK")
+     * )
+     *
      * @return \think\Response
      * @throws BusinessException 认证信息缺失或令牌无效时抛出
      */
@@ -253,6 +393,15 @@ final class UserController extends ApiController
         return $this->ok(true);
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/api/v1/users/email",
+     *     summary="解绑邮箱",
+     *     tags={"02.用户接口"},
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response=200, description="OK")
+     * )
+     */
     public function unbindEmail(): \think\Response
     {
         $userId = $this->getAuthUserId();
@@ -263,6 +412,13 @@ final class UserController extends ApiController
 
     /**
      * 下载用户导入模板
+     *
+     * @OA\Get(
+     *     path="/api/v1/users/template",
+     *     summary="用户导入模板下载",
+     *     tags={"02.用户接口"},
+     *     @OA\Response(response=200, description="OK")
+     * )
      *
      * @return \think\Response
      */
@@ -282,6 +438,13 @@ final class UserController extends ApiController
     /**
      * 导出用户
      *
+     * @OA\Get(
+     *     path="/api/v1/users/export",
+     *     summary="导出用户",
+     *     tags={"02.用户接口"},
+     *     @OA\Response(response=200, description="OK")
+     * )
+     *
      * @return \think\Response
      */
     public function export(): \think\Response
@@ -300,6 +463,23 @@ final class UserController extends ApiController
 
     /**
      * 导入用户
+     *
+     * @OA\Post(
+     *     path="/api/v1/users/import",
+     *     summary="导入用户",
+     *     tags={"02.用户接口"},
+     *     @OA\Parameter(name="deptId", in="query", description="部门ID", required=false),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(property="file", type="string", format="binary")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="OK")
+     * )
      *
      * @return \think\Response
      * @throws BusinessException 未上传文件时抛出

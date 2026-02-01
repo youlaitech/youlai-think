@@ -21,16 +21,16 @@
 
 ## 📢 项目简介
 
-**[youlai-think](https://gitee.com/youlaiorg/youlai-think)** 是 `vue3-element-admin` 配套的 PHP 后端实现，基于 ThinkPHP 8, PHP 8, JWT, Redis, MySQL 构建，是 **youlai 全家桶** 的重要组成部分。
+**[youlai-think](https://gitee.com/youlaiorg/youlai-think)** 是 **[vue3-element-admin](https://gitee.com/youlaiorg/vue3-element-admin)** 的 ThinkPHP 8 后端实现，接口路径与返回结构完全对齐，可直接为前端提供后端服务。
 
-- **🚀 轻量高效**: 基于 ThinkPHP 8 框架，提供简单、高效的 Web API 开发体验。
-- **🔐 双重认证**: 支持 JWT 和 Redis Token 两种会话模式，可根据业务需求灵活切换。
-- **🔑 权限管理**: 内置基于 RBAC 的权限模型，精确控制接口和按钮权限。
-- **🛠️ 功能模块**: 包含用户、角色、菜单、部门、字典等后台管理系统的核心功能。
+- **🚀 技术栈**：ThinkPHP 8 + PHP 8，轻量高效、上手成本低
+- **🔐 安全认证**：JWT 无状态认证 + Redis 会话双模式，支持会话治理
+- **🔑 权限管理**：RBAC 权限模型，菜单/按钮/接口三级权限统一治理
+- **🛠️ 模块能力**：用户、角色、菜单、部门、字典、日志等核心模块开箱即用
 
 ## 🌈 项目源码
 
-| 项目类型 | Gitee | Github | GitCode |
+| 项目 | Gitee | GitHub | GitCode |
 | --- | --- | --- | --- |
 | ✅ PHP 后端 | [youlai-think](https://gitee.com/youlaiorg/youlai-think) | [youlai-think](https://github.com/youlaitech/youlai-think) | [youlai-think](https://gitcode.com/youlai/youlai-think) |
 | vue3 前端 | [vue3-element-admin](https://gitee.com/youlaiorg/vue3-element-admin) | [vue3-element-admin](https://github.com/youlaitech/vue3-element-admin) | [vue3-element-admin](https://gitcode.com/youlai/vue3-element-admin) |
@@ -68,9 +68,9 @@ youlai-think/
 | **PHP** | `8.0` 或更高版本 | [Windows (XAMPP)](https://www.apachefriends.org/index.html) / [macOS (brew)](https://formulae.brew.sh/formula/php) |
 | **MySQL** | `5.7` 或 `8.x` | [Windows](https://youlai.blog.csdn.net/article/details/133272887) / [Linux](https://youlai.blog.csdn.net/article/details/130398179) |
 | **Redis** | `7.x` | [Windows](https://youlai.blog.csdn.net/article/details/133410293) / [Linux](https://youlai.blog.csdn.net/article/details/130439335) |
-| **Composer** | `2.x` | [官方下载](https://getcomposer.org/) |
+| **Composer** | `2.x`（PHP 依赖管理工具） | [官方下载](https://getcomposer.org/) |
 
-> 💡 **提示**：项目启动依赖 MySQL 和 Redis。为方便快速体验，若本地未配置，项目会默认连接 [youlai](https://www.youlai.tech) 的线上公共环境。
+> 💡 **贴心小提示**：本地未配置 MySQL、Redis 不影响启动，项目默认会连接 [youlai](https://www.youlai.tech) 线上公共环境运行，方便您快速体验。
 
 ### 2. 开发工具
 
@@ -83,7 +83,15 @@ youlai-think/
 - **PHP Intelephense**: 提供代码智能提示、补全、格式化等核心功能。
 - **PHP Debug**: Xdebug 调试支持。
 
-### 3. 启动项目
+### 3. 初始化数据库
+
+使用数据库客户端执行 `sql/mysql/youlai_admin.sql` 脚本，完成数据库和基础数据的初始化。
+
+### 4. 修改配置
+
+复制 `.env.example` 为 `.env`，并修改 MySQL/Redis 连接信息。
+
+### 5. 启动项目
 
 ```bash
 # 1. 克隆项目
@@ -93,17 +101,16 @@ cd youlai-think
 # 2. 安装依赖
 composer install
 
-# 3. 初始化数据库
-#    请使用数据库客户端执行 sql/mysql/youlai_admin.sql
-
-# 4. 修改配置
-#    复制 .example.env 为 .env，并修改 MySQL/Redis 连接信息
-
-# 5. 启动服务
+# 3. 启动服务
 php think run
 ```
 
 启动成功后，访问 `http://localhost:8000`，如看到 ThinkPHP 欢迎页面即表示成功。
+
+### 6. 接口文档（Swagger）
+
+- Swagger UI：`http://localhost:8000/swagger`
+- OpenAPI JSON：`http://localhost:8000/swagger/openapi.json`
 
 ## 🤝 前端整合
 

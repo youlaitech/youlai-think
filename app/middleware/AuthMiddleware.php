@@ -12,12 +12,14 @@ final class AuthMiddleware
 {
     public function handle($request, \Closure $next)
     {
+        // 预检请求直接放行
         if (strtoupper((string) $request->method()) === 'OPTIONS') {
             return $next($request);
         }
 
         $path = '/' . ltrim((string) $request->pathinfo(), '/');
 
+        // 认证接口不做鉴权
         if (str_starts_with($path, '/api/v1/auth/')) {
             return $next($request);
         }
@@ -35,6 +37,7 @@ final class AuthMiddleware
         }
 
         $token = $raw;
+        // 兼容 Bearer 前缀
         if ($tokenPrefix !== '' && str_starts_with($raw, $tokenPrefix)) {
             $token = substr($raw, strlen($tokenPrefix));
         }
@@ -44,6 +47,7 @@ final class AuthMiddleware
             throw new BusinessException(ResultCode::ACCESS_TOKEN_INVALID);
         }
 
+        // 解析 token 并写入上下文
         $user = (new TokenManagerResolver())->get()->parseAccessToken($token);
 
         if ($request instanceof \app\Request) {

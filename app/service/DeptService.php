@@ -24,6 +24,7 @@ final class DeptService
                 if ($scope === 3) {
                     $query = $query->where('id', $authDeptId);
                 } else {
+                    // 部门及子部门需要展开 tree_path
                     $deptIds = $this->getDeptAndSubDeptIds($authDeptId);
                     $query = !empty($deptIds) ? $query->whereIn('id', $deptIds) : $query->where('id', $authDeptId);
                 }
@@ -71,6 +72,7 @@ final class DeptService
                 if ($scope === 3) {
                     $query = $query->where('id', $authDeptId);
                 } else {
+                    // 下拉选项同样按部门及子部门范围过滤
                     $deptIds = $this->getDeptAndSubDeptIds($authDeptId);
                     $query = !empty($deptIds) ? $query->whereIn('id', $deptIds) : $query->where('id', $authDeptId);
                 }

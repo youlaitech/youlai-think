@@ -8,6 +8,7 @@ final class RedisKey
 {
     public static function format(string $pattern, mixed ...$args): string
     {
+        // 按顺序替换 {} 占位符
         $key = $pattern;
 
         foreach ($args as $arg) {

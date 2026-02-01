@@ -33,6 +33,7 @@ final class DataScopeMiddleware
             return $next($request);
         }
 
+        // 取所有角色中最严格的数据范围
         $scopes = Db::name('sys_user_role')
             ->alias('ur')
             ->join('sys_role r', 'ur.role_id = r.id')
