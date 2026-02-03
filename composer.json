@@ -7,16 +7,12 @@
     "thinkphp",
     "ORM"
   ],
-  "homepage": "https://www.thinkphp.cn/",
+  "homepage": "https://www.youlai.tech",
   "license": "Apache-2.0",
   "authors": [
     {
-      "name": "liu21st",
-      "email": "liu21st@gmail.com"
-    },
-    {
-      "name": "yunwuxin",
-      "email": "448901948@qq.com"
+      "name": "Ray.Hao",
+      "email": "youlaitech@163.com"
     }
   ],
   "require": {
