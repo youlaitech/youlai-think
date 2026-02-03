@@ -94,6 +94,7 @@ final class ConfigService
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
+        // 配置键唯一性校验
         $exists = Db::name('sys_config')
             ->where('is_deleted', 0)
             ->where('config_key', $configKey)
@@ -137,6 +138,7 @@ final class ConfigService
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
+        // 更新时排除自身
         $exists = Db::name('sys_config')
             ->where('is_deleted', 0)
             ->where('config_key', $configKey)
@@ -197,6 +199,7 @@ final class ConfigService
             $map[$k] = (string) ($r['config_value'] ?? '');
         }
 
+        // 全量刷新缓存
         $redis = RedisClient::get();
         $redis->del([self::CACHE_KEY]);
         if (!empty($map)) {
@@ -216,6 +219,7 @@ final class ConfigService
             return null;
         }
 
+        // 先读 Redis 缓存
         $redis = RedisClient::get();
         $val = $redis->hget(self::CACHE_KEY, $key);
         if ($val !== null) {

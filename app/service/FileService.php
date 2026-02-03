@@ -28,6 +28,7 @@ final class FileService
         $ext = pathinfo($originalName, PATHINFO_EXTENSION);
         $ext = $ext !== '' ? strtolower($ext) : 'bin';
 
+        // 按日期分目录，避免单目录过多文件
         $folder = date('Ymd');
         $storageRoot = rtrim(app()->getRootPath() . 'public/storage', "/\\");
         $targetDir = $storageRoot . DIRECTORY_SEPARATOR . $folder;
@@ -37,6 +38,7 @@ final class FileService
             throw new BusinessException(ResultCode::UPLOAD_FILE_EXCEPTION, '创建上传目录失败');
         }
 
+        // 随机文件名避免冲突
         $fileName = bin2hex(random_bytes(16)) . '.' . $ext;
         $targetPath = $targetDir . DIRECTORY_SEPARATOR . $fileName;
 
@@ -82,6 +84,7 @@ final class FileService
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
+        // 兼容传入完整 URL
         if (str_starts_with($filePath, 'http://') || str_starts_with($filePath, 'https://')) {
             $parsed = parse_url($filePath);
             if (is_array($parsed) && isset($parsed['path'])) {
@@ -102,6 +105,7 @@ final class FileService
             return false;
         }
 
+        // 统一定位到 storage 目录
         $storageRoot = rtrim(app()->getRootPath() . 'public/storage', "/\\");
         $fullPath = $storageRoot . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
 

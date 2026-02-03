@@ -119,6 +119,7 @@ final class UserService
 
         $u = $user ? $user->toArray() : null;
 
+        // 聚合当前用户角色编码（用于前端权限与菜单控制）
         $roles = Db::name('sys_user_role')
             ->alias('ur')
             ->join('sys_role r', 'ur.role_id = r.id')
@@ -127,6 +128,7 @@ final class UserService
 
         $roles = array_values(array_unique(array_filter($roles, fn($v) => $v !== null && $v !== '')));
 
+        // 通过角色关联菜单权限点，去重后下发给前端
         $perms = [];
         if (!empty($roles)) {
             $menuPerms = Db::name('sys_role_menu')
@@ -222,14 +224,24 @@ final class UserService
         }
 
         if ($deptId !== null && $deptId !== '' && ctype_digit((string) $deptId)) {
-            $q = $q->where('u.dept_id', (int) $deptId);
+            $deptId = (int) $deptId;
+            $q = $q->whereRaw("concat(',',concat(d.tree_path,',',d.id),',') like concat('%,',?,',%')", [$deptId]);
         }
 
-        if (is_array($createTime) && count($createTime) === 2) {
+        if (is_string($createTime)) {
+            $createTime = array_values(array_filter(array_map('trim', explode(',', $createTime)), fn($v) => $v !== ''));
+        }
+
+        if (is_array($createTime) && !empty($createTime)) {
             $start = trim((string) ($createTime[0] ?? ''));
             $end = trim((string) ($createTime[1] ?? ''));
-            if ($start !== '' && $end !== '') {
-                $q = $q->whereBetweenTime('u.create_time', $start, $end);
+            if ($start !== '') {
+                $start = strlen($start) === 10 ? ($start . ' 00:00:00') : $start;
+                $q = $q->where('u.create_time', '>=', $start);
+            }
+            if ($end !== '') {
+                $end = strlen($end) === 10 ? ($end . ' 23:59:59') : $end;
+                $q = $q->where('u.create_time', '<=', $end);
             }
         }
 
@@ -308,7 +320,7 @@ final class UserService
         }
 
         $roleIds = Db::name('sys_user_role')->where('user_id', $userId)->column('role_id');
-        $roleIds = array_values(array_unique(array_map('intval', $roleIds)));
+        $roleIds = array_values(array_unique(array_map('strval', $roleIds)));
 
         return [
             'id' => (string) ($row['id'] ?? $userId),

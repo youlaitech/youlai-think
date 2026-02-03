@@ -15,6 +15,7 @@ class BusinessException extends \RuntimeException
         int $code = 0,
         ?\Throwable $previous = null
     ) {
+        // 未传 message 时使用枚举默认提示
         parent::__construct($message !== '' ? $message : $resultCode->getMsg(), $code, $previous);
     }
 

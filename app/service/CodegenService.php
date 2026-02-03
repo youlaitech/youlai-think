@@ -41,6 +41,7 @@ final class CodegenService
         $pageSize = $pageSize > 0 ? $pageSize : 10;
         $keywords = trim((string) ($queryParams['keywords'] ?? ''));
 
+        // 排除代码生成自身表
         $where = "t.TABLE_SCHEMA = DATABASE() AND t.TABLE_NAME NOT IN ('gen_table','gen_table_column')";
         $bind = [];
         if ($keywords !== '') {
@@ -97,6 +98,7 @@ LIMIT ? OFFSET ?
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
+        // 已配置则读取配置表，否则走元数据默认值
         $cfg = Db::name('gen_table')
             ->where('table_name', $tableName)
             ->where('is_deleted', 0)
@@ -151,6 +153,7 @@ LIMIT ? OFFSET ?
             ];
         }
 
+        // 表未配置时从 information_schema 读取元信息
         $meta = Db::query(
             "SELECT TABLE_COMMENT AS tableComment FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? LIMIT 1",
             [$tableName]
@@ -164,6 +167,7 @@ LIMIT ? OFFSET ?
             : $tableName;
         $entityName = $this->toPascalCase($processed);
 
+        // 读取字段元数据生成默认字段配置
         $columns = Db::query(
             "
 SELECT
@@ -190,6 +194,7 @@ ORDER BY ORDINAL_POSITION ASC
             $maxLength = $col['maxLength'] ?? null;
             $isPk = ((string) ($col['columnKey'] ?? '')) === 'PRI';
 
+            // 根据字段类型推断后端类型与表单类型
             $fieldType = $this->phpTypeByColumnType($columnType);
             $formType = $this->defaultFormTypeByColumnType($columnType, $columnName);
 
@@ -197,6 +202,7 @@ ORDER BY ORDINAL_POSITION ASC
             $isShowInList = 1;
             $isShowInQuery = 0;
 
+            // 主键不参与查询/表单展示
             if ($isPk) {
                 $formType = 10;
                 $isShowInQuery = 0;
@@ -273,6 +279,7 @@ ORDER BY ORDINAL_POSITION ASC
             $fieldConfigs = [];
         }
 
+        // 保存主表与字段配置，保证一致性
         Db::transaction(function () use (
             $tableName,
             $moduleName,
@@ -323,6 +330,7 @@ ORDER BY ORDINAL_POSITION ASC
                 throw new BusinessException(ResultCode::DATABASE_SERVICE_ERROR, '生成配置保存失败');
             }
 
+            // 重建字段配置
             Db::name('gen_table_column')->where('table_id', $tableId)->delete();
 
             $rows = [];
@@ -337,6 +345,7 @@ ORDER BY ORDINAL_POSITION ASC
                     continue;
                 }
 
+                // 未传排序时按输入顺序递增
                 $fieldSort = isset($fc['fieldSort']) && is_numeric($fc['fieldSort']) ? (int) $fc['fieldSort'] : $sort;
 
                 $rows[] = [
@@ -386,6 +395,7 @@ ORDER BY ORDINAL_POSITION ASC
 
         $tableId = (int) ($row['id'] ?? 0);
 
+        // 标记删除并清理字段配置
         Db::transaction(function () use ($tableId) {
             $now = date('Y-m-d H:i:s');
             Db::name('gen_table')->where('id', $tableId)->update([
@@ -1207,6 +1217,21 @@ ORDER BY ORDINAL_POSITION ASC
         }
         if ($t === 'bool' || $t === 'boolean') {
             return 'boolean';
+        }
+        return 'string';
+    }
+
+    private function phpTypeByColumnType(string $columnType): string
+    {
+        $t = $this->normalizeColumnType($columnType);
+        if ($t === 'boolean' || $t === 'bit') {
+            return 'bool';
+        }
+        if (str_contains($t, 'int')) {
+            return 'int';
+        }
+        if (str_contains($t, 'decimal') || str_contains($t, 'numeric') || str_contains($t, 'float') || str_contains($t, 'double')) {
+            return 'float';
         }
         return 'string';
     }

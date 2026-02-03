@@ -16,6 +16,7 @@ final class TokenManagerResolver
 
         $mode = (string) config('security.session_mode');
 
+        // 按配置选择会话实现
         $this->manager = match ($mode) {
             'redis-token' => new RedisTokenManager(),
             default => new JwtTokenManager(),

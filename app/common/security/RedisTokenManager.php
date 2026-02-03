@@ -26,6 +26,7 @@ final class RedisTokenManager implements TokenManager
             throw new BusinessException(ResultCode::SYSTEM_ERROR, 'Invalid userId');
         }
 
+        // 读取旧 token，避免并发登录残留
         $oldAccess = $redis->get(RedisKey::format((string) ($keys['user_access_token'] ?? 'auth:user:access:{}'), $userId));
         $oldRefresh = $redis->get(RedisKey::format((string) ($keys['user_refresh_token'] ?? 'auth:user:refresh:{}'), $userId));
 
@@ -41,6 +42,7 @@ final class RedisTokenManager implements TokenManager
             ]);
         }
 
+        // 使用随机字符串作为 token
         $accessToken = bin2hex(random_bytes(16));
         $refreshToken = bin2hex(random_bytes(16));
 
@@ -49,6 +51,7 @@ final class RedisTokenManager implements TokenManager
         $accessUserKey = RedisKey::format((string) ($keys['access_token_user'] ?? 'auth:token:access:{}'), $accessToken);
         $refreshUserKey = RedisKey::format((string) ($keys['refresh_token_user'] ?? 'auth:token:refresh:{}'), $refreshToken);
 
+        // token 与用户信息双向映射
         $redis->setex($accessUserKey, $accessTtl, $userJson);
         $redis->setex($refreshUserKey, $refreshTtl, $userJson);
 
@@ -122,6 +125,7 @@ final class RedisTokenManager implements TokenManager
             }
         }
 
+        // 清理用户维度 token
         if ($userId !== null && $userId > 0) {
             $redis->del([
                 RedisKey::format((string) ($keys['user_access_token'] ?? 'auth:user:access:{}'), $userId),

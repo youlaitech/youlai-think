@@ -25,6 +25,7 @@ final class DemoProtectMiddleware
      */
     public function handle($request, \Closure $next)
     {
+        // 演示模式下拦截写操作
         $demo = (string) (env('DEMO_MODE') ?? env('APP_DEMO') ?? 'false');
         $enabled = in_array(strtolower($demo), ['1', 'true', 'yes', 'on'], true);
         if (!$enabled) {

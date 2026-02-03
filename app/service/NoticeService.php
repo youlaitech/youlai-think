@@ -34,6 +34,7 @@ final class NoticeService
         $title = trim((string) ($queryParams['title'] ?? ''));
         $publishStatus = $queryParams['publishStatus'] ?? null;
 
+        // 关联发布人、创建人、阅读状态
         $q = Db::name('sys_notice')
             ->alias('n')
             ->leftJoin('sys_user pu', 'n.publisher_id = pu.id')
@@ -78,6 +79,7 @@ final class NoticeService
             $q = $q->whereLike('n.title', '%' . $title . '%');
         }
 
+        // 前端状态转数据库状态
         if ($publishStatus !== null && $publishStatus !== '') {
             $dbStatus = $this->toDbPublishStatus((int) $publishStatus);
             $q = $q->where('n.publish_status', $dbStatus);
@@ -162,6 +164,7 @@ final class NoticeService
         $type = (int) ($data['type'] ?? 0);
         $level = (string) ($data['level'] ?? 'L');
         $targetType = (int) ($data['targetType'] ?? 1);
+        // 支持数组/逗号分隔字符串
         $targetUserIds = $this->normalizeTargetUserIds($data['targetUserIds'] ?? null);
 
         if ($title === '' || trim(strip_tags($content)) === '') {
@@ -213,6 +216,7 @@ final class NoticeService
         $type = (int) ($data['type'] ?? 0);
         $level = (string) ($data['level'] ?? 'L');
         $targetType = (int) ($data['targetType'] ?? 1);
+        // 支持数组/逗号分隔字符串
         $targetUserIds = $this->normalizeTargetUserIds($data['targetUserIds'] ?? null);
 
         if ($title === '' || trim(strip_tags($content)) === '') {
@@ -257,6 +261,7 @@ final class NoticeService
         }
 
         $targetType = (int) ($notice['target_type'] ?? 1);
+        // 指定用户模式需要目标用户列表
         $targetUserIds = (string) ($notice['target_user_ids'] ?? '');
         if ($targetType === 2 && trim($targetUserIds) === '') {
             throw new BusinessException(ResultCode::INVALID_USER_INPUT, '推送指定用户不能为空');
@@ -277,6 +282,7 @@ final class NoticeService
 
             Db::name('sys_user_notice')->where('notice_id', $id)->update(['is_deleted' => 1, 'update_time' => $now]);
 
+            // 仅给启用用户生成通知
             $userQuery = Db::name('sys_user')->where('is_deleted', 0)->where('status', 1);
             if ($targetType === 2) {
                 $ids = array_values(array_filter(array_map('trim', explode(',', $targetUserIds)), fn($v) => $v !== ''));

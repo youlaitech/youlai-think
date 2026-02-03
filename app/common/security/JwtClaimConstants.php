@@ -6,6 +6,7 @@ namespace app\common\security;
 
 final class JwtClaimConstants
 {
+    // JWT 载荷字段名约定
     public const TOKEN_TYPE = 'tokenType';
     public const USER_ID = 'userId';
     public const DEPT_ID = 'deptId';

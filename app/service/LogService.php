@@ -36,6 +36,7 @@ final class LogService
             $q = $q->whereLike('l.content|l.request_uri|l.request_method|l.province|l.city|l.browser|l.os', $kw);
         }
 
+        // 仅支持时间范围查询
         if (is_array($createTime) && count($createTime) === 2) {
             $start = trim((string) ($createTime[0] ?? ''));
             $end = trim((string) ($createTime[1] ?? ''));
@@ -96,6 +97,7 @@ final class LogService
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
+        // 归一化日期范围
         $startTs = strtotime($startDate);
         $endTs = strtotime($endDate);
         if ($startTs === false || $endTs === false) {
@@ -106,6 +108,7 @@ final class LogService
             [$startTs, $endTs] = [$endTs, $startTs];
         }
 
+        // 生成连续日期坐标
         $dates = [];
         for ($ts = $startTs; $ts <= $endTs; $ts += 86400) {
             $dates[] = date('Y-m-d', $ts);
@@ -114,6 +117,7 @@ final class LogService
         $start = $dates[0] . ' 00:00:00';
         $end = $dates[count($dates) - 1] . ' 23:59:59';
 
+        // PV 统计
         $pvRows = Db::name('sys_log')
             ->whereBetweenTime('create_time', $start, $end)
             ->fieldRaw("COUNT(1) AS count, DATE_FORMAT(create_time,'%Y-%m-%d') AS date")
@@ -121,6 +125,7 @@ final class LogService
             ->select()
             ->toArray();
 
+        // IP 去重统计
         $ipRows = Db::name('sys_log')
             ->whereBetweenTime('create_time', $start, $end)
             ->fieldRaw("COUNT(DISTINCT ip) AS count, DATE_FORMAT(create_time,'%Y-%m-%d') AS date")
@@ -138,6 +143,7 @@ final class LogService
             $ipMap[(string) ($r['date'] ?? '')] = (int) ($r['count'] ?? 0);
         }
 
+        // 补齐没有日志的日期
         $pvList = [];
         $ipList = [];
         foreach ($dates as $d) {
@@ -161,6 +167,7 @@ final class LogService
         $today = date('Y-m-d');
         $nowTime = date('H:i:s');
 
+        // 访问量与访客数概览
         $pvTotal = (int) Db::name('sys_log')->count('id');
         $pvToday = (int) Db::name('sys_log')->whereBetweenTime('create_time', $today . ' 00:00:00', $today . ' 23:59:59')->count('id');
 

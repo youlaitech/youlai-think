@@ -22,12 +22,15 @@
     "topthink/think-filesystem": "^2.0|^3.0",
     "firebase/php-jwt": "^6.10",
     "predis/predis": "^2.3",
-    "phpoffice/phpspreadsheet": "^2.1"
+    "doctrine/annotations": "^2.0",
+    "phpoffice/phpspreadsheet": "^3.10",
+    "zircote/swagger-php": "^4.10",
+    "gregwar/captcha": "^1.2"
   },
   "require-dev": {
     "topthink/think-dumper": "^1.0",
     "topthink/think-trace": "^2.0",
-    "phpunit/phpunit": "^9.6"
+    "phpunit/phpunit": "^10.5"
   },
   "autoload": {
     "psr-4": {
