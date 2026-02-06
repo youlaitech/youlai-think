@@ -135,7 +135,7 @@ final class RoleController extends ApiController
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
-        // 状态统一转为整型，避免字符串状态校验失败
+        // 状态转为整型
         (new RoleService())->updateRoleStatus($roleId, (int) $status);
         return $this->ok();
     }

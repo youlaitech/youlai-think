@@ -254,7 +254,7 @@ final class UserService
             ->select()
             ->toArray();
 
-        // 角色名称单独聚合，避免主查询过重
+        // 角色名称聚合
         $userIds = array_values(array_filter(array_map(fn($r) => (int) ($r['id'] ?? 0), $rows), fn($v) => $v > 0));
         $roleNamesMap = [];
         if (!empty($userIds)) {

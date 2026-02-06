@@ -164,7 +164,7 @@ final class UserController extends ApiController
             $password = (string) ($json['password'] ?? '');
         }
 
-        // 兼容 query/body 传参，避免前端传参方式不一致
+        // 兼容参数传递
         (new UserService())->resetUserPassword($id, $password);
         return $this->ok();
     }
@@ -197,7 +197,7 @@ final class UserController extends ApiController
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
-        // 明确转为整型，避免前端字符串状态导致校验偏差
+        // 状态转为整型
         (new UserService())->updateUserStatus($userId, (int) $status);
         return $this->ok();
     }
