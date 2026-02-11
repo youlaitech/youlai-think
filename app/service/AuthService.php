@@ -14,7 +14,6 @@ use think\facade\Cache;
 
 final class AuthService
 {
-    // ... (rest of the code remains the same)
     public function __construct(
         private readonly UserService $userService = new UserService(),
     ) {
@@ -74,47 +73,6 @@ final class AuthService
         ];
 
         return (new TokenManagerResolver())->get()->generateToken($authInfo);
-    }
-
-    public function loginByWechat(string $code): AuthenticationToken
-    {
-        $code = trim($code);
-        if ($code === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        // 这里用 code 当作 openid 走本地账号
-        $user = $this->userService->getUserByOpenid($code);
-        if ($user === null) {
-            throw new BusinessException(ResultCode::ACCOUNT_NOT_FOUND);
-        }
-
-        if ((int) ($user['status'] ?? 1) !== 1) {
-            throw new BusinessException(ResultCode::ACCOUNT_FROZEN);
-        }
-
-        $authInfo = [
-            'userId' => (int) $user['id'],
-            'deptId' => $user['dept_id'] ?? null,
-            'dataScope' => null,
-            'authorities' => [],
-        ];
-
-        return (new TokenManagerResolver())->get()->generateToken($authInfo);
-    }
-
-    public function loginByWxMiniAppCode(array $data): AuthenticationToken
-    {
-        // 小程序 code 复用微信登录流程
-        $code = trim((string) ($data['code'] ?? ''));
-        return $this->loginByWechat($code);
-    }
-
-    public function loginByWxMiniAppPhone(array $data): AuthenticationToken
-    {
-        // 小程序手机号登录复用微信登录流程
-        $code = trim((string) ($data['code'] ?? ''));
-        return $this->loginByWechat($code);
     }
 
     public function getCaptcha(): array
@@ -234,8 +192,9 @@ final class AuthService
 
     public function login(string $username, string $password, string $captchaId, string $captchaCode): AuthenticationToken
     {
-        if ($captchaId === '' || $captchaCode === '') {
-            throw new BusinessException(ResultCode::USER_VERIFICATION_CODE_ERROR);
+        $username = trim($username);
+        if ($username === '' || $password === '') {
+            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
         // 先读 Redis，不存在再回退 Cache

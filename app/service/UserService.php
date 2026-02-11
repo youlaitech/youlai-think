@@ -63,19 +63,6 @@ final class UserService
         return $row->toArray();
     }
 
-    public function getUserByOpenid(string $openid): ?array
-    {
-        $row = User::where('openid', $openid)
-            ->where('is_deleted', 0)
-            ->find();
-
-        if ($row === null) {
-            return null;
-        }
-
-        return $row->toArray();
-    }
-
     /**
      * 获取用户下拉选项。
      */

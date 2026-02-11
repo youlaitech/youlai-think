@@ -85,63 +85,6 @@ final class AuthController extends ApiController
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/v1/auth/login/wechat",
-     *     summary="微信授权登录(Web)",
-     *     tags={"01.认证接口"},
-     *     @OA\Parameter(name="code", in="query", description="微信授权码", required=true, example="code"),
-     *     @OA\Response(response=200, description="OK")
-     * )
-     */
-    public function loginByWechat(): \think\Response
-    {
-        $code = trim((string) $this->request->param('code', ''));
-        if ($code === '') {
-            $json = $this->getJsonBody();
-            $code = trim((string) ($json['code'] ?? ''));
-        }
-
-        if ($code === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        $token = (new AuthService())->loginByWechat($code);
-        return $this->ok($token->toArray());
-    }
-
-    /**
-     * @OA\Post(
-     *     path="/api/v1/auth/wx/miniapp/code-login",
-     *     summary="微信小程序登录(Code)",
-     *     tags={"01.认证接口"},
-     *     @OA\RequestBody(required=true, @OA\JsonContent()),
-     *     @OA\Response(response=200, description="OK")
-     * )
-     */
-    public function loginByWxMiniAppCode(): \think\Response
-    {
-        $data = $this->mergeJsonParams();
-        $token = (new AuthService())->loginByWxMiniAppCode($data);
-        return $this->ok($token->toArray());
-    }
-
-    /**
-     * @OA\Post(
-     *     path="/api/v1/auth/wx/miniapp/phone-login",
-     *     summary="微信小程序登录(手机号)",
-     *     tags={"01.认证接口"},
-     *     @OA\RequestBody(required=true, @OA\JsonContent()),
-     *     @OA\Response(response=200, description="OK")
-     * )
-     */
-    public function loginByWxMiniAppPhone(): \think\Response
-    {
-        $data = $this->mergeJsonParams();
-        $token = (new AuthService())->loginByWxMiniAppPhone($data);
-        return $this->ok($token->toArray());
-    }
-
-    /**
      * 登录
      *
      * @OA\Post(

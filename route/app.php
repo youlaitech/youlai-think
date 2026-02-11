@@ -21,9 +21,6 @@ Route::group('api/v1', function () {
     Route::post('auth/login', [\app\controller\AuthController::class, 'login']);
     Route::post('auth/login/sms', [\app\controller\AuthController::class, 'loginBySms']);
     Route::post('auth/sms/code', [\app\controller\AuthController::class, 'sendLoginSmsCode']);
-    Route::post('auth/login/wechat', [\app\controller\AuthController::class, 'loginByWechat']);
-    Route::post('auth/wx/miniapp/code-login', [\app\controller\AuthController::class, 'loginByWxMiniAppCode']);
-    Route::post('auth/wx/miniapp/phone-login', [\app\controller\AuthController::class, 'loginByWxMiniAppPhone']);
     Route::delete('auth/logout', [\app\controller\AuthController::class, 'logout']);
     Route::post('auth/refresh-token', [\app\controller\AuthController::class, 'refreshToken']);
 
