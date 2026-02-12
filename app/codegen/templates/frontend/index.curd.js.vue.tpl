@@ -73,8 +73,8 @@ const contentConfig = reactive({
   deleteAction: {{entityName}}API.deleteByIds,
   parseData(res) {
     return {
-      total: res?.page?.total ?? 0,
-      list: res?.data ?? [],
+      total: res?.total ?? 0,
+      list: res?.list ?? [],
     };
   },
   pagination: {

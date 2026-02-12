@@ -9,20 +9,16 @@ final class PageResult
     public function __construct(
         public string $code,
         public array $data,
-        public array $page,
         public string $msg,
     ) {
     }
 
     public static function success(array $list, int $total, int $pageNum, int $pageSize): self
     {
-        // 统一分页结构，page 节点用于前端分页组件
         return new self(
             ResultCode::SUCCESS->getCode(),
-            $list,
             [
-                'pageNum' => $pageNum,
-                'pageSize' => $pageSize,
+                'list' => $list,
                 'total' => $total,
             ],
             ResultCode::SUCCESS->getMsg(),
@@ -34,7 +30,6 @@ final class PageResult
         return [
             'code' => $this->code,
             'data' => $this->data,
-            'page' => $this->page,
             'msg' => $this->msg,
         ];
     }

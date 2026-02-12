@@ -1,5 +1,6 @@
 {
   "name": "topthink/think",
+  "version": "4.1.0",
   "description": "the new thinkphp framework",
   "type": "project",
   "keywords": [

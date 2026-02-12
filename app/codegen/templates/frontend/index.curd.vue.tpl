@@ -75,8 +75,8 @@ const contentConfig: IContentConfig<{{entityName}}QueryParams, {{entityName}}Ite
   deleteAction: {{entityName}}API.deleteByIds,
   parseData(res: any) {
     return {
-      total: res?.page?.total ?? 0,
-      list: res?.data ?? [],
+      total: res?.total ?? 0,
+      list: res?.list ?? [],
     };
   },
   pagination: {
