@@ -1031,11 +1031,11 @@ final class UserService
         }
 
         $keys = (array) (config('security.redis.keys') ?? []);
-        $pattern = (string) ($keys['user_security_version'] ?? 'auth:user:security_version:{}');
+        $pattern = (string) ($keys['user_token_version'] ?? 'auth:user:token_version:{}');
         $key = RedisKey::format($pattern, $userId);
 
         $redis = RedisClient::get();
-        $current = (int) ($redis->get($key) ?: 1);
+        $current = (int) ($redis->get($key) ?: 0);
         $next = $current + 1;
         $redis->set($key, (string) $next);
     }

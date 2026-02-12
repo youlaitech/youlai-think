@@ -30,7 +30,7 @@ return [
             'user_access_token' => 'auth:user:access:{}',
             'user_refresh_token' => 'auth:user:refresh:{}',
             'blacklist_token' => 'auth:token:blacklist:{}',
-            'user_security_version' => 'auth:user:security_version:{}',
+            'user_token_version' => 'auth:user:token_version:{}',
         ],
     ],
 ];

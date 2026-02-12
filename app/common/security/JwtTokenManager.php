@@ -33,13 +33,10 @@ final class JwtTokenManager implements TokenManager
         $redis = RedisClient::get();
         $keys = $cfg['redis']['keys'] ?? [];
 
-        // 安全版本用于强制失效历史 token
-        $securityVersionKey = RedisKey::format((string) ($keys['user_security_version'] ?? 'auth:user:security_version:{}'), $userId);
-        $securityVersion = (int) ($redis->get($securityVersionKey) ?: 1);
-        if ($securityVersion <= 0) {
-            $securityVersion = 1;
-        }
-        $redis->set($securityVersionKey, (string) $securityVersion);
+        // Token 版本号用于强制失效历史 token
+        $tokenVersionKey = RedisKey::format((string) ($keys['user_token_version'] ?? 'auth:user:token_version:{}'), $userId);
+        $tokenVersion = (int) ($redis->get($tokenVersionKey) ?: 0);
+        $redis->set($tokenVersionKey, (string) $tokenVersion);
 
         $secret = (string) ($jwtCfg['secret'] ?? 'change-me');
         $issuer = (string) ($jwtCfg['issuer'] ?? 'youlai-think');
@@ -55,7 +52,7 @@ final class JwtTokenManager implements TokenManager
             JwtClaimConstants::DEPT_ID => $userAuthInfo['deptId'] ?? null,
             JwtClaimConstants::DATA_SCOPE => $userAuthInfo['dataScope'] ?? null,
             JwtClaimConstants::AUTHORITIES => $userAuthInfo['authorities'] ?? [],
-            JwtClaimConstants::SECURITY_VERSION => $securityVersion,
+            JwtClaimConstants::TOKEN_VERSION => $tokenVersion,
         ];
 
         // refresh token 载荷
@@ -66,7 +63,7 @@ final class JwtTokenManager implements TokenManager
             'jti' => bin2hex(random_bytes(16)),
             JwtClaimConstants::TOKEN_TYPE => 'refresh',
             JwtClaimConstants::USER_ID => $userId,
-            JwtClaimConstants::SECURITY_VERSION => $securityVersion,
+            JwtClaimConstants::TOKEN_VERSION => $tokenVersion,
         ];
 
         $accessToken = JWT::encode($accessPayload, $secret, self::ALG);
@@ -163,10 +160,10 @@ final class JwtTokenManager implements TokenManager
             }
         }
 
-        // 提升安全版本，统一踢出旧 token
+        // 递增 Token 版本号，统一踢出旧 token
         if ($userId !== null && $userId > 0) {
-            $securityVersionKey = RedisKey::format((string) ($keys['user_security_version'] ?? 'auth:user:security_version:{}'), $userId);
-            $redis->incr($securityVersionKey);
+            $tokenVersionKey = RedisKey::format((string) ($keys['user_token_version'] ?? 'auth:user:token_version:{}'), $userId);
+            $redis->incr($tokenVersionKey);
         }
 
         // 手动加入黑名单，防止立即复用
@@ -202,18 +199,18 @@ final class JwtTokenManager implements TokenManager
         }
 
         $userId = (int) ($claims[JwtClaimConstants::USER_ID] ?? 0);
-        $securityVersion = (int) ($claims[JwtClaimConstants::SECURITY_VERSION] ?? 0);
+        $tokenVersion = (int) ($claims[JwtClaimConstants::TOKEN_VERSION] ?? 0);
 
-        if ($userId <= 0 || $securityVersion <= 0) {
+        if ($userId <= 0) {
             throw new BusinessException(ResultCode::ACCESS_TOKEN_INVALID);
         }
 
         $keys = $cfg['redis']['keys'] ?? [];
         $redis = RedisClient::get();
-        $securityVersionKey = RedisKey::format((string) ($keys['user_security_version'] ?? 'auth:user:security_version:{}'), $userId);
-        $current = (int) ($redis->get($securityVersionKey) ?: 1);
+        $tokenVersionKey = RedisKey::format((string) ($keys['user_token_version'] ?? 'auth:user:token_version:{}'), $userId);
+        $currentVersion = (int) ($redis->get($tokenVersionKey) ?: 0);
 
-        if ($current !== $securityVersion) {
+        if ($tokenVersion < $currentVersion) {
             throw new BusinessException(ResultCode::ACCESS_TOKEN_INVALID);
         }
 
