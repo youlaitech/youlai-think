@@ -41,6 +41,17 @@ final class JwtTokenManager implements TokenManager
         $secret = (string) ($jwtCfg['secret'] ?? 'change-me');
         $issuer = (string) ($jwtCfg['issuer'] ?? 'youlai-think');
 
+        // 如果没有传入 dataScopes，则从数据库查询
+        $dataScopes = $userAuthInfo['dataScopes'] ?? [];
+        $authorities = $userAuthInfo['authorities'] ?? [];
+        if (empty($dataScopes) || empty($authorities)) {
+            $dataScopes = $this->buildDataScopes($userId);
+            $authorities = $this->buildAuthorities($userId);
+        }
+
+        // 序列化 dataScopes 为 JSON 字符串
+        $dataScopesJson = is_array($dataScopes) ? json_encode($dataScopes, JSON_UNESCAPED_UNICODE) : $dataScopes;
+
         // access token 载荷
         $accessPayload = [
             'iss' => $issuer,
@@ -50,8 +61,8 @@ final class JwtTokenManager implements TokenManager
             JwtClaimConstants::TOKEN_TYPE => 'access',
             JwtClaimConstants::USER_ID => $userId,
             JwtClaimConstants::DEPT_ID => $userAuthInfo['deptId'] ?? null,
-            JwtClaimConstants::DATA_SCOPE => $userAuthInfo['dataScope'] ?? null,
-            JwtClaimConstants::AUTHORITIES => $userAuthInfo['authorities'] ?? [],
+            JwtClaimConstants::DATA_SCOPES => $dataScopesJson,
+            JwtClaimConstants::AUTHORITIES => $authorities,
             JwtClaimConstants::TOKEN_VERSION => $tokenVersion,
         ];
 
@@ -102,10 +113,22 @@ final class JwtTokenManager implements TokenManager
             throw new BusinessException(ResultCode::ACCESS_TOKEN_INVALID);
         }
 
+        // 解析 dataScopes
+        $dataScopes = [];
+        $dataScopesRaw = $claims[JwtClaimConstants::DATA_SCOPES] ?? null;
+        if (is_string($dataScopesRaw)) {
+            $decoded = json_decode($dataScopesRaw, true);
+            if (is_array($decoded)) {
+                $dataScopes = $decoded;
+            }
+        } elseif (is_array($dataScopesRaw)) {
+            $dataScopes = $dataScopesRaw;
+        }
+
         return [
             'userId' => (int) ($claims[JwtClaimConstants::USER_ID] ?? 0),
             'deptId' => $claims[JwtClaimConstants::DEPT_ID] ?? null,
-            'dataScope' => $claims[JwtClaimConstants::DATA_SCOPE] ?? null,
+            'dataScopes' => $dataScopes,
             'authorities' => $claims[JwtClaimConstants::AUTHORITIES] ?? [],
             'accessToken' => $accessToken,
         ];
@@ -134,15 +157,80 @@ final class JwtTokenManager implements TokenManager
             throw new BusinessException(ResultCode::REFRESH_TOKEN_INVALID);
         }
 
-        // refresh 只补最小用户信息
+        // refresh 时重新查询完整的角色数据权限
+        $dataScopes = $this->buildDataScopes($userId);
+        $authorities = $this->buildAuthorities($userId);
+
         $userAuthInfo = [
             'userId' => $userId,
             'deptId' => $user['dept_id'] ?? null,
-            'dataScope' => null,
-            'authorities' => [],
+            'dataScopes' => $dataScopes,
+            'authorities' => $authorities,
         ];
 
         return $this->generateToken($userAuthInfo);
+    }
+
+    /**
+     * 构建用户角色数据权限列表
+     */
+    private function buildDataScopes(int $userId): array
+    {
+        $roles = Db::name('sys_user_role')
+            ->alias('ur')
+            ->join('sys_role r', 'ur.role_id = r.id')
+            ->where('ur.user_id', $userId)
+            ->where('r.is_deleted', 0)
+            ->where('r.status', 1)
+            ->field('r.id,r.code,r.data_scope')
+            ->select()
+            ->toArray();
+
+        $dataScopes = [];
+        foreach ($roles as $role) {
+            $roleCode = $role['code'] ?? '';
+            $dataScope = (int) ($role['data_scope'] ?? 4);
+            $customDeptIds = null;
+
+            // 如果是自定义部门权限，查询该角色的自定义部门列表
+            if ($dataScope === 5 && !empty($role['id'])) {
+                $customDeptIds = Db::name('sys_role_dept')
+                    ->where('role_id', $role['id'])
+                    ->column('dept_id');
+                $customDeptIds = array_values(array_filter(array_map('intval', $customDeptIds), fn($v) => $v > 0));
+            }
+
+            $dataScopes[] = [
+                'roleCode' => $roleCode,
+                'dataScope' => $dataScope,
+                'customDeptIds' => $customDeptIds,
+            ];
+        }
+
+        return $dataScopes;
+    }
+
+    /**
+     * 构建用户权限标识列表
+     */
+    private function buildAuthorities(int $userId): array
+    {
+        $roles = Db::name('sys_user_role')
+            ->alias('ur')
+            ->join('sys_role r', 'ur.role_id = r.id')
+            ->where('ur.user_id', $userId)
+            ->where('r.is_deleted', 0)
+            ->where('r.status', 1)
+            ->column('r.code');
+
+        $authorities = [];
+        foreach ($roles as $code) {
+            if (!empty($code)) {
+                $authorities[] = 'ROLE_' . $code;
+            }
+        }
+
+        return array_values(array_unique($authorities));
     }
 
     public function invalidate(?string $accessToken, ?string $refreshToken): void

@@ -11,6 +11,7 @@ final class JwtClaimConstants
     public const USER_ID = 'userId';
     public const DEPT_ID = 'deptId';
     public const DATA_SCOPE = 'dataScope';
+    public const DATA_SCOPES = 'dataScopes';
     public const AUTHORITIES = 'authorities';
     public const TOKEN_VERSION = 'tokenVersion';
 }

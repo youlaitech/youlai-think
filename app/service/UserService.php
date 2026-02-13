@@ -169,36 +169,10 @@ final class UserService
                 ->field('ur.user_id');
         });
 
-        // 数据权限：1-所有数据 2-部门及子部门 3-本部门 4-本人
+        // 数据权限过滤（支持多角色并集策略）
         if (is_array($authUser)) {
-            $scope = (int) ($authUser['dataScope'] ?? 0);
-            $authUserId = (int) ($authUser['userId'] ?? 0);
-            $authDeptId = $authUser['deptId'] ?? null;
-            $authDeptId = $authDeptId === null || $authDeptId === '' ? null : (int) $authDeptId;
-
-            if ($scope === 4 && $authUserId > 0) {
-                $q = $q->where('u.id', $authUserId);
-            } elseif (($scope === 2 || $scope === 3) && $authDeptId !== null && $authDeptId > 0) {
-                if ($scope === 3) {
-                    $q = $q->where('u.dept_id', $authDeptId);
-                } else {
-                    // 部门及子部门：基于 sys_dept.tree_path 过滤
-                    $deptIds = Db::name('sys_dept')
-                        ->where('is_deleted', 0)
-                        ->where(function ($sub) use ($authDeptId) {
-                            $sub->where('id', $authDeptId)
-                                ->whereOrRaw("FIND_IN_SET(?, tree_path)", [$authDeptId]);
-                        })
-                        ->column('id');
-
-                    $deptIds = array_values(array_unique(array_filter(array_map('intval', $deptIds), fn($v) => $v > 0)));
-                    if (!empty($deptIds)) {
-                        $q = $q->whereIn('u.dept_id', $deptIds);
-                    } else {
-                        $q = $q->where('u.dept_id', $authDeptId);
-                    }
-                }
-            }
+            $dataPermissionService = new DataPermissionService();
+            $q = $dataPermissionService->apply($q, 'u.dept_id', 'u.id', $authUser);
         }
 
         if ($keywords !== '') {

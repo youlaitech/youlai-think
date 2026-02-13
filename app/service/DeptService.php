@@ -14,28 +14,10 @@ final class DeptService
     {
         $query = Dept::where('is_deleted', 0)->order('sort', 'asc');
 
-        // 数据权限：1-所有数据 2-部门及子部门 3-本部门 4-本人
+        // 数据权限过滤（支持多角色并集策略）
         if (is_array($authUser)) {
-            $scope = (int) ($authUser['dataScope'] ?? 0);
-            $authDeptId = $authUser['deptId'] ?? null;
-            $authDeptId = $authDeptId === null || $authDeptId === '' ? null : (int) $authDeptId;
-
-            if (($scope === 2 || $scope === 3) && $authDeptId !== null && $authDeptId > 0) {
-                if ($scope === 3) {
-                    $query = $query->where('id', $authDeptId);
-                } else {
-                    // 部门及子部门需要展开 tree_path
-                    $deptIds = $this->getDeptAndSubDeptIds($authDeptId);
-                    $query = !empty($deptIds) ? $query->whereIn('id', $deptIds) : $query->where('id', $authDeptId);
-                }
-            } elseif ($scope === 4) {
-                // 本人数据范围对部门列表没有意义，默认仅返回当前用户部门，避免全量泄露
-                if ($authDeptId !== null && $authDeptId > 0) {
-                    $query = $query->where('id', $authDeptId);
-                } else {
-                    $query = $query->where('id', -1);
-                }
-            }
+            $dataPermissionService = new DataPermissionService();
+            $query = $dataPermissionService->apply($query, 'id', 'id', $authUser);
         }
 
         if ($keywords !== null && trim($keywords) !== '') {
@@ -62,27 +44,10 @@ final class DeptService
             ->order('sort', 'asc')
             ->field('id,name,parent_id,sort');
 
-        // 数据权限：1-所有数据 2-部门及子部门 3-本部门 4-本人
+        // 数据权限过滤（支持多角色并集策略）
         if (is_array($authUser)) {
-            $scope = (int) ($authUser['dataScope'] ?? 0);
-            $authDeptId = $authUser['deptId'] ?? null;
-            $authDeptId = $authDeptId === null || $authDeptId === '' ? null : (int) $authDeptId;
-
-            if (($scope === 2 || $scope === 3) && $authDeptId !== null && $authDeptId > 0) {
-                if ($scope === 3) {
-                    $query = $query->where('id', $authDeptId);
-                } else {
-                    // 下拉选项同样按部门及子部门范围过滤
-                    $deptIds = $this->getDeptAndSubDeptIds($authDeptId);
-                    $query = !empty($deptIds) ? $query->whereIn('id', $deptIds) : $query->where('id', $authDeptId);
-                }
-            } elseif ($scope === 4) {
-                if ($authDeptId !== null && $authDeptId > 0) {
-                    $query = $query->where('id', $authDeptId);
-                } else {
-                    $query = $query->where('id', -1);
-                }
-            }
+            $dataPermissionService = new DataPermissionService();
+            $query = $dataPermissionService->apply($query, 'id', 'id', $authUser);
         }
 
         $rows = $query->select()->toArray();
