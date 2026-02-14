@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace app\service;
 
 use app\common\exception\BusinessException;
+use app\common\redis\RedisClient;
+use app\common\redis\RedisKey;
 use app\common\web\ResultCode;
 use app\model\Role;
 use think\facade\Db;
@@ -144,7 +146,30 @@ final class RoleService
             throw new BusinessException(ResultCode::INVALID_USER_INPUT, '角色不存在');
         }
 
+        $oldDataScope = isset($role['data_scope']) ? (int) $role['data_scope'] : null;
+
         $role->save($entity);
+
+        $newDataScope = isset($entity['data_scope']) ? (int) $entity['data_scope'] : null;
+        if ($oldDataScope !== $newDataScope) {
+            $userIds = Db::name('sys_user_role')->where('role_id', $roleId)->column('user_id');
+            $userIds = array_values(array_unique(array_map('intval', $userIds)));
+
+            $cfg = config('security');
+            $keys = $cfg['redis']['keys'] ?? [];
+            $pattern = (string) ($keys['user_token_version'] ?? 'auth:user:token_version:{}');
+
+            $redis = RedisClient::get();
+            foreach ($userIds as $uid) {
+                if ($uid > 0) {
+                    $versionKey = RedisKey::format($pattern, $uid);
+                    try {
+                        $redis->incr($versionKey);
+                    } catch (\Throwable) {
+                    }
+                }
+            }
+        }
         return true;
     }
 
@@ -236,5 +261,65 @@ final class RoleService
 
             Db::name('sys_role_menu')->insertAll($rows);
         });
+    }
+
+    public function getRoleDeptIds(int $roleId): array
+    {
+        return array_map('intval', Db::name('sys_role_dept')->where('role_id', $roleId)->column('dept_id'));
+    }
+
+    public function assignDeptsToRole(int $roleId, array $deptIds): void
+    {
+        $role = Role::where('id', $roleId)->where('is_deleted', 0)->find();
+        if ($role === null) {
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '角色不存在');
+        }
+
+        $ids = [];
+        foreach ($deptIds as $id) {
+            if (is_int($id) || (is_string($id) && ctype_digit($id))) {
+                $ids[] = (int) $id;
+            }
+        }
+        $ids = array_values(array_unique(array_filter($ids, fn($v) => $v > 0)));
+
+        $oldIds = array_map('intval', Db::name('sys_role_dept')->where('role_id', $roleId)->column('dept_id'));
+        sort($oldIds);
+        $newIds = $ids;
+        sort($newIds);
+
+        Db::transaction(function () use ($roleId, $ids) {
+            Db::name('sys_role_dept')->where('role_id', $roleId)->delete();
+
+            if (empty($ids)) {
+                return;
+            }
+
+            $rows = [];
+            foreach ($ids as $deptId) {
+                $rows[] = ['role_id' => $roleId, 'dept_id' => $deptId];
+            }
+            Db::name('sys_role_dept')->insertAll($rows);
+        });
+
+        if ($oldIds !== $newIds) {
+            $userIds = Db::name('sys_user_role')->where('role_id', $roleId)->column('user_id');
+            $userIds = array_values(array_unique(array_map('intval', $userIds)));
+
+            $cfg = config('security');
+            $keys = $cfg['redis']['keys'] ?? [];
+            $pattern = (string) ($keys['user_token_version'] ?? 'auth:user:token_version:{}');
+
+            $redis = RedisClient::get();
+            foreach ($userIds as $uid) {
+                if ($uid > 0) {
+                    $versionKey = RedisKey::format($pattern, $uid);
+                    try {
+                        $redis->incr($versionKey);
+                    } catch (\Throwable) {
+                    }
+                }
+            }
+        }
     }
 }

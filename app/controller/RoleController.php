@@ -179,4 +179,44 @@ final class RoleController extends ApiController
         (new RoleService())->assignMenusToRole($roleId, $json);
         return $this->ok();
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/roles/{roleId}/dept-ids",
+     *     summary="获取角色的自定义部门ID集合",
+     *     tags={"03.角色接口"},
+     *     @OA\Parameter(name="roleId", in="path", description="角色ID", required=true),
+     *     @OA\Response(response=200, description="OK")
+     * )
+     */
+    public function deptIds(int $roleId): \think\Response
+    {
+        // 返回该角色已配置的自定义部门列表，用于数据权限为“自定义部门”时的勾选回显
+        $list = (new RoleService())->getRoleDeptIds($roleId);
+        if (is_array($list)) {
+            $list = array_values(array_map(static fn($v) => (string) $v, $list));
+        }
+        return $this->ok($list);
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/api/v1/roles/{roleId}/depts",
+     *     summary="角色分配自定义部门",
+     *     tags={"03.角色接口"},
+     *     @OA\Parameter(name="roleId", in="path", description="角色ID", required=true),
+     *     @OA\RequestBody(required=true, @OA\JsonContent(type="array", @OA\Items(type="integer"))),
+     *     @OA\Response(response=200, description="OK")
+     * )
+     */
+    public function assignDepts(int $roleId): \think\Response
+    {
+        $json = $this->getJsonBody();
+        if (!is_array($json)) {
+            throw new BusinessException(ResultCode::USER_REQUEST_PARAMETER_ERROR);
+        }
+
+        (new RoleService())->assignDeptsToRole($roleId, $json);
+        return $this->ok();
+    }
 }

@@ -149,6 +149,9 @@ Route::group('api/v1', function () {
 
         Route::get(':roleId/menuIds', [\app\controller\RoleController::class, 'menuIds'])->pattern(['roleId' => '\\d+']);
         Route::put(':roleId/menus', [\app\controller\RoleController::class, 'assignMenus'])->pattern(['roleId' => '\\d+'])->middleware('perm', 'sys:role:assign');
+
+        Route::get(':roleId/dept-ids', [\app\controller\RoleController::class, 'deptIds'])->pattern(['roleId' => '\\d+']);
+        Route::put(':roleId/depts', [\app\controller\RoleController::class, 'assignDepts'])->pattern(['roleId' => '\\d+'])->middleware('perm', 'sys:role:assign');
     })->middleware(['auth', 'demo']);
 
     // 代码生成

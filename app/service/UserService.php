@@ -172,7 +172,7 @@ final class UserService
         // 数据权限过滤（支持多角色并集策略）
         if (is_array($authUser)) {
             $dataPermissionService = new DataPermissionService();
-            $q = $dataPermissionService->apply($q, 'u.dept_id', 'u.id', $authUser);
+            $q = $dataPermissionService->apply($q, 'u.dept_id', 'u.create_by', $authUser);
         }
 
         if ($keywords !== '') {
