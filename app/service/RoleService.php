@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace app\service;
 
+use app\common\enums\DataScopeEnum;
 use app\common\exception\BusinessException;
-use app\common\redis\RedisClient;
-use app\common\redis\RedisKey;
 use app\common\web\ResultCode;
 use app\model\Role;
+use app\support\RedisClient;
+use app\support\RedisKey;
 use think\facade\Db;
 
 final class RoleService
@@ -33,18 +34,21 @@ final class RoleService
             ->order('sort', 'asc')
             ->order('id', 'asc')
             ->page($pageNum, $pageSize)
-            ->field('id,name,code,status,sort,create_time,update_time')
+            ->field('id,name,code,status,sort,data_scope,create_time,update_time')
             ->select();
 
         $list = [];
         foreach ($rows as $row) {
             $r = $row->toArray();
+            $dataScope = isset($r['data_scope']) ? (int) $r['data_scope'] : null;
             $list[] = [
                 'id' => isset($r['id']) ? (string) $r['id'] : null,
                 'name' => $r['name'] ?? null,
                 'code' => $r['code'] ?? null,
                 'status' => isset($r['status']) ? (int) $r['status'] : null,
                 'sort' => isset($r['sort']) ? (int) $r['sort'] : null,
+                'dataScope' => $dataScope,
+                'dataScopeLabel' => $dataScope !== null ? DataScopeEnum::getLabel($dataScope) : null,
                 'createTime' => $r['create_time'] ?? null,
                 'updateTime' => $r['update_time'] ?? null,
             ];
@@ -82,13 +86,23 @@ final class RoleService
 
         $r = $role->toArray();
 
+        $dataScope = isset($r['data_scope']) ? (int) $r['data_scope'] : null;
+        $deptIds = null;
+        if ($dataScope === DataScopeEnum::CUSTOM) {
+            $deptIds = Db::name('sys_role_dept')->where('role_id', $roleId)->column('dept_id');
+            if (is_array($deptIds)) {
+                $deptIds = array_values(array_map(static fn($v) => (string) $v, $deptIds));
+            }
+        }
+
         return [
             'id' => isset($r['id']) ? (string) $r['id'] : null,
             'name' => $r['name'] ?? null,
             'code' => $r['code'] ?? null,
             'sort' => isset($r['sort']) ? (int) $r['sort'] : null,
             'status' => isset($r['status']) ? (int) $r['status'] : null,
-            'dataScope' => isset($r['data_scope']) ? (int) $r['data_scope'] : null,
+            'dataScope' => $dataScope,
+            'deptIds' => $deptIds,
             'remark' => null,
         ];
     }
