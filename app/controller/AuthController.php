@@ -1,190 +1,113 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\controller;
 
-use app\common\controller\ApiController;
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
 use app\service\AuthService;
+use Gregwar\Captcha\CaptchaBuilder;
 use OpenApi\Annotations as OA;
+use think\response\Json;
 
 /**
- * @OA\Tag(name="01.认证接口")
+ * @OA\Tag(name="01.��֤�ӿ�")
  */
-final class AuthController extends ApiController
+final class AuthController extends BaseController
 {
     /**
+     * ��ȡ��֤��
+     *
      * @OA\Get(
      *     path="/api/v1/auth/captcha",
-     *     summary="获取验证码",
-     *     tags={"01.认证接口"},
-     *     @OA\Response(response=200, description="OK")
+     *     summary="��ȡ��֤��",
+     *     @OA\Response(response="200", description="�ɹ�")
      * )
      */
-    public function captcha(): \think\Response
+    public function captcha(): Json
     {
-        $data = (new AuthService())->getCaptcha();
-        return $this->ok($data);
+        $builder = new CaptchaBuilder();
+        $builder->build(120, 40);
+
+        $uuid = uniqid('', true);
+
+        // �洢��֤�뵽 Redis��5���ӹ��ڣ�
+        \app\common\redis\RedisClient::get()->setex(
+            "captcha:{$uuid}",
+            300,
+            $builder->getPhrase()
+        );
+
+        return $this->success([
+            'uuid' => $uuid,
+            'img' => $builder->inline(),
+        ]);
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/v1/auth/sms/code",
-     *     summary="发送登录短信验证码",
-     *     tags={"01.认证接口"},
-     *     @OA\Parameter(name="mobile", in="query", description="手机号", required=true, example="18812345678"),
-     *     @OA\Response(response=200, description="OK")
-     * )
+     * ��¼
      */
-    public function sendLoginSmsCode(): \think\Response
+    public function login(): Json
     {
-        $mobile = trim((string) $this->request->param('mobile', ''));
-        if ($mobile === '') {
-            $json = $this->getJsonBody();
-            $mobile = trim((string) ($json['mobile'] ?? ''));
-        }
+        $username = $this->getParam('username', '');
+        $password = $this->getParam('password', '');
+        $uuid = $this->getParam('uuid', '');
+        $code = $this->getParam('code', '');
 
-        if ($mobile === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
+        // ��֤��У��
+        $this->validateCaptcha($uuid, $code);
 
-        (new AuthService())->sendSmsLoginCode($mobile);
-        return $this->ok();
+        // ִ�е�¼
+        $result = $this->service(AuthService::class)->login($username, $password);
+
+        return $this->success($result, '��¼�ɹ�');
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/v1/auth/login/sms",
-     *     summary="短信验证码登录",
-     *     tags={"01.认证接口"},
-     *     @OA\Parameter(name="mobile", in="query", description="手机号", required=true, example="18812345678"),
-     *     @OA\Parameter(name="code", in="query", description="验证码", required=true, example="1234"),
-     *     @OA\Response(response=200, description="OK")
-     * )
+     * �ǳ�
      */
-    public function loginBySms(): \think\Response
+    public function logout(): Json
     {
-        $mobile = trim((string) $this->request->param('mobile', ''));
-        $code = trim((string) $this->request->param('code', ''));
+        $token = $this->request->header('Authorization', '');
 
-        if ($mobile === '' || $code === '') {
-            $json = $this->getJsonBody();
-            // 兼容 query/body 传参
-            $mobile = $mobile !== '' ? $mobile : trim((string) ($json['mobile'] ?? ''));
-            $code = $code !== '' ? $code : trim((string) ($json['code'] ?? ''));
+        if ($token) {
+            $this->service(AuthService::class)->logout($token);
         }
 
-        if ($mobile === '' || $code === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        $token = (new AuthService())->loginBySms($mobile, $code);
-        return $this->ok($token->toArray());
+        return $this->success(null, '�ǳ��ɹ�');
     }
 
     /**
-     * 登录
-     *
-     * @OA\Post(
-     *     path="/api/v1/auth/login",
-     *     summary="账号密码登录",
-     *     tags={"01.认证接口"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"username","password","captchaId","captchaCode"},
-     *             @OA\Property(property="username", type="string"),
-     *             @OA\Property(property="password", type="string"),
-     *             @OA\Property(property="captchaId", type="string"),
-     *             @OA\Property(property="captchaCode", type="string")
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="OK")
-     * )
-     *
-     * @return \think\Response
-     * @throws BusinessException 参数缺失或认证失败时抛出
+     * ˢ�� Token
      */
-    public function login(): \think\Response
+    public function refresh(): Json
     {
-        // 统一合并参数，避免前端传参方式不一致
-        $params = $this->mergeJsonParams();
+        $refreshToken = $this->getParam('refreshToken', '');
 
-        $username = trim((string) ($params['username'] ?? ''));
-        $password = (string) ($params['password'] ?? '');
-        $captchaId = trim((string) ($params['captchaId'] ?? ''));
-        $captchaCode = trim((string) ($params['captchaCode'] ?? ''));
+        $result = $this->service(AuthService::class)->refresh($refreshToken);
 
-        if ($username === '' || $password === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        if ($captchaId === '' || $captchaCode === '') {
-            throw new BusinessException(ResultCode::USER_VERIFICATION_CODE_ERROR);
-        }
-
-        $token = (new AuthService())->login($username, $password, $captchaId, $captchaCode);
-        return $this->ok($token->toArray());
+        return $this->success($result);
     }
 
-    /**
-     * 刷新访问令牌
-     *
-     * @OA\Post(
-     *     path="/api/v1/auth/refresh-token",
-     *     summary="刷新令牌",
-     *     tags={"01.认证接口"},
-     *     @OA\Parameter(name="refreshToken", in="query", description="刷新令牌", required=true, example="xxx.xxx.xxx"),
-     *     @OA\Response(response=200, description="OK")
-     * )
-     *
-     * @return \think\Response
-     * @throws BusinessException 刷新令牌无效或已过期时抛出
-     */
-    public function refreshToken(): \think\Response
-    {
-        $refreshToken = (string) $this->request->param('refreshToken', '');
-        if ($refreshToken === '') {
-            $json = $this->getJsonBody();
-            $refreshToken = (string) ($json['refreshToken'] ?? '');
-        }
-        // refreshToken 可走 query 或 body
-        $token = (new AuthService())->refreshToken($refreshToken);
-        return $this->ok($token->toArray());
-    }
+    // ==================== ˽�з��� ====================
 
     /**
-     * 退出登录
-     *
-     * @OA\Delete(
-     *     path="/api/v1/auth/logout",
-     *     summary="退出登录",
-     *     tags={"01.认证接口"},
-     *     @OA\Response(response=200, description="OK")
-     * )
-     *
-     * @return \think\Response
+     * ��֤��֤��
      */
-    public function logout(): \think\Response
+    private function validateCaptcha(string $uuid, string $code): void
     {
-        $headerName = (string) config('security.token_header');
-        $tokenPrefix = (string) config('security.token_prefix');
-
-        $raw = (string) $this->request->header($headerName);
-        if ($raw === '') {
-            $raw = (string) $this->request->header(strtolower($headerName));
+        if (empty($uuid) || empty($code)) {
+            throw new BusinessException(ResultCode::USER_REQUEST_PARAMETER_ERROR, '��֤�벻��Ϊ��');
         }
 
-        $accessToken = null;
-        if ($raw !== '') {
-            // 兼容 Bearer 前缀
-            $accessToken = str_starts_with($raw, $tokenPrefix) ? substr($raw, strlen($tokenPrefix)) : $raw;
-            $accessToken = trim((string) $accessToken);
+        $redis = \app\common\redis\RedisClient::get();
+        $key = "captcha:{$uuid}";
+        $storedCode = $redis->get($key);
+
+        if (!$storedCode || strtolower($storedCode) !== strtolower($code)) {
+            throw new BusinessException(ResultCode::USER_ERROR, '��֤�����');
         }
 
-        (new AuthService())->logout($accessToken, null);
-        return $this->ok();
+        // ɾ����ʹ�õ���֤��
+        $redis->del($key);
     }
 }

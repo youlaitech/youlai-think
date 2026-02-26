@@ -1,142 +1,86 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\controller;
 
-use app\common\controller\ApiController;
+use app\controller\ApiController;
 use app\service\DeptService;
 use OpenApi\Annotations as OA;
 
 /**
- * @OA\Tag(name="05.部门接口")
+ * @OA\Tag(name="05.部门管理")
  */
 final class DeptController extends ApiController
 {
     /**
-     * 部门列表（树形）
-     *
-     * @OA\Get(
-     *     path="/api/v1/depts",
-     *     summary="部门列表",
-     *     tags={"05.部门接口"},
-     *     @OA\Parameter(name="keywords", in="query", description="关键字", required=false),
-     *     @OA\Parameter(name="status", in="query", description="状态", required=false),
-     *     @OA\Response(response=200, description="OK")
-     * )
-     *
-     * @return \think\Response
+     * 获取部门�?
      */
-    public function index(): \think\Response
+    public function tree(): \think\response\Json
     {
-        $keywords = (string) $this->request->param('keywords', '');
-        $status = $this->request->param('status');
-        $status = $status === null || $status === '' ? null : (int) $status;
+        $tree = $this->service(DeptService::class)->getTree();
 
-        $authUser = $this->getAuthUser();
-        $list = (new DeptService())->listDepts($keywords, $status, $authUser);
-        return $this->ok($list);
+        return $this->success($tree);
     }
 
     /**
-     * 部门下拉选项
-     *
-     * @OA\Get(
-     *     path="/api/v1/depts/options",
-     *     summary="部门下拉列表",
-     *     tags={"05.部门接口"},
-     *     @OA\Response(response=200, description="OK")
-     * )
-     *
-     * @return \think\Response
+     * 获取所有部门（平铺列表�?
      */
-    public function options(): \think\Response
+    public function list(): \think\response\Json
     {
-        $authUser = $this->getAuthUser();
-        $list = (new DeptService())->listDeptOptions($authUser);
-        return $this->ok($list);
+        $list = $this->service(DeptService::class)->getAll();
+
+        return $this->success($list);
     }
 
     /**
-     * 部门表单数据
-     *
-     * @OA\Get(
-     *     path="/api/v1/depts/{deptId}/form",
-     *     summary="获取部门表单数据",
-     *     tags={"05.部门接口"},
-     *     @OA\Parameter(name="deptId", in="path", description="部门ID", required=true),
-     *     @OA\Response(response=200, description="OK")
-     * )
-     *
-     * @param int $deptId 部门ID
-     * @return \think\Response
+     * 获取部门详情
      */
-    public function form(int $deptId): \think\Response
+    public function detail(): \think\response\Json
     {
-        $data = (new DeptService())->getDeptForm($deptId);
-        return $this->ok($data);
+        $id = $this->getIdParam();
+        $data = $this->service(DeptService::class)->getById($id);
+
+        if (!$data) {
+            return $this->fail('A0400', '部门不存�?);
+        }
+
+        return $this->success($data);
     }
 
     /**
-     * 新增部门
-     *
-     * @OA\Post(
-     *     path="/api/v1/depts",
-     *     summary="新增部门",
-     *     tags={"05.部门接口"},
-     *     @OA\RequestBody(required=true, @OA\JsonContent()),
-     *     @OA\Response(response=200, description="OK")
-     * )
-     *
-     * @return \think\Response
+     * 创建部门
      */
-    public function create(): \think\Response
+    public function create(): \think\response\Json
     {
-        $data = $this->mergeJsonParams();
-        $id = (new DeptService())->saveDept($data);
-        return $this->ok($id);
+        $this->checkDemo();
+
+        $id = $this->service(DeptService::class)->create($this->getAllParams());
+
+        return $this->success(['id' => (string) $id], '创建成功');
     }
 
     /**
-     * 修改部门
-     *
-     * @OA\Put(
-     *     path="/api/v1/depts/{deptId}",
-     *     summary="修改部门",
-     *     tags={"05.部门接口"},
-     *     @OA\Parameter(name="deptId", in="path", description="部门ID", required=true),
-     *     @OA\RequestBody(required=true, @OA\JsonContent()),
-     *     @OA\Response(response=200, description="OK")
-     * )
-     *
-     * @param int $deptId 部门ID
-     * @return \think\Response
+     * 更新部门
      */
-    public function update(int $deptId): \think\Response
+    public function update(): \think\response\Json
     {
-        $data = $this->mergeJsonParams();
-        $data['id'] = $deptId;
-        $id = (new DeptService())->saveDept($data);
-        return $this->ok($id);
+        $this->checkDemo();
+
+        $id = $this->getIdParam();
+        $this->service(DeptService::class)->update($id, $this->getAllParams());
+
+        return $this->success(null, '更新成功');
     }
 
     /**
-     * 删除部门（批量）
-     *
-     * @OA\Delete(
-     *     path="/api/v1/depts/{ids}",
-     *     summary="删除部门",
-     *     tags={"05.部门接口"},
-     *     @OA\Parameter(name="ids", in="path", description="部门ID，多个以英文逗号(,)分割", required=true),
-     *     @OA\Response(response=200, description="OK")
-     * )
-     *
-     * @param string $ids 逗号分隔ID列表
-     * @return \think\Response
+     * 删除部门
      */
-    public function delete(string $ids): \think\Response
+    public function delete(): \think\response\Json
     {
-        (new DeptService())->deleteByIds($ids);
-        return $this->ok();
+        $this->checkDemo();
+
+        $id = $this->getIdParam();
+        $this->service(DeptService::class)->delete($id);
+
+        return $this->success(null, '删除成功');
     }
 }

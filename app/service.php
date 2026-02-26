@@ -1,9 +1,8 @@
-<?php
+<?php declare(strict_types=1);
 
-use app\AppService;
-
-// 系统服务定义文件
-// 服务在完成全局初始化之后执行
+// 服务绑定配置
+// 用于依赖注入容器解析接口到实�?
 return [
-    AppService::class,
+    // 示例：将接口绑定到实�?
+    // \app\contract\RepositoryInterface::class => \app\repository\BaseRepository::class,
 ];

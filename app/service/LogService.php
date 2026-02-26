@@ -1,6 +1,4 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\service;
 
@@ -9,14 +7,14 @@ use app\common\web\ResultCode;
 use think\facade\Db;
 
 /**
- * 日志与统计业务
+ * 日志与统计业�?
  *
  * 日志分页 趋势统计 概览统计
  */
 final class LogService
 {
     /**
-     * 日志分页列表。
+     * 日志分页列表�?
      */
     public function getLogPage(array $queryParams): array
     {
@@ -30,18 +28,18 @@ final class LogService
 
         $q = Db::name('sys_log')->alias('l');
 
-        // sys_log 无 is_deleted 字段，按 create_time 过滤即可
+        // sys_log �?is_deleted 字段，按 create_time 过滤即可
         if ($keywords !== '') {
             $kw = '%' . $keywords . '%';
             $q = $q->whereLike('l.content|l.request_uri|l.request_method|l.province|l.city|l.browser|l.os', $kw);
         }
 
-        // 仅支持时间范围查询
+        // 仅支持时间范围查�?
         if (is_array($createTime) && count($createTime) === 2) {
             $start = trim((string) ($createTime[0] ?? ''));
             $end = trim((string) ($createTime[1] ?? ''));
             if ($start !== '' && $end !== '') {
-                // 前端传 YYYY-MM-DD，后端补全时分秒
+                // 前端�?YYYY-MM-DD，后端补全时分秒
                 $q = $q->whereBetweenTime('l.create_time', $start . ' 00:00:00', $end . ' 23:59:59');
             }
         }
@@ -87,7 +85,7 @@ final class LogService
     }
 
     /**
-     * 获取访问趋势。
+     * 获取访问趋势�?
      */
     public function getVisitTrend(string $startDate, string $endDate): array
     {
@@ -97,7 +95,7 @@ final class LogService
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
-        // 归一化日期范围
+        // 归一化日期范�?
         $startTs = strtotime($startDate);
         $endTs = strtotime($endDate);
         if ($startTs === false || $endTs === false) {
@@ -143,7 +141,7 @@ final class LogService
             $ipMap[(string) ($r['date'] ?? '')] = (int) ($r['count'] ?? 0);
         }
 
-        // 补齐没有日志的日期
+        // 补齐没有日志的日�?
         $pvList = [];
         $ipList = [];
         foreach ($dates as $d) {
@@ -160,14 +158,14 @@ final class LogService
     }
 
     /**
-     * 获取访问概览。
+     * 获取访问概览�?
      */
     public function getVisitStats(): array
     {
         $today = date('Y-m-d');
         $nowTime = date('H:i:s');
 
-        // 访问量与访客数概览
+        // 访问量与访客数概�?
         $pvTotal = (int) Db::name('sys_log')->count('id');
         $pvToday = (int) Db::name('sys_log')->whereBetweenTime('create_time', $today . ' 00:00:00', $today . ' 23:59:59')->count('id');
 

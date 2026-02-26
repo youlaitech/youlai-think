@@ -1,13 +1,11 @@
-<?php
+<?php declare(strict_types=1);
 
-declare(strict_types=1);
-
-namespace app\common\security;
+namespace app\support\security;
 
 use app\common\exception\BusinessException;
-use app\common\redis\RedisClient;
-use app\common\redis\RedisKey;
 use app\common\web\ResultCode;
+use app\support\redis\RedisClient;
+use app\support\redis\RedisKey;
 
 final class RedisTokenManager implements TokenManager
 {
@@ -26,8 +24,7 @@ final class RedisTokenManager implements TokenManager
             throw new BusinessException(ResultCode::SYSTEM_ERROR, 'Invalid userId');
         }
 
-        // 读取旧 token，避免并发登录残留
-        $oldAccess = $redis->get(RedisKey::format((string) ($keys['user_access_token'] ?? 'auth:user:access:{}'), $userId));
+        // 读取�?token，避免并发登录残�?        $oldAccess = $redis->get(RedisKey::format((string) ($keys['user_access_token'] ?? 'auth:user:access:{}'), $userId));
         $oldRefresh = $redis->get(RedisKey::format((string) ($keys['user_refresh_token'] ?? 'auth:user:refresh:{}'), $userId));
 
         if (!empty($oldAccess)) {
@@ -42,7 +39,7 @@ final class RedisTokenManager implements TokenManager
             ]);
         }
 
-        // 使用随机字符串作为 token
+        // 使用随机字符串作�?token
         $accessToken = bin2hex(random_bytes(16));
         $refreshToken = bin2hex(random_bytes(16));
 
@@ -51,8 +48,7 @@ final class RedisTokenManager implements TokenManager
         $accessUserKey = RedisKey::format((string) ($keys['access_token_user'] ?? 'auth:token:access:{}'), $accessToken);
         $refreshUserKey = RedisKey::format((string) ($keys['refresh_token_user'] ?? 'auth:token:refresh:{}'), $refreshToken);
 
-        // token 与用户信息双向映射
-        $redis->setex($accessUserKey, $accessTtl, $userJson);
+        // token 与用户信息双向映�?        $redis->setex($accessUserKey, $accessTtl, $userJson);
         $redis->setex($refreshUserKey, $refreshTtl, $userJson);
 
         $redis->setex(RedisKey::format((string) ($keys['user_access_token'] ?? 'auth:user:access:{}'), $userId), $accessTtl, $accessToken);

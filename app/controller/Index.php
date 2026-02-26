@@ -1,8 +1,7 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace app\controller;
 
-use app\BaseController;
 use OpenApi\Annotations as OA;
 
 /**
@@ -13,7 +12,7 @@ class Index extends BaseController
     /**
      * @OA\Get(
      *     path="/",
-     *     summary="欢迎页",
+     *     summary="欢迎�?,
      *     tags={"99.基础示例"},
      *     @OA\Response(response=200, description="OK")
      * )

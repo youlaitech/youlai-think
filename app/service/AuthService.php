@@ -1,257 +1,204 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\service;
 
-use app\common\redis\RedisClient;
-use app\common\redis\RedisKey;
 use app\common\exception\BusinessException;
-use app\common\security\AuthenticationToken;
-use app\common\security\TokenManagerResolver;
-use Gregwar\Captcha\PhraseBuilder;
-use think\facade\Cache;
+use app\support\redis\RedisClient;
+use app\support\security\JwtTokenManager;
+use app\common\web\ResultCode;
+use app\model\User;
+use think\facade\Db;
 
+/**
+ * ÈÏÖ¤·şÎñ
+ */
 final class AuthService
 {
-    public function __construct(
-        private readonly UserService $userService = new UserService(),
-    ) {
+    private JwtTokenManager $jwt;
+
+    public function __construct(JwtTokenManager $jwt)
+    {
+        $this->jwt = $jwt;
     }
 
-    public function sendSmsLoginCode(string $mobile): void
+    /**
+     * ÓÃ»§µÇÂ¼
+     */
+    public function login(string $username, string $password): array
     {
-        $mobile = trim($mobile);
-        if ($mobile === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
+        // ²éÕÒÓÃ»§
+        $user = User::where('username', $username)->find();
 
-        // TODO: å¯¹æ¥çŸ­ä¿¡æœåŠ¡æ—¶æ›¿æ¢å›ºå®šéªŒè¯ç 
-        $code = '1234';
-        $key = RedisKey::format('captcha:sms_login:{}', $mobile);
-        RedisClient::get()->setex($key, 300, $code);
-    }
-
-    public function loginBySms(string $mobile, string $code): AuthenticationToken
-    {
-        $mobile = trim($mobile);
-        $code = trim($code);
-
-        if ($mobile === '' || $code === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        // æ ¡éªŒçŸ­ä¿¡éªŒè¯ç 
-        $key = RedisKey::format('captcha:sms_login:{}', $mobile);
-        $cachedCode = (string) (RedisClient::get()->get($key) ?? '');
-        if ($cachedCode === '') {
-            throw new BusinessException(ResultCode::USER_VERIFICATION_CODE_EXPIRED);
-        }
-
-        if (strcasecmp($cachedCode, $code) !== 0) {
-            throw new BusinessException(ResultCode::USER_VERIFICATION_CODE_ERROR);
-        }
-
-        // é€šè¿‡åç«‹å³æ¸…ç†éªŒè¯ç 
-        RedisClient::get()->del([$key]);
-
-        $user = $this->userService->getUserByMobile($mobile);
-        if ($user === null) {
-            throw new BusinessException(ResultCode::ACCOUNT_NOT_FOUND);
-        }
-
-        if ((int) ($user['status'] ?? 1) !== 1) {
-            throw new BusinessException(ResultCode::ACCOUNT_FROZEN);
-        }
-
-        // ç™»å½•æ€æœ€å°ä¿¡æ¯
-        $authInfo = [
-            'userId' => (int) $user['id'],
-            'deptId' => $user['dept_id'] ?? null,
-            'dataScope' => null,
-            'authorities' => [],
-        ];
-
-        return (new TokenManagerResolver())->get()->generateToken($authInfo);
-    }
-
-    public function getCaptcha(): array
-    {
-        // éªŒè¯ç ç”Ÿæˆä¸ç¼“å­˜
-        $phraseBuilder = new PhraseBuilder(4, '23456789');
-        $code = $phraseBuilder->build();
-        $width = 160;
-        $height = 50;
-        $theme = [
-            [
-                'bgStart' => [240, 246, 255],
-                'bgEnd' => [228, 237, 252],
-                'text' => [[82, 118, 237], [98, 140, 244], [62, 98, 220]],
-                'line' => [198, 214, 248],
-            ],
-            [
-                'bgStart' => [240, 252, 248],
-                'bgEnd' => [226, 244, 236],
-                'text' => [[70, 171, 136], [86, 190, 152], [54, 152, 118]],
-                'line' => [195, 235, 222],
-            ],
-            [
-                'bgStart' => [252, 245, 247],
-                'bgEnd' => [246, 233, 238],
-                'text' => [[225, 120, 145], [238, 146, 167], [203, 102, 126]],
-                'line' => [245, 210, 219],
-            ],
-        ];
-        $palette = $theme[array_rand($theme)];
-
-        $image = imagecreatetruecolor($width, $height);
-        imagealphablending($image, true);
-        imagesavealpha($image, true);
-
-        // èƒŒæ™¯æ¸å˜
-        for ($y = 0; $y < $height; $y++) {
-            $ratio = $y / max(1, $height - 1);
-            $r = (int) ($palette['bgStart'][0] * (1 - $ratio) + $palette['bgEnd'][0] * $ratio);
-            $g = (int) ($palette['bgStart'][1] * (1 - $ratio) + $palette['bgEnd'][1] * $ratio);
-            $b = (int) ($palette['bgStart'][2] * (1 - $ratio) + $palette['bgEnd'][2] * $ratio);
-            $rowColor = imagecolorallocate($image, $r, $g, $b);
-            imageline($image, 0, $y, $width, $y, $rowColor);
-        }
-
-        // å¹²æ‰°çº¿
-        $lineColor = imagecolorallocate($image, $palette['line'][0], $palette['line'][1], $palette['line'][2]);
-        $lineCount = random_int(1, 2);
-        $lineStartMax = (int) floor($width / 3);
-        $lineEndMin = (int) floor($width * 2 / 3);
-        for ($i = 0; $i < $lineCount; $i++) {
-            imageline(
-                $image,
-                random_int(0, $lineStartMax),
-                random_int(5, $height - 5),
-                random_int($lineEndMin, $width),
-                random_int(5, $height - 5),
-                $lineColor
-            );
-        }
-
-        // å™ªç‚¹
-        for ($i = 0; $i < 45; $i++) {
-            $dot = $palette['text'][array_rand($palette['text'])];
-            $dotColor = imagecolorallocate($image, $dot[0], $dot[1], $dot[2]);
-            imagesetpixel($image, random_int(0, $width - 1), random_int(0, $height - 1), $dotColor);
-        }
-
-        $fontDir = dirname(__DIR__, 2) . '/vendor/gregwar/captcha/src/Gregwar/Captcha/Font';
-        $fonts = is_dir($fontDir) ? glob($fontDir . '/*.ttf') : [];
-        $font = $fonts ? $fonts[array_rand($fonts)] : null;
-
-        $chars = preg_split('//u', $code, -1, PREG_SPLIT_NO_EMPTY);
-        $step = ($width - 20) / max(1, count($chars));
-        $x = 10;
-
-        foreach ($chars as $char) {
-            $text = $palette['text'][array_rand($palette['text'])];
-            $textColor = imagecolorallocate($image, $text[0], $text[1], $text[2]);
-            $shadow = imagecolorallocate($image, 255, 255, 255);
-            $angle = random_int(-12, 12);
-            $fontSize = random_int(22, 26);
-            $y = random_int(32, 40);
-
-            if ($font) {
-                imagettftext($image, $fontSize, $angle, (int) $x + 1, $y + 1, $shadow, $font, $char);
-                imagettftext($image, $fontSize, $angle, (int) $x, $y, $textColor, $font, $char);
-            } else {
-                // æ²¡æœ‰å­—ä½“æ–‡ä»¶æ—¶ç”¨ç³»ç»Ÿå­—ä½“å…œåº•
-                imagestring($image, 5, (int) $x, 15, $char, $textColor);
-            }
-
-            $x += $step;
-        }
-        $captchaId = bin2hex(random_bytes(16));
-
-        $key = RedisKey::format('captcha:image:{}', $captchaId);
-        // Redis ä¼˜å…ˆï¼ŒCache å…œåº•
-        Cache::set($key, $code, 300);
-        try {
-            RedisClient::get()->setex($key, 300, $code);
-        } catch (\Throwable) {
-        }
-
-        ob_start();
-        imagepng($image);
-        $imageData = ob_get_clean();
-        imagedestroy($image);
-        // å‰ç«¯ç›´æ¥å±•ç¤º base64 å›¾ç‰‡
-        $captchaBase64 = 'data:image/png;base64,' . base64_encode((string) $imageData);
-
-        return [
-            'captchaId' => $captchaId,
-            'captchaBase64' => $captchaBase64,
-        ];
-    }
-
-    public function login(string $username, string $password, string $captchaId, string $captchaCode): AuthenticationToken
-    {
-        $username = trim($username);
-        if ($username === '' || $password === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        // å…ˆè¯» Redisï¼Œä¸å­˜åœ¨å†å›é€€ Cache
-        $captchaKey = RedisKey::format('captcha:image:{}', $captchaId);
-        $cachedCode = '';
-        try {
-            $cachedCode = (string) (RedisClient::get()->get($captchaKey) ?? '');
-        } catch (\Throwable) {
-        }
-        if ($cachedCode === '') {
-            $cachedCode = (string) Cache::get($captchaKey, '');
-        }
-        if ($cachedCode === '') {
-            throw new BusinessException(ResultCode::USER_VERIFICATION_CODE_EXPIRED);
-        }
-
-        if (strcasecmp(trim($cachedCode), trim($captchaCode)) !== 0) {
-            throw new BusinessException(ResultCode::USER_VERIFICATION_CODE_ERROR);
-        }
-
-        // æ ¡éªŒç”¨æˆ·å/å¯†ç ä¸è´¦å·çŠ¶æ€
-        $user = $this->userService->getUserByUsername($username);
-
-        if ($user === null) {
-            throw new BusinessException(ResultCode::ACCOUNT_NOT_FOUND);
-        }
-
-        if ((int) ($user['status'] ?? 1) !== 1) {
-            throw new BusinessException(ResultCode::ACCOUNT_FROZEN);
-        }
-
-        $hash = (string) ($user['password'] ?? '');
-        if ($hash === '' || !password_verify($password, $hash)) {
+        if (!$user) {
             throw new BusinessException(ResultCode::USER_PASSWORD_ERROR);
         }
 
-        $authInfo = [
-            'userId' => (int) $user['id'],
-            'deptId' => $user['dept_id'] ?? null,
-            'dataScope' => null,
-            'authorities' => [],
-        ];
-
-        return (new TokenManagerResolver())->get()->generateToken($authInfo);
-    }
-
-    public function refreshToken(string $refreshToken): AuthenticationToken
-    {
-        if ($refreshToken === '') {
-            throw new BusinessException(ResultCode::REFRESH_TOKEN_INVALID);
+        // ÑéÖ¤ÃÜÂë
+        if (!password_verify($password, $user->password)) {
+            throw new BusinessException(ResultCode::USER_PASSWORD_ERROR);
         }
 
-        return (new TokenManagerResolver())->get()->refreshToken($refreshToken);
+        // ¼ì²é×´Ì¬
+        if ($user->status != 1) {
+            throw new BusinessException(ResultCode::USER_ERROR, 'ÕËºÅÒÑ±»½ûÓÃ');
+        }
+
+        // »ñÈ¡ÓÃ»§½ÇÉ«ºÍÈ¨ÏŞ
+        $roleCodes = $this->getUserRoleCodes((int) $user->id);
+        $dataScopes = $this->getUserDataScopes((int) $user->id, $roleCodes);
+
+        // Éú³É Token
+        $token = $this->jwt->generateAccessToken([
+            'id' => $user->id,
+            'username' => $user->username,
+            'roleCodes' => $roleCodes,
+            'dataScopes' => $dataScopes,
+        ]);
+
+        $refreshToken = $this->jwt->generateRefreshToken([
+            'id' => $user->id,
+        ]);
+
+        return [
+            'accessToken' => $token,
+            'refreshToken' => $refreshToken,
+            'tokenType' => 'Bearer',
+            'expiresIn' => 7200,
+        ];
     }
 
-    public function logout(?string $accessToken, ?string $refreshToken): void
+    /**
+     * µÇ³ö
+     */
+    public function logout(string $token): void
     {
-        (new TokenManagerResolver())->get()->invalidate($accessToken, $refreshToken);
+        // ½« Token ¼ÓÈëºÚÃûµ¥
+        $this->jwt->blacklist($token);
+    }
+
+    /**
+     * Ë¢ĞÂ Token
+     */
+    public function refresh(string $refreshToken): array
+    {
+        $payload = $this->jwt->parseRefreshToken($refreshToken);
+
+        $user = User::find($payload['id']);
+        if (!$user) {
+            throw new BusinessException(ResultCode::ACCESS_TOKEN_INVALID);
+        }
+
+        $roleCodes = $this->getUserRoleCodes((int) $user->id);
+        $dataScopes = $this->getUserDataScopes((int) $user->id, $roleCodes);
+
+        $newToken = $this->jwt->generateAccessToken([
+            'id' => $user->id,
+            'username' => $user->username,
+            'roleCodes' => $roleCodes,
+            'dataScopes' => $dataScopes,
+        ]);
+
+        return [
+            'accessToken' => $newToken,
+            'tokenType' => 'Bearer',
+            'expiresIn' => 7200,
+        ];
+    }
+
+    /**
+     * »ñÈ¡ÓÃ»§½ÇÉ«±àÂë
+     */
+    private function getUserRoleCodes(int $userId): array
+    {
+        $roleIds = Db::name('sys_user_role')
+            ->where('user_id', $userId)
+            ->column('role_id');
+
+        if (empty($roleIds)) {
+            return [];
+        }
+
+        return Db::name('sys_role')
+            ->whereIn('id', $roleIds)
+            ->where('status', 1)
+            ->column('code');
+    }
+
+    /**
+     * »ñÈ¡ÓÃ»§Êı¾İÈ¨ÏŞ·¶Î§
+     */
+    private function getUserDataScopes(int $userId, array $roleCodes): array
+    {
+        // ³¬¼¶¹ÜÀíÔ±·µ»ØÈ«²¿È¨ÏŞ
+        if (in_array('ROOT', $roleCodes, true)) {
+            return [[
+                'type' => 'ALL',
+                'deptIds' => [],
+            ]];
+        }
+
+        $roleIds = Db::name('sys_user_role')
+            ->where('user_id', $userId)
+            ->column('role_id');
+
+        if (empty($roleIds)) {
+            return [];
+        }
+
+        // »ñÈ¡½ÇÉ«µÄÊı¾İÈ¨ÏŞÅäÖÃ
+        $dataScopes = Db::name('sys_role')
+            ->whereIn('id', $roleIds)
+            ->where('status', 1)
+            ->field(['data_scope', 'scope_dept_ids'])
+            ->select()
+            ->toArray();
+
+        $result = [];
+        foreach ($dataScopes as $scope) {
+            $deptIds = $this->resolveDataScope(
+                (int) $scope['data_scope'],
+                $scope['scope_dept_ids'] ?? '',
+                $userId
+            );
+
+            $result[] = [
+                'type' => $scope['data_scope'],
+                'deptIds' => $deptIds,
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * ½âÎöÊı¾İÈ¨ÏŞ·¶Î§
+     */
+    private function resolveDataScope(int $type, string $scopeDeptIds, int $userId): array
+    {
+        switch ($type) {
+            case 1: // È«²¿Êı¾İ
+                return [];
+
+            case 2: // ×Ô¶¨Òå
+                return array_map('intval', explode(',', $scopeDeptIds));
+
+            case 3: // ±¾²¿ÃÅ
+                $deptId = Db::name('sys_user')->where('id', $userId)->value('dept_id');
+                return $deptId ? [(int) $deptId] : [];
+
+            case 4: // ±¾²¿ÃÅ¼°ÒÔÏÂ
+                $deptId = Db::name('sys_user')->where('id', $userId)->value('dept_id');
+                if (!$deptId) {
+                    return [];
+                }
+                // »ñÈ¡×Ó²¿ÃÅ
+                return app(DeptService::class)->getDescendantIds((int) $deptId);
+
+            case 5: // ½ö±¾ÈË
+                return [];
+
+            default:
+                return [];
+        }
     }
 }

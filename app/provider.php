@@ -1,9 +1,11 @@
 <?php
-use app\ExceptionHandle;
-use app\Request;
 
-// 容器Provider定义文件
+// +----------------------------------------------------------------------
+// | 服务提供配置
+// +----------------------------------------------------------------------
+
+use app\support\http\HttpClient;
+
 return [
-    'think\Request'          => Request::class,
-    'think\exception\Handle' => ExceptionHandle::class,
+    HttpClient::class => HttpClient::class,
 ];

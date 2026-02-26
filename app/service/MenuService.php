@@ -1,6 +1,4 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\service;
 
@@ -9,464 +7,167 @@ use app\common\web\ResultCode;
 use app\model\Menu;
 use think\facade\Db;
 
+/**
+ * ²Ëµ¥·şÎñ¡£
+ */
 final class MenuService
 {
-    public function listMenus(?string $keywords = null, ?int $status = null): array
+    /**
+     * »ñÈ¡²Ëµ¥Ê÷
+     */
+    public function getTree(): array
     {
-        $query = Menu::order('sort', 'asc');
+        $list = Menu::where('status', 1)
+            ->order('sort', 'asc')
+            ->order('id', 'asc')
+            ->select()
+            ->toArray();
 
-        if ($keywords !== null && trim($keywords) !== '') {
-            $kw = '%' . trim($keywords) . '%';
-            $query = $query->whereLike('name', $kw);
-        }
-
-        if ($status !== null) {
-            $query = $query->where('visible', (int) $status);
-        }
-
-        $rows = $query->select();
-        $list = [];
-        foreach ($rows as $row) {
-            $list[] = $row->toArray();
-        }
-
-        return $this->buildMenuTree(0, $list);
+        return $this->buildTree($list);
     }
 
-    public function listMenuOptions(bool $onlyParent): array
+    /**
+     * »ñÈ¡ÓÃ»§µÄ²Ëµ¥Ê÷£¨Â·ÓÉÓÃ£©
+     */
+    public function getUserMenuTree(int $userId, array $roleCodes): array
     {
-        $query = Menu::order('sort', 'asc');
-        if ($onlyParent) {
-            $query = $query->whereIn('type', ['C', 'M']);
-        }
-
-        $rows = $query->select();
-        $list = [];
-        foreach ($rows as $row) {
-            $list[] = $row->toArray();
-        }
-
-        return $this->buildMenuOptions(0, $list);
-    }
-
-    public function listCurrentUserRoutes(int $userId): array
-    {
-        $roles = Db::name('sys_user_role')
-            ->alias('ur')
-            ->join('sys_role r', 'ur.role_id = r.id')
-            ->where('ur.user_id', $userId)
-            ->column('r.code');
-
-        $roles = array_values(array_unique(array_filter($roles, fn($v) => $v !== null && $v !== '')));
-
-        if (empty($roles)) {
-            return [];
-        }
-
-        $menuRows = [];
-        // è¶…çº§ç®¡ç†å‘˜ç›´æ¥æ‹‰å–å…¨éƒ¨èœå•ï¼ˆæ’é™¤æŒ‰é’®æƒé™ï¼‰
-        if (in_array('ROOT', $roles, true)) {
-            $rows = Menu::where('type', '<>', 'B')->order('sort', 'asc')->select();
-            foreach ($rows as $row) {
-                $menuRows[] = $row->toArray();
-            }
-        } else {
-            // æŒ‰è§’è‰²å…³è”èœå•ï¼Œå»é‡åæ„å»ºè·¯ç”±æ ‘
-            $rows = Db::name('sys_role_menu')
-                ->alias('rm')
-                ->join('sys_role r', 'rm.role_id = r.id')
-                ->join('sys_menu m', 'rm.menu_id = m.id')
-                ->whereIn('r.code', $roles)
-                ->where('m.type', '<>', 'B')
-                ->order('m.sort', 'asc')
-                ->field('m.*')
+        // ³¬¼¶¹ÜÀíÔ±»ñÈ¡ËùÓĞ²Ëµ¥
+        if (in_array('ROOT', $roleCodes, true)) {
+            $menus = Menu::where('status', 1)
+                ->whereIn('type', ['catalog', 'menu'])
+                ->order('sort', 'asc')
                 ->select()
                 ->toArray();
+        } else {
+            // ¸ù¾İ½ÇÉ«»ñÈ¡²Ëµ¥
+            $roleIds = Db::name('sys_user_role')
+                ->where('user_id', $userId)
+                ->column('role_id');
 
-            $seen = [];
-            foreach ($rows as $r) {
-                $id = (int) ($r['id'] ?? 0);
-                if ($id <= 0 || isset($seen[$id])) {
-                    continue;
-                }
-                $seen[$id] = true;
-                $menuRows[] = $r;
-            }
+            $menuIds = Db::name('sys_role_menu')
+                ->whereIn('role_id', $roleIds)
+                ->column('menu_id');
+
+            $menus = Menu::whereIn('id', $menuIds)
+                ->where('status', 1)
+                ->whereIn('type', ['catalog', 'menu'])
+                ->order('sort', 'asc')
+                ->select()
+                ->toArray();
         }
 
-        return $this->buildRoutes(0, $menuRows);
+        return $this->buildTree($menus);
     }
 
-    public function getMenuForm(int $id): array
+    /**
+     * ¸ù¾İID»ñÈ¡²Ëµ¥ÏêÇé
+     */
+    public function getById(int $id): ?array
     {
-        $menu = Menu::where('id', $id)->find();
-        if ($menu === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, 'èœå•ä¸å­˜åœ¨');
-        }
-
-        $m = $menu->toArray();
-        $params = [];
-        $paramsJson = (string) ($m['params'] ?? '');
-        if ($paramsJson !== '') {
-            $decoded = json_decode($paramsJson, true);
-            if (is_array($decoded)) {
-                foreach ($decoded as $k => $v) {
-                    $params[] = ['key' => (string) $k, 'value' => (string) $v];
-                }
-            }
-        }
-
-        return [
-            'id' => (string) ($m['id'] ?? ''),
-            'parentId' => (string) ($m['parent_id'] ?? '0'),
-            'name' => (string) ($m['name'] ?? ''),
-            'type' => (string) ($m['type'] ?? ''),
-            'routeName' => $m['route_name'] ?? null,
-            'routePath' => $m['route_path'] ?? null,
-            'redirect' => $m['redirect'] ?? null,
-            'component' => $m['component'] ?? null,
-            'icon' => $m['icon'] ?? null,
-            'sort' => isset($m['sort']) ? (int) $m['sort'] : null,
-            'visible' => isset($m['visible']) ? (int) $m['visible'] : null,
-            'perm' => $m['perm'] ?? null,
-            'alwaysShow' => isset($m['always_show']) ? (int) $m['always_show'] : null,
-            'keepAlive' => isset($m['keep_alive']) ? (int) $m['keep_alive'] : null,
-            'params' => $params,
-        ];
+        return Menu::find($id)?->toArray();
     }
 
-    public function saveMenu(array $data): bool
+    /**
+     * »ñÈ¡ËùÓĞ²Ëµ¥£¨Æ½ÆÌ£©
+     */
+    public function getAll(): array
     {
-        $id = isset($data['id']) && (string) $data['id'] !== '' ? (int) $data['id'] : null;
-        $parentId = isset($data['parentId']) ? (int) $data['parentId'] : 0;
-
-        if ($id !== null && $id > 0 && $parentId === $id) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, 'çˆ¶çº§èœå•ä¸èƒ½ä¸ºå½“å‰èœå•');
-        }
-
-        $type = strtoupper((string) ($data['type'] ?? ''));
-        $name = trim((string) ($data['name'] ?? ''));
-        $routePath = trim((string) ($data['routePath'] ?? ''));
-
-        if ($type === '' || $name === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        $isExternalLink = $type === 'M' && preg_match('/^https?:\/\//i', $routePath) === 1;
-
-        $routeName = trim((string) ($data['routeName'] ?? ''));
-        if ($type === 'M' && !$isExternalLink) {
-            if ($routeName === '') {
-                throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-            }
-
-            $existsQuery = Menu::where('route_name', $routeName);
-            if ($id !== null && $id > 0) {
-                $existsQuery = $existsQuery->where('id', '<>', $id);
-            }
-
-            if ($existsQuery->count() > 0) {
-                throw new BusinessException(ResultCode::INVALID_USER_INPUT, 'è·¯ç”±åç§°å·²å­˜åœ¨');
-            }
-        }
-
-        if ($type === 'C') {
-            if ($parentId === 0 && $routePath !== '' && !str_starts_with($routePath, '/')) {
-                $routePath = '/' . $routePath;
-            }
-        }
-
-        $component = $data['component'] ?? null;
-        if ($type === 'C') {
-            $component = 'Layout';
-        } elseif ($isExternalLink) {
-            // å¤–é“¾ä¸æŒ‚è½½ç»„ä»¶
-            $component = null;
-        }
-
-        $paramsMap = null;
-        $params = $data['params'] ?? null;
-        if (is_array($params) && !empty($params)) {
-            // æŠŠå‰ç«¯ key/value åˆ—è¡¨å‹æˆ JSON
-            $m = [];
-            foreach ($params as $p) {
-                if (!is_array($p)) {
-                    continue;
-                }
-                $k = trim((string) ($p['key'] ?? ''));
-                $v = (string) ($p['value'] ?? '');
-                if ($k === '') {
-                    continue;
-                }
-                $m[$k] = $v;
-            }
-            if (!empty($m)) {
-                $paramsMap = json_encode($m, JSON_UNESCAPED_UNICODE);
-            }
-        }
-
-        $entity = [
-            'parent_id' => $parentId,
-            'name' => $name,
-            'type' => $type,
-            'route_name' => ($type === 'M' && !$isExternalLink) ? $routeName : null,
-            'route_path' => $routePath,
-            'component' => $component,
-            'perm' => $data['perm'] ?? null,
-            'visible' => isset($data['visible']) ? (int) $data['visible'] : 1,
-            'sort' => isset($data['sort']) ? (int) $data['sort'] : 0,
-            'icon' => $data['icon'] ?? null,
-            'redirect' => $data['redirect'] ?? null,
-            'keep_alive' => isset($data['keepAlive']) ? (int) $data['keepAlive'] : 0,
-            'always_show' => isset($data['alwaysShow']) ? (int) $data['alwaysShow'] : 0,
-            'params' => $paramsMap,
-            'update_time' => date('Y-m-d H:i:s'),
-        ];
-
-        if ($id === null || $id <= 0) {
-            $entity['create_time'] = date('Y-m-d H:i:s');
-        }
-
-        // tree_path ç”¨äºåç»­æ ‘å½¢ç»“æ„è®¡ç®—
-        $treePath = $this->generateMenuTreePath($parentId);
-        $entity['tree_path'] = $treePath;
-
-        if ($id === null || $id <= 0) {
-            $menu = new Menu();
-            $menu->save($entity);
-            return true;
-        }
-
-        $menu = Menu::where('id', $id)->find();
-        if ($menu === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, 'èœå•ä¸å­˜åœ¨');
-        }
-
-        $menu->save($entity);
-        return true;
+        return Menu::order('sort', 'asc')
+            ->order('id', 'asc')
+            ->select()
+            ->toArray();
     }
 
-    public function deleteMenu(int $id): bool
+    /**
+     * ´´½¨²Ëµ¥
+     */
+    public function create(array $data): int
     {
-        if ($id <= 0) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, 'èœå•ä¸å­˜åœ¨');
+        $now = date('Y-m-d H:i:s');
+
+        return (int) Menu::insertGetId([
+            'parent_id' => $data['parent_id'] ?? 0,
+            'type' => $data['type'] ?? 'menu',
+            'name' => $data['name'],
+            'path' => $data['path'] ?? '',
+            'component' => $data['component'] ?? '',
+            'perm' => $data['perm'] ?? '',
+            'icon' => $data['icon'] ?? '',
+            'sort' => $data['sort'] ?? 0,
+            'status' => $data['status'] ?? 1,
+            'visible' => $data['visible'] ?? 1,
+            'redirect' => $data['redirect'] ?? '',
+            'create_time' => $now,
+            'update_time' => $now,
+        ]);
+    }
+
+    /**
+     * ¸üĞÂ²Ëµ¥
+     */
+    public function update(int $id, array $data): bool
+    {
+        $menu = Menu::find($id);
+        if (!$menu) {
+            throw new BusinessException(ResultCode::USER_ERROR, '²Ëµ¥²»´æÔÚ');
         }
 
+        // ²»ÄÜ°Ñ×Ô¼ºÉèÎª¸¸¼¶
+        if (isset($data['parent_id']) && (int) $data['parent_id'] === $id) {
+            throw new BusinessException(ResultCode::USER_ERROR, '¸¸¼¶²Ëµ¥²»ÄÜÊÇ×Ô¼º');
+        }
+
+        $menu->parent_id = $data['parent_id'] ?? $menu->parent_id;
+        $menu->type = $data['type'] ?? $menu->type;
+        $menu->name = $data['name'] ?? $menu->name;
+        $menu->path = $data['path'] ?? $menu->path;
+        $menu->component = $data['component'] ?? $menu->component;
+        $menu->perm = $data['perm'] ?? $menu->perm;
+        $menu->icon = $data['icon'] ?? $menu->icon;
+        $menu->sort = $data['sort'] ?? $menu->sort;
+        $menu->status = $data['status'] ?? $menu->status;
+        $menu->visible = $data['visible'] ?? $menu->visible;
+        $menu->redirect = $data['redirect'] ?? $menu->redirect;
+
+        return $menu->save();
+    }
+
+    /**
+     * É¾³ı²Ëµ¥
+     */
+    public function delete(int $id): bool
+    {
+        // ¼ì²éÊÇ·ñÓĞ×Ó²Ëµ¥
         $childCount = Menu::where('parent_id', $id)->count();
         if ($childCount > 0) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, 'å­˜åœ¨å­èœå•ï¼Œæ— æ³•åˆ é™¤');
+            throw new BusinessException(ResultCode::USER_ERROR, '´æÔÚ×Ó²Ëµ¥£¬ÎŞ·¨É¾³ı');
         }
 
-        $menu = Menu::where('id', $id)->find();
-        if ($menu === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, 'èœå•ä¸å­˜åœ¨');
-        }
+        // É¾³ı¹ØÁª
+        Db::name('sys_role_menu')->where('menu_id', $id)->delete();
 
-        $menu->delete();
-        return true;
+        return Menu::destroy($id) > 0;
     }
 
-    public function updateMenuVisible(int $menuId, int $visible): bool
-    {
-        $menu = Menu::where('id', $menuId)->find();
-        if ($menu === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, 'èœå•ä¸å­˜åœ¨');
-        }
+    // ==================== Ë½ÓĞ·½·¨ ====================
 
-        $menu->save([
-            'visible' => $visible,
-            'update_time' => date('Y-m-d H:i:s'),
-        ]);
-
-        return true;
-    }
-
-    private function buildMenuTree(int $parentId, array $menus): array
+    /**
+     * ¹¹½¨Ê÷½á¹¹
+     */
+    private function buildTree(array $list, int $parentId = 0): array
     {
         $tree = [];
-        foreach ($menus as $m) {
-            if ((int) ($m['parent_id'] ?? 0) !== $parentId) {
-                continue;
-            }
 
-            $node = [
-                'id' => isset($m['id']) ? (string) $m['id'] : null,
-                'parentId' => isset($m['parent_id']) ? (string) $m['parent_id'] : null,
-                'name' => $m['name'] ?? null,
-                'type' => $m['type'] ?? null,
-                'routeName' => $m['route_name'] ?? null,
-                'routePath' => $m['route_path'] ?? null,
-                'component' => $m['component'] ?? null,
-                'sort' => isset($m['sort']) ? (int) $m['sort'] : null,
-                'visible' => isset($m['visible']) ? (int) $m['visible'] : null,
-                'icon' => $m['icon'] ?? null,
-                'redirect' => $m['redirect'] ?? null,
-                'perm' => $m['perm'] ?? null,
-            ];
-
-            $children = $this->buildMenuTree((int) ($m['id'] ?? 0), $menus);
-            if (!empty($children)) {
-                $node['children'] = $children;
-            }
-
-            $tree[] = $this->filterNulls($node);
-        }
-
-        return $tree;
-    }
-
-    private function buildMenuOptions(int $parentId, array $menus): array
-    {
-        $tree = [];
-        foreach ($menus as $m) {
-            if ((int) ($m['parent_id'] ?? 0) !== $parentId) {
-                continue;
-            }
-
-            $node = [
-                'value' => isset($m['id']) ? (string) $m['id'] : '0',
-                'label' => (string) ($m['name'] ?? ''),
-            ];
-
-            $children = $this->buildMenuOptions((int) ($m['id'] ?? 0), $menus);
-            if (!empty($children)) {
-                $node['children'] = $children;
-            }
-
-            $tree[] = $node;
-        }
-
-        return $tree;
-    }
-
-    private function buildRoutes(int $parentId, array $menus): array
-    {
-        $routes = [];
-        foreach ($menus as $m) {
-            if ((int) ($m['parent_id'] ?? 0) !== $parentId) {
-                continue;
-            }
-
-            $route = $this->toRouteVo($m);
-
-            $children = $this->buildRoutes((int) ($m['id'] ?? 0), $menus);
-            if (!empty($children)) {
-                $route['children'] = $children;
-            }
-
-            $routes[] = $this->filterNulls($route);
-        }
-
-        return $routes;
-    }
-
-    private function toRouteVo(array $menu): array
-    {
-        $id = (int) ($menu['id'] ?? 0);
-        $routePath = (string) ($menu['route_path'] ?? '');
-        // å¤–é“¾èœå•ä¸èµ°å‰ç«¯è·¯ç”±ç»„ä»¶
-        $externalLink = preg_match('/^https?:\/\//i', $routePath) === 1;
-
-        $component = $menu['component'] ?? null;
-        if (is_string($component) && $component !== '') {
-            $component = str_replace('\\', '/', $component);
-        }
-
-        $type = (string) ($menu['type'] ?? '');
-        $routeName = (string) ($menu['route_name'] ?? '');
-        if ($routeName === '') {
-            // å¤–é“¾ç”¨å›ºå®šå‰ç¼€ï¼Œæ™®é€šèœå•æŒ‰è·¯å¾„ç”Ÿæˆè·¯ç”±å
-            $routeName = $externalLink ? ('ext-' . $id) : $this->guessRouteNameFromPath($routePath);
-        }
-
-        $meta = [
-            'title' => $menu['name'] ?? null,
-            'icon' => $menu['icon'] ?? null,
-            'hidden' => ((int) ($menu['visible'] ?? 1)) === 0,
-            'alwaysShow' => ((int) ($menu['always_show'] ?? 0)) === 1,
-        ];
-
-        // ç›®å½•ä¸éœ€è¦ keepAliveï¼Œåªæœ‰èœå•ç±»å‹ä¸”å¯ç”¨æ—¶æ‰è®¾ç½®
-        if ($type === 'M' && ((int) ($menu['keep_alive'] ?? 0)) === 1) {
-            $meta['keepAlive'] = true;
-        }
-
-        $paramsJson = (string) ($menu['params'] ?? '');
-        if ($paramsJson !== '') {
-            $decoded = json_decode($paramsJson, true);
-            if (is_array($decoded) && !empty($decoded)) {
-                // params é€ä¼ åˆ°å‰ç«¯è·¯ç”± meta
-                $meta['params'] = $decoded;
-            }
-        }
-
-        return [
-            'path' => $routePath,
-            'component' => $externalLink ? null : $component,
-            'redirect' => $menu['redirect'] ?? null,
-            'name' => $routeName,
-            'meta' => $this->filterNulls($meta),
-        ];
-    }
-
-    private function guessRouteNameFromPath(string $routePath): string
-    {
-        $p = trim($routePath);
-        if ($p === '') {
-            return '';
-        }
-
-        $p = preg_replace_callback('/-([a-zA-Z0-9])/', static function (array $matches): string {
-            return strtoupper($matches[1]);
-        }, $p);
-
-        $first = $p[0] ?? '';
-        if ($first !== '' && ctype_alpha($first)) {
-            $p = strtoupper($first) . substr($p, 1);
-        }
-
-        return $p;
-    }
-
-    private function generateMenuTreePath(int $parentId): string
-    {
-        if ($parentId <= 0) {
-            return '0';
-        }
-
-        $parent = Menu::where('id', $parentId)->find();
-        if ($parent === null) {
-            return '0';
-        }
-
-        $p = $parent->toArray();
-        $parentTree = (string) ($p['tree_path'] ?? '0');
-        if ($parentTree === '') {
-            $parentTree = '0';
-        }
-
-        return $parentTree . ',' . $parentId;
-    }
-
-    private function filterNulls(array $data): array
-    {
-        foreach ($data as $k => $v) {
-            if (is_array($v)) {
-                $v = $this->filterNulls($v);
-                if ($v === []) {
-                    unset($data[$k]);
-                    continue;
+        foreach ($list as $item) {
+            if ((int) $item['parent_id'] === $parentId) {
+                $children = $this->buildTree($list, (int) $item['id']);
+                if ($children) {
+                    $item['children'] = $children;
                 }
-                $data[$k] = $v;
-                continue;
-            }
-
-            if ($v === null) {
-                unset($data[$k]);
-                continue;
+                $tree[] = $item;
             }
         }
 
-        return $data;
+        return $tree;
     }
 }

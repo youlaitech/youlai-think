@@ -1,12 +1,7 @@
-<?php
-// 全局中间件定义文件
+<?php declare(strict_types=1);
+
+// 全局中间件配�?
 return [
-    \app\middleware\PhpDeprecationMiddleware::class,
-    \app\middleware\CorsMiddleware::class,
-    // 全局请求缓存
-    // \think\middleware\CheckRequestCache::class,
-    // 多语言加载
-    // \think\middleware\LoadLangPack::class,
-    // Session初始化
-    // \think\middleware\SessionInit::class
+    // 跨域处理
+    \app\middleware\Cors::class,
 ];

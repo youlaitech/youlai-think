@@ -1,6 +1,4 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\service;
 
@@ -9,22 +7,22 @@ use think\facade\Db;
 
 /**
  * 数据权限服务
- * 支持多角色数据权限合并（并集策略）
+ * 支持多角色数据权限合并（并集策略�?
  */
 class DataPermissionService
 {
     /**
      * 应用数据权限过滤
      *
-     * @param object $query 查询构建器
-     * @param string $deptIdColumn 部门ID字段名（如 'u.dept_id'）
-     * @param string $userIdColumn 用户ID字段名（如 'u.id' 或 'u.create_by'）
-     * @param array $authUser 当前用户信息（包含 userId、deptId、dataScopes、roles）
-     * @return object 过滤后的查询构建器
+     * @param object $query 查询构建�?
+     * @param string $deptIdColumn 部门ID字段名（�?'u.dept_id'�?
+     * @param string $userIdColumn 用户ID字段名（�?'u.id' �?'u.create_by'�?
+     * @param array $authUser 当前用户信息（包�?userId、deptId、dataScopes、roles�?
+     * @return object 过滤后的查询构建�?
      */
     public function apply(object $query, string $deptIdColumn, string $userIdColumn, array $authUser): object
     {
-        // 超级管理员跳过过滤
+        // 超级管理员跳过过�?
         if ($this->isRoot($authUser)) {
             return $query;
         }
@@ -34,17 +32,17 @@ class DataPermissionService
         $deptId = $authUser['deptId'] ?? null;
         $deptId = $deptId === null || $deptId === '' ? null : (int) $deptId;
 
-        // 没有数据权限配置，默认只能查看本人数据
+        // 没有数据权限配置，默认只能查看本人数�?
         if (empty($dataScopes)) {
             return $userId > 0 ? $query->where($userIdColumn, $userId) : $query->whereRaw('1 = 0');
         }
 
-        // 如果任一角色是 ALL，则跳过数据权限过滤
+        // 如果任一角色�?ALL，则跳过数据权限过滤
         if ($this->hasAllDataScope($dataScopes)) {
             return $query;
         }
 
-        // 多角色数据权限合并（并集策略）
+        // 多角色数据权限合并（并集策略�?
         return $this->applyWithDataScopes($query, $deptIdColumn, $userIdColumn, $dataScopes, $userId, $deptId);
     }
 
@@ -72,7 +70,7 @@ class DataPermissionService
     }
 
     /**
-     * 应用多角色数据权限（并集策略）
+     * 应用多角色数据权限（并集策略�?
      */
     private function applyWithDataScopes(
         object $query,
@@ -99,13 +97,13 @@ class DataPermissionService
             return $query->whereRaw('1 = 0');
         }
 
-        // 使用 OR 连接各角色条件（并集）
+        // 使用 OR 连接各角色条件（并集�?
         $orCondition = '(' . implode(' OR ', $conditions) . ')';
         return $query->whereRaw($orCondition, $bindings);
     }
 
     /**
-     * 构建单个角色的数据权限条件
+     * 构建单个角色的数据权限条�?
      */
     private function buildRoleCondition(
         int $dataScope,
@@ -189,7 +187,7 @@ class DataPermissionService
     }
 
     /**
-     * 判断用户是否有全部数据权限
+     * 判断用户是否有全部数据权�?
      */
     public function hasAllPermission(array $authUser): bool
     {

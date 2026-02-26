@@ -1,10 +1,8 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\controller;
 
-use app\common\controller\ApiController;
+use app\controller\ApiController;
 use app\common\exception\BusinessException;
 use app\common\web\Result;
 use app\common\web\ResultCode;
@@ -41,7 +39,7 @@ final class FileController extends ApiController
             throw new BusinessException(ResultCode::UPLOAD_FILE_EXCEPTION);
         }
 
-        $info = (new FileService())->uploadFile($file, $this->request);
+        $info = $this->service(FileService::class)->uploadFile($file, $this->request);
         return $this->ok($info);
     }
 
@@ -61,8 +59,8 @@ final class FileController extends ApiController
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
-        // 删除 storage 内文件
-        $result = (new FileService())->deleteFile($filePath);
+        // 删除 storage 内文�?
+        $result = $this->service(FileService::class)->deleteFile($filePath);
         return json(Result::judge($result)->toArray());
     }
 }

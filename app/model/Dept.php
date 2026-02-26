@@ -1,13 +1,111 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\model;
 
-use think\Model;
-
-// éƒ¨é—¨æ¨¡åž‹ï¼Œå¯¹åº” sys_dept
+/**
+ * ²¿ÃÅÄ£ÐÍ
+ *
+ * @property int    $id          ²¿ÃÅID
+ * @property int    $parentId    ¸¸²¿ÃÅID
+ * @property string $name        ²¿ÃÅÃû³Æ
+ * @property string $code        ²¿ÃÅ±àÂë
+ * @property int    $sort        ÅÅÐò
+ * @property int    $status      ×´Ì¬
+ * @property string $treePath    Ê÷Â·¾¶£¨¶ººÅ·Ö¸ôµÄIDÁ´£©
+ * @property string $createTime  ´´½¨Ê±¼ä
+ *
+ * @property Dept   $parent      ¸¸²¿ÃÅ
+ * @property Dept[] $children    ×Ó²¿ÃÅ
+ * @property User[] $users       ²¿ÃÅÓÃ»§
+ */
 class Dept extends Model
 {
     protected $name = 'sys_dept';
+
+    protected $type = [
+        'id' => 'integer',
+        'parent_id' => 'integer',
+        'sort' => 'integer',
+        'status' => 'integer',
+    ];
+
+    // ==================== ¹ØÁª¹ØÏµ ====================
+
+    /**
+     * ¸¸²¿ÃÅ
+     */
+    public function parent(): \think\model\relation\BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id', 'id');
+    }
+
+    /**
+     * ×Ó²¿ÃÅ
+     */
+    public function children(): \think\model\relation\HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id', 'id')
+            ->order('sort', 'asc');
+    }
+
+    /**
+     * ²¿ÃÅÓÃ»§
+     */
+    public function users(): \think\model\relation\HasMany
+    {
+        return $this->hasMany(User::class, 'dept_id', 'id');
+    }
+
+    // ==================== ·ÃÎÊÆ÷ ====================
+
+    /**
+     * ¸¸ID·ÃÎÊÆ÷
+     */
+    public function getParentIdAttr(mixed $value): string
+    {
+        return (string) $value;
+    }
+
+    /**
+     * ×´Ì¬ÎÄ±¾
+     */
+    public function getStatusTextAttr(mixed $value, array $data): string
+    {
+        return (int) ($data['status'] ?? 0) === 1 ? 'ÆôÓÃ' : '½ûÓÃ';
+    }
+
+    // ==================== ²éÑ¯×÷ÓÃÓò ====================
+
+    /**
+     * ÆôÓÃ×´Ì¬
+     */
+    public function scopeEnabled($query)
+    {
+        return $query->where('status', 1);
+    }
+
+    /**
+     * °´±àÂë²éÑ¯
+     */
+    public function scopeByCode($query, string $code)
+    {
+        return $query->where('code', $code);
+    }
+
+    // ==================== ÒµÎñ·½·¨ ====================
+
+    /**
+     * »ñÈ¡ËùÓÐ×Ó²¿ÃÅID£¨°üº¬×Ô¼º£©
+     */
+    public function getDescendantIds(): array
+    {
+        $ids = [$this->id];
+        $children = $this->children;
+
+        foreach ($children as $child) {
+            $ids = array_merge($ids, $child->getDescendantIds());
+        }
+
+        return $ids;
+    }
 }

@@ -1,166 +1,70 @@
-<?php
-// +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
-// +----------------------------------------------------------------------
-// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
-// +----------------------------------------------------------------------
-// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
-// +----------------------------------------------------------------------
-// | Author: liu21st <liu21st@gmail.com>
-// +----------------------------------------------------------------------
+<?php declare(strict_types=1);
+
+use app\controller\AuthController;
+use app\controller\UserController;
+use app\controller\RoleController;
+use app\controller\MenuController;
+use app\controller\DeptController;
 use think\facade\Route;
 
-Route::get('swagger/openapi', [\app\controller\SwaggerController::class, 'openapi']);
-Route::get('swagger/openapi.json', [\app\controller\SwaggerController::class, 'openapi']);
-Route::get('swagger', [\app\controller\SwaggerController::class, 'ui']);
+// ==================== 认证接口（无需登录�?====================
 
-// API v1 路由
+Route::group('api/v1/auth', function () {
+    Route::get('captcha', [AuthController::class, 'captcha']);
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('refresh', [AuthController::class, 'refresh']);
+    Route::post('logout', [AuthController::class, 'logout']);
+});
+
+// ==================== 业务接口（需要登录） ====================
+
 Route::group('api/v1', function () {
-    // 认证与登录
-    Route::get('auth/captcha', [\app\controller\AuthController::class, 'captcha']);
-    Route::post('auth/login', [\app\controller\AuthController::class, 'login']);
-    Route::post('auth/login/sms', [\app\controller\AuthController::class, 'loginBySms']);
-    Route::post('auth/sms/code', [\app\controller\AuthController::class, 'sendLoginSmsCode']);
-    Route::delete('auth/logout', [\app\controller\AuthController::class, 'logout']);
-    Route::post('auth/refresh-token', [\app\controller\AuthController::class, 'refreshToken']);
-
-    // 文件上传/删除
-    Route::group('files', function () {
-        Route::post('', [\app\controller\FileController::class, 'upload']);
-        Route::delete('', [\app\controller\FileController::class, 'delete']);
-    })->middleware(['auth', 'demo']);
 
     // 用户管理
     Route::group('users', function () {
-        Route::get('me', [\app\controller\UserController::class, 'me']);
-
-        Route::get('', [\app\controller\UserController::class, 'page'])->middleware('perm', 'sys:user:list');
-        Route::get('options', [\app\controller\UserController::class, 'options']);
-
-        Route::get(':userId/form', [\app\controller\UserController::class, 'form'])->pattern(['userId' => '\\d+'])->middleware('perm', 'sys:user:update');
-        Route::post('', [\app\controller\UserController::class, 'create'])->middleware('perm', 'sys:user:create');
-        Route::put(':id', [\app\controller\UserController::class, 'update'])->pattern(['id' => '\\d+'])->middleware('perm', 'sys:user:update');
-        Route::delete(':ids', [\app\controller\UserController::class, 'delete'])->middleware('perm', 'sys:user:delete');
-
-        Route::put(':id/password/reset', [\app\controller\UserController::class, 'resetPassword'])->pattern(['id' => '\\d+'])->middleware('perm', 'sys:user:reset-password');
-        Route::patch(':userId/status', [\app\controller\UserController::class, 'updateStatus'])->pattern(['userId' => '\\d+'])->middleware('perm', 'sys:user:update');
-
-        Route::get('template', [\app\controller\UserController::class, 'downloadTemplate']);
-        Route::get('export', [\app\controller\UserController::class, 'export'])->middleware('perm', 'sys:user:export');
-        Route::post('import', [\app\controller\UserController::class, 'import'])->middleware('perm', 'sys:user:import');
-
-        Route::get('profile', [\app\controller\UserController::class, 'profile']);
-        Route::put('profile', [\app\controller\UserController::class, 'updateProfile']);
-        Route::put('password', [\app\controller\UserController::class, 'changePassword']);
-        Route::post('mobile/code', [\app\controller\UserController::class, 'sendMobileCode']);
-        Route::put('mobile', [\app\controller\UserController::class, 'bindOrChangeMobile']);
-        Route::delete('mobile', [\app\controller\UserController::class, 'unbindMobile']);
-        Route::post('email/code', [\app\controller\UserController::class, 'sendEmailCode']);
-        Route::put('email', [\app\controller\UserController::class, 'bindOrChangeEmail']);
-        Route::delete('email', [\app\controller\UserController::class, 'unbindEmail']);
-    })->middleware(['auth', 'dataScope', 'demo']);
-
-    // 部门管理
-    Route::group('depts', function () {
-        Route::get('', [\app\controller\DeptController::class, 'index']);
-        Route::get('options', [\app\controller\DeptController::class, 'options']);
-
-        Route::post('', [\app\controller\DeptController::class, 'create'])->middleware('perm', 'sys:dept:create');
-        Route::get(':deptId/form', [\app\controller\DeptController::class, 'form'])->pattern(['deptId' => '\\d+']);
-        Route::put(':deptId', [\app\controller\DeptController::class, 'update'])->pattern(['deptId' => '\\d+'])->middleware('perm', 'sys:dept:update');
-        Route::delete(':ids', [\app\controller\DeptController::class, 'delete'])->middleware('perm', 'sys:dept:delete');
-    })->middleware(['auth', 'dataScope', 'demo']);
-
-    // 字典与字典项
-    Route::group('dicts', function () {
-        Route::get('', [\app\controller\DictController::class, 'page'])->middleware('perm', 'sys:dict:list');
-        Route::get('options', [\app\controller\DictController::class, 'index']);
-
-        Route::get(':id/form', [\app\controller\DictController::class, 'form'])->pattern(['id' => '\\d+']);
-        Route::post('', [\app\controller\DictController::class, 'create'])->middleware('perm', 'sys:dict:create');
-        Route::put(':id', [\app\controller\DictController::class, 'update'])->pattern(['id' => '\\d+'])->middleware('perm', 'sys:dict:update');
-        Route::delete(':ids', [\app\controller\DictController::class, 'delete'])->middleware('perm', 'sys:dict:delete');
-
-        Route::get(':dictCode/items/options', [\app\controller\DictController::class, 'items']);
-        Route::get(':dictCode/items', [\app\controller\DictController::class, 'itemPage']);
-        Route::post(':dictCode/items', [\app\controller\DictController::class, 'createItem'])->middleware('perm', 'sys:dict-item:create');
-        Route::get(':dictCode/items/:itemId/form', [\app\controller\DictController::class, 'itemForm'])->pattern(['itemId' => '\\d+']);
-        Route::put(':dictCode/items/:itemId', [\app\controller\DictController::class, 'updateItem'])->pattern(['itemId' => '\\d+'])->middleware('perm', 'sys:dict-item:update');
-        Route::delete(':dictCode/items/:itemIds', [\app\controller\DictController::class, 'deleteItems'])->middleware('perm', 'sys:dict-item:delete');
-    })->middleware(['auth', 'demo']);
-
-    // 通知公告
-    Route::group('notices', function () {
-        Route::get('', [\app\controller\NoticeController::class, 'page'])->middleware('perm', 'sys:notice:list');
-        Route::post('', [\app\controller\NoticeController::class, 'create'])->middleware('perm', 'sys:notice:create');
-        Route::get(':id/form', [\app\controller\NoticeController::class, 'form'])->pattern(['id' => '\\d+']);
-        Route::get(':id/detail', [\app\controller\NoticeController::class, 'detail'])->pattern(['id' => '\\d+']);
-        Route::put(':id/publish', [\app\controller\NoticeController::class, 'publish'])->pattern(['id' => '\\d+'])->middleware('perm', 'sys:notice:publish');
-        Route::put(':id/revoke', [\app\controller\NoticeController::class, 'revoke'])->pattern(['id' => '\\d+'])->middleware('perm', 'sys:notice:revoke');
-        Route::put(':id', [\app\controller\NoticeController::class, 'update'])->pattern(['id' => '\\d+'])->middleware('perm', 'sys:notice:update');
-        Route::delete(':ids', [\app\controller\NoticeController::class, 'delete'])->middleware('perm', 'sys:notice:delete');
-        Route::put('read-all', [\app\controller\NoticeController::class, 'readAll']);
-        Route::get('my', [\app\controller\NoticeController::class, 'my']);
-    })->middleware(['auth', 'dataScope', 'demo']);
-
-    // 系统配置
-    Route::group('configs', function () {
-        Route::get('', [\app\controller\ConfigController::class, 'page'])->middleware('perm', 'sys:config:list');
-        Route::post('', [\app\controller\ConfigController::class, 'create'])->middleware('perm', 'sys:config:create');
-        Route::get(':id/form', [\app\controller\ConfigController::class, 'form'])->pattern(['id' => '\\d+']);
-        Route::put(':id', [\app\controller\ConfigController::class, 'update'])->pattern(['id' => '\\d+'])->middleware('perm', 'sys:config:update');
-        Route::delete(':id', [\app\controller\ConfigController::class, 'delete'])->pattern(['id' => '\\d+'])->middleware('perm', 'sys:config:delete');
-        Route::put('refresh', [\app\controller\ConfigController::class, 'refresh'])->middleware('perm', 'sys:config:refresh');
-    })->middleware(['auth', 'demo']);
-
-    // 操作日志
-    Route::group('logs', function () {
-        Route::get('', [\app\controller\LogController::class, 'page']);
-    })->middleware(['auth']);
-
-    // 统计分析
-    Route::group('statistics', function () {
-        Route::get('visits/trend', [\app\controller\StatisticsController::class, 'visitTrend']);
-        Route::get('visits/overview', [\app\controller\StatisticsController::class, 'visitOverview']);
-    })->middleware(['auth']);
-
-    // 菜单与路由
-    Route::group('menus', function () {
-        Route::get('', [\app\controller\MenuController::class, 'index']);
-        Route::get('options', [\app\controller\MenuController::class, 'options']);
-        Route::get('routes', [\app\controller\MenuController::class, 'routes']);
-
-        Route::get(':id/form', [\app\controller\MenuController::class, 'form'])->pattern(['id' => '\\d+'])->middleware('perm', 'sys:menu:update');
-        Route::post('', [\app\controller\MenuController::class, 'create'])->middleware('perm', 'sys:menu:create');
-        Route::put(':id', [\app\controller\MenuController::class, 'update'])->pattern(['id' => '\\d+'])->middleware('perm', 'sys:menu:update');
-        Route::delete(':id', [\app\controller\MenuController::class, 'delete'])->pattern(['id' => '\\d+'])->middleware('perm', 'sys:menu:delete');
-        Route::patch(':menuId', [\app\controller\MenuController::class, 'updateVisible'])->pattern(['menuId' => '\\d+'])->middleware('perm', 'sys:menu:update');
-    })->middleware(['auth', 'demo']);
+        Route::get('me', [UserController::class, 'me']);
+        Route::get('template', [UserController::class, 'template']);
+        Route::post('import', [UserController::class, 'import'])->middleware('perm', 'sys:user:import');
+        Route::get('', [UserController::class, 'page'])->middleware('perm', 'sys:user:list');
+        Route::get(':id', [UserController::class, 'detail'])->pattern(['id' => '\d+']);
+        Route::post('', [UserController::class, 'create'])->middleware('perm', 'sys:user:create');
+        Route::put(':id', [UserController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:user:update');
+        Route::delete(':ids', [UserController::class, 'delete'])->middleware('perm', 'sys:user:delete');
+        Route::put(':id/password', [UserController::class, 'resetPassword'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:user:resetPwd');
+        Route::put(':id/status', [UserController::class, 'changeStatus'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:user:update');
+    });
 
     // 角色管理
     Route::group('roles', function () {
-        Route::get('', [\app\controller\RoleController::class, 'page'])->middleware('perm', 'sys:role:list');
-        Route::get('options', [\app\controller\RoleController::class, 'options']);
-        Route::get(':roleId/form', [\app\controller\RoleController::class, 'form'])->pattern(['roleId' => '\\d+'])->middleware('perm', 'sys:role:update');
-        Route::post('', [\app\controller\RoleController::class, 'create'])->middleware('perm', 'sys:role:create');
-        Route::put(':id', [\app\controller\RoleController::class, 'update'])->pattern(['id' => '\\d+'])->middleware('perm', 'sys:role:update');
-        Route::put(':roleId/status', [\app\controller\RoleController::class, 'updateStatus'])->pattern(['roleId' => '\\d+'])->middleware('perm', 'sys:role:update');
-        Route::delete(':ids', [\app\controller\RoleController::class, 'delete'])->middleware('perm', 'sys:role:delete');
+        Route::get('options', [RoleController::class, 'options']);
+        Route::get('', [RoleController::class, 'page'])->middleware('perm', 'sys:role:list');
+        Route::get(':id', [RoleController::class, 'detail'])->pattern(['id' => '\d+']);
+        Route::post('', [RoleController::class, 'create'])->middleware('perm', 'sys:role:create');
+        Route::put(':id', [RoleController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:update');
+        Route::delete(':ids', [RoleController::class, 'delete'])->middleware('perm', 'sys:role:delete');
+    });
 
-        Route::get(':roleId/menuIds', [\app\controller\RoleController::class, 'menuIds'])->pattern(['roleId' => '\\d+']);
-        Route::put(':roleId/menus', [\app\controller\RoleController::class, 'assignMenus'])->pattern(['roleId' => '\\d+'])->middleware('perm', 'sys:role:assign');
+    // 菜单管理
+    Route::group('menus', function () {
+        Route::get('routes', [MenuController::class, 'routes']);
+        Route::get('tree', [MenuController::class, 'tree'])->middleware('perm', 'sys:menu:list');
+        Route::get('', [MenuController::class, 'list'])->middleware('perm', 'sys:menu:list');
+        Route::get(':id', [MenuController::class, 'detail'])->pattern(['id' => '\d+']);
+        Route::post('', [MenuController::class, 'create'])->middleware('perm', 'sys:menu:create');
+        Route::put(':id', [MenuController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:menu:update');
+        Route::delete(':id', [MenuController::class, 'delete'])->middleware('perm', 'sys:menu:delete');
+    });
 
-        Route::get(':roleId/dept-ids', [\app\controller\RoleController::class, 'deptIds'])->pattern(['roleId' => '\\d+']);
-        Route::put(':roleId/depts', [\app\controller\RoleController::class, 'assignDepts'])->pattern(['roleId' => '\\d+'])->middleware('perm', 'sys:role:assign');
-    })->middleware(['auth', 'demo']);
+    // 部门管理
+    Route::group('depts', function () {
+        Route::get('tree', [DeptController::class, 'tree']);
+        Route::get('', [DeptController::class, 'list'])->middleware('perm', 'sys:dept:list');
+        Route::get(':id', [DeptController::class, 'detail'])->pattern(['id' => '\d+']);
+        Route::post('', [DeptController::class, 'create'])->middleware('perm', 'sys:dept:create');
+        Route::put(':id', [DeptController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:dept:update');
+        Route::delete(':id', [DeptController::class, 'delete'])->middleware('perm', 'sys:dept:delete');
+    });
 
-    // 代码生成
-    Route::group('codegen', function () {
-        Route::get('table', [\app\controller\CodegenController::class, 'tablePage']);
-        Route::get(':tableName/config', [\app\controller\CodegenController::class, 'getConfig']);
-        Route::post(':tableName/config', [\app\controller\CodegenController::class, 'saveConfig']);
-        Route::delete(':tableName/config', [\app\controller\CodegenController::class, 'deleteConfig']);
-        Route::get(':tableName/preview', [\app\controller\CodegenController::class, 'preview']);
-        Route::get(':tableName/download', [\app\controller\CodegenController::class, 'download']);
-    })->middleware(['auth', 'demo']);
-});
+})->middleware([
+    'auth',
+]);

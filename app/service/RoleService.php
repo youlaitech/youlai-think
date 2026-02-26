@@ -1,339 +1,256 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\service;
 
-use app\common\enums\DataScopeEnum;
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
+use app\model\Menu;
 use app\model\Role;
-use app\support\RedisClient;
-use app\support\RedisKey;
+use app\model\RoleMenu;
 use think\facade\Db;
 
+/**
+ * 角色服务
+ */
 final class RoleService
 {
-    public function getRolePage(int $pageNum, int $pageSize, ?string $keywords = null): array
+    /**
+     * 角色字段列表
+     */
+    private const LIST_FIELDS = [
+        'id', 'code', 'name', 'status', 'sort', 'remark', 'create_time',
+    ];
+
+    /**
+     * 根据ID获取角色详情
+     */
+    public function getById(int $id): ?array
     {
-        $pageNum = $pageNum > 0 ? $pageNum : 1;
-        $pageSize = $pageSize > 0 ? $pageSize : 10;
+        $role = Role::with(['menus'])->find($id);
 
-        $query = Role::where('is_deleted', 0)->whereNotIn('code', ['ROOT']);
-
-        if ($keywords !== null && trim($keywords) !== '') {
-            $kw = '%' . trim($keywords) . '%';
-            $query = $query->where(function ($q) use ($kw) {
-                $q->whereLike('name', $kw)->whereOrLike('code', $kw);
-            });
+        if (!$role) {
+            return null;
         }
 
-        $total = (int) $query->count();
+        $data = $role->toArray();
+        $data['menuIds'] = array_column($data['menus'] ?? [], 'id');
+        unset($data['menus']);
 
-        $rows = $query
+        return $data;
+    }
+
+    /**
+     * 根据编码获取角色
+     */
+    public function getByCode(string $code): ?array
+    {
+        return Role::where('code', $code)->find()?->toArray();
+    }
+
+    /**
+     * 分页查询角色列表
+     */
+    public function paginate(array $params): array
+    {
+        $page = (int) ($params['pageNum'] ?? 1);
+        $pageSize = min((int) ($params['pageSize'] ?? 10), 100);
+
+        $query = Role::field(self::LIST_FIELDS)
             ->order('sort', 'asc')
-            ->order('id', 'asc')
-            ->page($pageNum, $pageSize)
-            ->field('id,name,code,status,sort,data_scope,create_time,update_time')
-            ->select();
+            ->order('id', 'desc');
 
-        $list = [];
-        foreach ($rows as $row) {
-            $r = $row->toArray();
-            $dataScope = isset($r['data_scope']) ? (int) $r['data_scope'] : null;
-            $list[] = [
-                'id' => isset($r['id']) ? (string) $r['id'] : null,
-                'name' => $r['name'] ?? null,
-                'code' => $r['code'] ?? null,
-                'status' => isset($r['status']) ? (int) $r['status'] : null,
-                'sort' => isset($r['sort']) ? (int) $r['sort'] : null,
-                'dataScope' => $dataScope,
-                'dataScopeLabel' => $dataScope !== null ? DataScopeEnum::getLabel($dataScope) : null,
-                'createTime' => $r['create_time'] ?? null,
-                'updateTime' => $r['update_time'] ?? null,
-            ];
+        // 条件筛�?
+        $this->applyFilters($query, $params);
+
+        $total = $query->count();
+        $list = $query->page($page, $pageSize)->select()->toArray();
+
+        // 格式�?
+        foreach ($list as &$item) {
+            $item['statusText'] = $item['status'] == 1 ? '启用' : '禁用';
         }
 
         return [$list, $total];
     }
 
-    public function listRoleOptions(): array
+    /**
+     * 获取所有启用的角色
+     */
+    public function getAllEnabled(): array
     {
-        $rows = Db::name('sys_role')
-            ->where('is_deleted', 0)
-            ->whereNotIn('code', ['ROOT'])
+        return Role::where('status', 1)
+            ->field(['id', 'code', 'name'])
             ->order('sort', 'asc')
-            ->field('id,name')
             ->select()
             ->toArray();
-
-        $list = [];
-        foreach ($rows as $r) {
-            $list[] = [
-                'label' => (string) ($r['name'] ?? ''),
-                'value' => (string) ($r['id'] ?? ''),
-            ];
-        }
-        return $list;
     }
 
-    public function getRoleForm(int $roleId): array
+    /**
+     * 创建角色
+     */
+    public function create(array $data): int
     {
-        $role = Role::where('id', $roleId)->where('is_deleted', 0)->find();
-        if ($role === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '角色不存在');
+        // 检查编码是否重�?
+        if (Role::where('code', $data['code'])->find()) {
+            throw new BusinessException(ResultCode::USER_ERROR, '角色编码已存�?);
         }
 
-        $r = $role->toArray();
+        return Db::transaction(function () use ($data) {
+            $now = date('Y-m-d H:i:s');
 
-        $dataScope = isset($r['data_scope']) ? (int) $r['data_scope'] : null;
-        $deptIds = null;
-        if ($dataScope === DataScopeEnum::CUSTOM) {
-            $deptIds = Db::name('sys_role_dept')->where('role_id', $roleId)->column('dept_id');
-            if (is_array($deptIds)) {
-                $deptIds = array_values(array_map(static fn($v) => (string) $v, $deptIds));
+            $roleId = Role::insertGetId([
+                'code' => $data['code'],
+                'name' => $data['name'],
+                'status' => $data['status'] ?? 1,
+                'sort' => $data['sort'] ?? 0,
+                'remark' => $data['remark'] ?? '',
+                'create_time' => $now,
+                'update_time' => $now,
+            ]);
+
+            // 分配菜单
+            if (!empty($data['menu_ids'])) {
+                $this->assignMenus($roleId, $data['menu_ids']);
             }
-        }
 
-        return [
-            'id' => isset($r['id']) ? (string) $r['id'] : null,
-            'name' => $r['name'] ?? null,
-            'code' => $r['code'] ?? null,
-            'sort' => isset($r['sort']) ? (int) $r['sort'] : null,
-            'status' => isset($r['status']) ? (int) $r['status'] : null,
-            'dataScope' => $dataScope,
-            'deptIds' => $deptIds,
-            'remark' => null,
-        ];
+            return (int) $roleId;
+        });
     }
 
-    public function saveRole(array $data, ?int $roleId = null): bool
+    /**
+     * 更新角色
+     */
+    public function update(int $id, array $data): bool
     {
-        $name = trim((string) ($data['name'] ?? ''));
-        $code = trim((string) ($data['code'] ?? ''));
-
-        if ($name === '' || $code === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+        $role = Role::find($id);
+        if (!$role) {
+            throw new BusinessException(ResultCode::USER_ERROR, '角色不存�?);
         }
 
-        $existsName = Role::where('is_deleted', 0)
-            ->where('name', $name)
-            ->when($roleId !== null, function ($q) use ($roleId) {
-                $q->where('id', '<>', $roleId);
-            })
-            ->count();
-
-        if ($existsName > 0) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '角色名称已存在');
+        // ROOT 角色不允许修�?
+        if ($role->code === 'ROOT') {
+            throw new BusinessException(ResultCode::USER_ERROR, '超级管理员角色不允许修改');
         }
 
-        $existsCode = Role::where('is_deleted', 0)
-            ->where('code', $code)
-            ->when($roleId !== null, function ($q) use ($roleId) {
-                $q->where('id', '<>', $roleId);
-            })
-            ->count();
+        return Db::transaction(function () use ($role, $data) {
+            $role->name = $data['name'] ?? $role->name;
+            $role->status = $data['status'] ?? $role->status;
+            $role->sort = $data['sort'] ?? $role->sort;
+            $role->remark = $data['remark'] ?? $role->remark;
+            $role->save();
 
-        if ($existsCode > 0) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '角色编码已存在');
-        }
+            // 更新菜单
+            if (isset($data['menu_ids'])) {
+                $this->syncMenus($id, $data['menu_ids']);
+            }
 
-        $entity = [
-            'name' => $name,
-            'code' => $code,
-            'sort' => isset($data['sort']) ? (int) $data['sort'] : 0,
-            'status' => isset($data['status']) ? (int) $data['status'] : 1,
-            'data_scope' => isset($data['dataScope']) ? (int) $data['dataScope'] : null,
-            'update_time' => date('Y-m-d H:i:s'),
-        ];
-
-        if ($roleId === null || $roleId <= 0) {
-            $entity['create_time'] = date('Y-m-d H:i:s');
-            $entity['is_deleted'] = 0;
-            $role = new Role();
-            $role->save($entity);
             return true;
-        }
-
-        $role = Role::where('id', $roleId)->where('is_deleted', 0)->find();
-        if ($role === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '角色不存在');
-        }
-
-        $oldDataScope = isset($role['data_scope']) ? (int) $role['data_scope'] : null;
-
-        $role->save($entity);
-
-        $newDataScope = isset($entity['data_scope']) ? (int) $entity['data_scope'] : null;
-        if ($oldDataScope !== $newDataScope) {
-            $userIds = Db::name('sys_user_role')->where('role_id', $roleId)->column('user_id');
-            $userIds = array_values(array_unique(array_map('intval', $userIds)));
-
-            $cfg = config('security');
-            $keys = $cfg['redis']['keys'] ?? [];
-            $pattern = (string) ($keys['user_token_version'] ?? 'auth:user:token_version:{}');
-
-            $redis = RedisClient::get();
-            foreach ($userIds as $uid) {
-                if ($uid > 0) {
-                    $versionKey = RedisKey::format($pattern, $uid);
-                    try {
-                        $redis->incr($versionKey);
-                    } catch (\Throwable) {
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    public function updateRoleStatus(int $roleId, int $status): bool
-    {
-        if (!in_array($status, [0, 1], true)) {
-            throw new BusinessException(ResultCode::PARAMETER_FORMAT_MISMATCH);
-        }
-
-        $role = Role::where('id', $roleId)->where('is_deleted', 0)->find();
-        if ($role === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '角色不存在');
-        }
-
-        $role->save([
-            'status' => $status,
-            'update_time' => date('Y-m-d H:i:s'),
-        ]);
-
-        return true;
-    }
-
-    public function deleteRoles(string $ids): bool
-    {
-        $ids = trim($ids);
-        if ($ids === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        $parts = array_values(array_filter(array_map('trim', explode(',', $ids)), fn($v) => $v !== ''));
-        $idList = [];
-        foreach ($parts as $p) {
-            if (!ctype_digit($p)) {
-                throw new BusinessException(ResultCode::PARAMETER_FORMAT_MISMATCH);
-            }
-            $idList[] = (int) $p;
-        }
-
-        if (empty($idList)) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT);
-        }
-
-        // 已分配用户的角色不允许删除
-        $hasUsers = Db::name('sys_user_role')->whereIn('role_id', $idList)->count();
-        if ($hasUsers > 0) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '角色已分配用户，无法删除');
-        }
-
-        Role::whereIn('id', $idList)->update([
-            'is_deleted' => 1,
-            'update_time' => date('Y-m-d H:i:s'),
-        ]);
-
-        return true;
-    }
-
-    public function getRoleMenuIds(int $roleId): array
-    {
-        return array_map('intval', Db::name('sys_role_menu')->where('role_id', $roleId)->column('menu_id'));
-    }
-
-    public function assignMenusToRole(int $roleId, array $menuIds): void
-    {
-        $role = Role::where('id', $roleId)->where('is_deleted', 0)->find();
-        if ($role === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '角色不存在');
-        }
-
-        $ids = [];
-        foreach ($menuIds as $id) {
-            if (is_int($id) || (is_string($id) && ctype_digit($id))) {
-                $ids[] = (int) $id;
-            }
-        }
-        $ids = array_values(array_unique(array_filter($ids, fn($v) => $v > 0)));
-
-        // 先清空旧关联，再写入新菜单权限
-        Db::transaction(function () use ($roleId, $ids) {
-            Db::name('sys_role_menu')->where('role_id', $roleId)->delete();
-
-            if (empty($ids)) {
-                return;
-            }
-
-            $rows = [];
-            foreach ($ids as $menuId) {
-                $rows[] = ['role_id' => $roleId, 'menu_id' => $menuId];
-            }
-
-            Db::name('sys_role_menu')->insertAll($rows);
         });
     }
 
-    public function getRoleDeptIds(int $roleId): array
+    /**
+     * 批量删除角色
+     */
+    public function deleteByIds(array $ids): int
     {
-        return array_map('intval', Db::name('sys_role_dept')->where('role_id', $roleId)->column('dept_id'));
+        // 不允许删除系统内置角�?
+        $protectedCodes = ['ROOT', 'ADMIN'];
+        $protectedIds = Role::whereIn('code', $protectedCodes)->column('id');
+        $ids = array_diff($ids, $protectedIds);
+
+        if (empty($ids)) {
+            return 0;
+        }
+
+        return Db::transaction(function () use ($ids) {
+            // 删除角色菜单关联
+            RoleMenu::whereIn('role_id', $ids)->delete();
+
+            // 删除角色
+            return Role::destroy($ids);
+        });
     }
 
-    public function assignDeptsToRole(int $roleId, array $deptIds): void
+    /**
+     * 获取角色的菜单权限标�?
+     */
+    public function getPermissionsByRoleId(int $roleId): array
     {
-        $role = Role::where('id', $roleId)->where('is_deleted', 0)->find();
-        if ($role === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '角色不存在');
+        $role = Role::with(['menus'])->find($roleId);
+
+        if (!$role) {
+            return [];
         }
 
-        $ids = [];
-        foreach ($deptIds as $id) {
-            if (is_int($id) || (is_string($id) && ctype_digit($id))) {
-                $ids[] = (int) $id;
-            }
+        return array_filter(
+            array_column($role->menus->toArray() ?? [], 'perm'),
+            fn ($perm) => !empty($perm)
+        );
+    }
+
+    /**
+     * 根据用户ID获取权限标识
+     */
+    public function getPermissionsByUserId(int $userId): array
+    {
+        // 获取用户所有角�?
+        $roleIds = Db::name('sys_user_role')
+            ->where('user_id', $userId)
+            ->column('role_id');
+
+        if (empty($roleIds)) {
+            return [];
         }
-        $ids = array_values(array_unique(array_filter($ids, fn($v) => $v > 0)));
 
-        $oldIds = array_map('intval', Db::name('sys_role_dept')->where('role_id', $roleId)->column('dept_id'));
-        sort($oldIds);
-        $newIds = $ids;
-        sort($newIds);
+        // 获取所有角色的菜单ID
+        $menuIds = RoleMenu::whereIn('role_id', $roleIds)->column('menu_id');
 
-        Db::transaction(function () use ($roleId, $ids) {
-            Db::name('sys_role_dept')->where('role_id', $roleId)->delete();
+        if (empty($menuIds)) {
+            return [];
+        }
 
-            if (empty($ids)) {
-                return;
-            }
+        // 获取权限标识
+        return Menu::whereIn('id', $menuIds)
+            ->where('type', 'button')
+            ->where('status', 1)
+            ->column('perm');
+    }
 
-            $rows = [];
-            foreach ($ids as $deptId) {
-                $rows[] = ['role_id' => $roleId, 'dept_id' => $deptId];
-            }
-            Db::name('sys_role_dept')->insertAll($rows);
-        });
+    // ==================== 私有方法 ====================
 
-        if ($oldIds !== $newIds) {
-            $userIds = Db::name('sys_user_role')->where('role_id', $roleId)->column('user_id');
-            $userIds = array_values(array_unique(array_map('intval', $userIds)));
+    private function applyFilters($query, array $params): void
+    {
+        if (!empty($params['keyword'])) {
+            $keyword = $params['keyword'];
+            $query->where(function ($q) use ($keyword) {
+                $q->whereLike('name', "%{$keyword}%")
+                  ->whereOr('code', 'like', "%{$keyword}%");
+            });
+        }
 
-            $cfg = config('security');
-            $keys = $cfg['redis']['keys'] ?? [];
-            $pattern = (string) ($keys['user_token_version'] ?? 'auth:user:token_version:{}');
+        if (isset($params['status']) && $params['status'] !== '') {
+            $query->where('status', (int) $params['status']);
+        }
+    }
 
-            $redis = RedisClient::get();
-            foreach ($userIds as $uid) {
-                if ($uid > 0) {
-                    $versionKey = RedisKey::format($pattern, $uid);
-                    try {
-                        $redis->incr($versionKey);
-                    } catch (\Throwable) {
-                    }
-                }
-            }
+    private function assignMenus(int $roleId, array $menuIds): void
+    {
+        $now = date('Y-m-d H:i:s');
+        $data = array_map(fn ($menuId) => [
+            'role_id' => $roleId,
+            'menu_id' => $menuId,
+            'create_time' => $now,
+        ], $menuIds);
+
+        RoleMenu::insertAll($data);
+    }
+
+    private function syncMenus(int $roleId, array $menuIds): void
+    {
+        RoleMenu::where('role_id', $roleId)->delete();
+
+        if (!empty($menuIds)) {
+            $this->assignMenus($roleId, $menuIds);
         }
     }
 }

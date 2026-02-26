@@ -1,6 +1,4 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\controller;
 
@@ -12,7 +10,7 @@ use think\facade\App;
  * @OA\Info(
  *     title="youlai-think",
  *     version="1.0",
- *     description="youlai 全家桶（ThinkPHP 8）权限管理后台接口文档"
+ *     description="youlai 全家桶（ThinkPHP 8）权限管理后台接口文�?
  * )
  */
 final class SwaggerController

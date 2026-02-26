@@ -1,10 +1,8 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\controller;
 
-use app\common\controller\ApiController;
+use app\controller\ApiController;
 use app\service\DictService;
 use OpenApi\Annotations as OA;
 
@@ -23,13 +21,13 @@ final class DictController extends ApiController
      *     tags={"06.字典接口"},
      *     @OA\Parameter(name="pageNum", in="query", description="页码", required=false),
      *     @OA\Parameter(name="pageSize", in="query", description="每页数量", required=false),
-     *     @OA\Parameter(name="keywords", in="query", description="关键字", required=false),
+     *     @OA\Parameter(name="keywords", in="query", description="关键�?, required=false),
      *     @OA\Response(response=200, description="OK")
      * )
      */
     public function page(): \think\Response
     {
-        [$list, $total] = (new DictService())->getDictPage($this->request->param());
+        [$list, $total] = $this->service(DictService::class)->getDictPage($this->request->param());
         return $this->okPage($list, $total);
     }
 
@@ -43,7 +41,7 @@ final class DictController extends ApiController
      */
     public function index(): \think\Response
     {
-        $list = (new DictService())->getDictList();
+        $list = $this->service(DictService::class)->getDictList();
         return $this->ok($list);
     }
 
@@ -58,7 +56,7 @@ final class DictController extends ApiController
      */
     public function form(int $id): \think\Response
     {
-        $data = (new DictService())->getDictForm($id);
+        $data = $this->service(DictService::class)->getDictForm($id);
         return $this->ok($data);
     }
 
@@ -74,7 +72,7 @@ final class DictController extends ApiController
     public function create(): \think\Response
     {
         $data = $this->mergeJsonParams();
-        (new DictService())->saveDict($data);
+        $this->service(DictService::class)->saveDict($data);
         return $this->ok();
     }
 
@@ -91,7 +89,7 @@ final class DictController extends ApiController
     public function update(int $id): \think\Response
     {
         $data = $this->mergeJsonParams();
-        (new DictService())->updateDict($id, $data);
+        $this->service(DictService::class)->updateDict($id, $data);
         return $this->ok();
     }
 
@@ -106,7 +104,7 @@ final class DictController extends ApiController
      */
     public function delete(string $ids): \think\Response
     {
-        (new DictService())->deleteDictByIds($ids);
+        $this->service(DictService::class)->deleteDictByIds($ids);
         return $this->ok();
     }
 
@@ -116,7 +114,7 @@ final class DictController extends ApiController
     /**
      * @OA\Get(
      *     path="/api/v1/dicts/{dictCode}/items",
-     *     summary="字典项分页列表",
+     *     summary="字典项分页列�?,
      *     tags={"06.字典接口"},
      *     @OA\Parameter(name="dictCode", in="path", description="字典编码", required=true),
      *     @OA\Parameter(name="pageNum", in="query", description="页码", required=false),
@@ -126,14 +124,14 @@ final class DictController extends ApiController
      */
     public function itemPage(string $dictCode): \think\Response
     {
-        [$list, $total] = (new DictService())->getDictItemPage($dictCode, $this->request->param());
+        [$list, $total] = $this->service(DictService::class)->getDictItemPage($dictCode, $this->request->param());
         return $this->okPage($list, $total);
     }
 
     /**
      * @OA\Get(
      *     path="/api/v1/dicts/{dictCode}/items/options",
-     *     summary="字典项下拉列表",
+     *     summary="字典项下拉列�?,
      *     tags={"06.字典接口"},
      *     @OA\Parameter(name="dictCode", in="path", description="字典编码", required=true),
      *     @OA\Response(response=200, description="OK")
@@ -141,14 +139,14 @@ final class DictController extends ApiController
      */
     public function items(string $dictCode): \think\Response
     {
-        $list = (new DictService())->getDictItems($dictCode);
+        $list = $this->service(DictService::class)->getDictItems($dictCode);
         return $this->ok($list);
     }
 
     /**
      * @OA\Get(
      *     path="/api/v1/dicts/{dictCode}/items/{itemId}/form",
-     *     summary="获取字典项表单数据",
+     *     summary="获取字典项表单数�?,
      *     tags={"06.字典接口"},
      *     @OA\Parameter(name="dictCode", in="path", description="字典编码", required=true),
      *     @OA\Parameter(name="itemId", in="path", description="字典项ID", required=true),
@@ -157,7 +155,7 @@ final class DictController extends ApiController
      */
     public function itemForm(string $dictCode, int $itemId): \think\Response
     {
-        $data = (new DictService())->getDictItemForm($itemId);
+        $data = $this->service(DictService::class)->getDictItemForm($itemId);
         $data['dictCode'] = $dictCode;
         return $this->ok($data);
     }
@@ -165,7 +163,7 @@ final class DictController extends ApiController
     /**
      * @OA\Post(
      *     path="/api/v1/dicts/{dictCode}/items",
-     *     summary="新增字典项",
+     *     summary="新增字典�?,
      *     tags={"06.字典接口"},
      *     @OA\Parameter(name="dictCode", in="path", description="字典编码", required=true),
      *     @OA\RequestBody(required=true, @OA\JsonContent()),
@@ -175,14 +173,14 @@ final class DictController extends ApiController
     public function createItem(string $dictCode): \think\Response
     {
         $data = $this->mergeJsonParams();
-        (new DictService())->saveDictItem($dictCode, $data);
+        $this->service(DictService::class)->saveDictItem($dictCode, $data);
         return $this->ok();
     }
 
     /**
      * @OA\Put(
      *     path="/api/v1/dicts/{dictCode}/items/{itemId}",
-     *     summary="修改字典项",
+     *     summary="修改字典�?,
      *     tags={"06.字典接口"},
      *     @OA\Parameter(name="dictCode", in="path", description="字典编码", required=true),
      *     @OA\Parameter(name="itemId", in="path", description="字典项ID", required=true),
@@ -193,14 +191,14 @@ final class DictController extends ApiController
     public function updateItem(string $dictCode, int $itemId): \think\Response
     {
         $data = $this->mergeJsonParams();
-        (new DictService())->updateDictItem($dictCode, $itemId, $data);
+        $this->service(DictService::class)->updateDictItem($dictCode, $itemId, $data);
         return $this->ok();
     }
 
     /**
      * @OA\Delete(
      *     path="/api/v1/dicts/{dictCode}/items/{itemIds}",
-     *     summary="删除字典项",
+     *     summary="删除字典�?,
      *     tags={"06.字典接口"},
      *     @OA\Parameter(name="dictCode", in="path", description="字典编码", required=true),
      *     @OA\Parameter(name="itemIds", in="path", description="字典项ID，多个以英文逗号(,)分割", required=true),
@@ -209,7 +207,7 @@ final class DictController extends ApiController
      */
     public function deleteItems(string $dictCode, string $itemIds): \think\Response
     {
-        (new DictService())->deleteDictItems($dictCode, $itemIds);
+        $this->service(DictService::class)->deleteDictItems($dictCode, $itemIds);
         return $this->ok();
     }
 }

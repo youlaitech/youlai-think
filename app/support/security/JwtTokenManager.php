@@ -1,13 +1,11 @@
-<?php
+<?php declare(strict_types=1);
 
-declare(strict_types=1);
-
-namespace app\common\security;
+namespace app\support\security;
 
 use app\common\exception\BusinessException;
-use app\common\redis\RedisClient;
-use app\common\redis\RedisKey;
 use app\common\web\ResultCode;
+use app\support\redis\RedisClient;
+use app\support\redis\RedisKey;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use think\facade\Db;
@@ -33,7 +31,7 @@ final class JwtTokenManager implements TokenManager
         $redis = RedisClient::get();
         $keys = $cfg['redis']['keys'] ?? [];
 
-        // Token 版本号用于强制失效历史 token
+        // Token 版本号用于强制失效历�?token
         $tokenVersionKey = RedisKey::format((string) ($keys['user_token_version'] ?? 'auth:user:token_version:{}'), $userId);
         $tokenVersion = (int) ($redis->get($tokenVersionKey) ?: 0);
         $redis->set($tokenVersionKey, (string) $tokenVersion);
@@ -49,8 +47,7 @@ final class JwtTokenManager implements TokenManager
             $authorities = $this->buildAuthorities($userId);
         }
 
-        // 序列化 dataScopes 为 JSON 字符串
-        $dataScopesJson = is_array($dataScopes) ? json_encode($dataScopes, JSON_UNESCAPED_UNICODE) : $dataScopes;
+        // 序列�?dataScopes �?JSON 字符�?        $dataScopesJson = is_array($dataScopes) ? json_encode($dataScopes, JSON_UNESCAPED_UNICODE) : $dataScopes;
 
         // access token 载荷
         $accessPayload = [
@@ -85,11 +82,11 @@ final class JwtTokenManager implements TokenManager
         $oldAccess = $redis->get($userAccessKey);
         $oldRefresh = $redis->get($userRefreshKey);
 
-        // 记录当前用户最新 token
+        // 记录当前用户最�?token
         $redis->setex($userAccessKey, $accessTtl, $accessToken);
         $redis->setex($userRefreshKey, $refreshTtl, $refreshToken);
 
-        // 旧 token 进入黑名单，防止并发登录复用
+        // �?token 进入黑名单，防止并发登录复用
         if (!empty($oldAccess)) {
             $this->blacklistToken((string) $oldAccess, $accessTtl);
         }
@@ -171,9 +168,6 @@ final class JwtTokenManager implements TokenManager
         return $this->generateToken($userAuthInfo);
     }
 
-    /**
-     * 构建用户角色数据权限列表
-     */
     private function buildDataScopes(int $userId): array
     {
         $roles = Db::name('sys_user_role')
@@ -210,9 +204,6 @@ final class JwtTokenManager implements TokenManager
         return $dataScopes;
     }
 
-    /**
-     * 构建用户权限标识列表
-     */
     private function buildAuthorities(int $userId): array
     {
         $roles = Db::name('sys_user_role')
@@ -248,7 +239,7 @@ final class JwtTokenManager implements TokenManager
             }
         }
 
-        // 递增 Token 版本号，统一踢出旧 token
+        // 递增 Token 版本号，统一踢出�?token
         if ($userId !== null && $userId > 0) {
             $tokenVersionKey = RedisKey::format((string) ($keys['user_token_version'] ?? 'auth:user:token_version:{}'), $userId);
             $redis->incr($tokenVersionKey);
@@ -321,6 +312,8 @@ final class JwtTokenManager implements TokenManager
         $redis = RedisClient::get();
 
         $k = RedisKey::format((string) ($keys['blacklist_token'] ?? 'auth:token:blacklist:{}'), $token);
-        $redis->setex($k, max(60, $ttl), '1');
+
+        // ttl 不应超过 token 剩余有效期，但这里以传入 ttl 为准
+        $redis->setex($k, $ttl, '1');
     }
 }

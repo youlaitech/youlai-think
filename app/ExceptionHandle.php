@@ -1,4 +1,5 @@
-<?php
+<?php declare(strict_types=1);
+
 namespace app;
 
 use app\common\exception\BusinessException;
@@ -15,42 +16,32 @@ use think\Response;
 use Throwable;
 
 /**
- * 应用异常处理类
+ * 应用异常处理�?
  */
 class ExceptionHandle extends Handle
 {
     /**
-     * 不需要记录信息（日志）的异常类列表
-     * @var array
+     * 不需要记录信息（日志）的异常类列�?
      */
-    protected $ignoreReport = [
+    protected array $ignoreReport = [
         HttpException::class,
         HttpResponseException::class,
         ModelNotFoundException::class,
         DataNotFoundException::class,
         ValidateException::class,
+        BusinessException::class,
     ];
 
     /**
-     * 记录异常信息（包括日志或者其它方式记录）
-     *
-     * @access public
-     * @param  Throwable $exception
-     * @return void
+     * 记录异常信息
      */
     public function report(Throwable $exception): void
     {
-        // 使用内置的方式记录异常日志
         parent::report($exception);
     }
 
     /**
-     * Render an exception into an HTTP response.
-     *
-     * @access public
-     * @param \think\Request   $request
-     * @param Throwable $e
-     * @return Response
+     * 渲染异常为HTTP响应
      */
     public function render($request, Throwable $e): Response
     {
@@ -61,15 +52,14 @@ class ExceptionHandle extends Handle
         $resultCode = ResultCode::SYSTEM_ERROR;
         $msg = $e->getMessage();
 
+        // 根据异常类型映射错误�?
         if ($e instanceof BusinessException) {
             $resultCode = $e->getResultCode();
-            $msg = $e->getMessage();
         } elseif ($e instanceof ValidateException) {
             $resultCode = ResultCode::USER_REQUEST_PARAMETER_ERROR;
             $msg = $e->getError();
         } elseif ($e instanceof HttpException) {
-            $statusCode = (int) $e->getStatusCode();
-            $resultCode = match ($statusCode) {
+            $resultCode = match ((int) $e->getStatusCode()) {
                 401 => ResultCode::ACCESS_UNAUTHORIZED,
                 403 => ResultCode::ACCESS_PERMISSION_EXCEPTION,
                 404 => ResultCode::INTERFACE_NOT_EXIST,
@@ -77,13 +67,29 @@ class ExceptionHandle extends Handle
             };
         } elseif ($e instanceof ModelNotFoundException || $e instanceof DataNotFoundException) {
             $resultCode = ResultCode::INTERFACE_NOT_EXIST;
+            $msg = '数据不存�?;
         }
 
+        // 非调试模式隐藏详细错误信�?
         if (!config('app.show_error_msg')) {
             $msg = $resultCode->getMsg();
         }
 
-        $payload = Result::failedWith($resultCode, $msg, IdStringify::stringify(null))->toArray();
-        return json($payload);
+        // 构建响应
+        $result = Result::failedWith($resultCode, $msg);
+
+        // 添加追踪ID（便于日志排查）
+        $traceId = $request->header('X-Request-Id') ?: $this->generateTraceId();
+        $result->withTraceId($traceId);
+
+        return json($result->toArray());
+    }
+
+    /**
+     * 生成追踪ID
+     */
+    private function generateTraceId(): string
+    {
+        return bin2hex(random_bytes(16));
     }
 }

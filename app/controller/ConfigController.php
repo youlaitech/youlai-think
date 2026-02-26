@@ -1,10 +1,8 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\controller;
 
-use app\common\controller\ApiController;
+use app\controller\ApiController;
 use app\service\ConfigService;
 use OpenApi\Annotations as OA;
 
@@ -22,7 +20,7 @@ final class ConfigController extends ApiController
      *     tags={"07.系统配置"},
      *     @OA\Parameter(name="pageNum", in="query", description="页码", required=false),
      *     @OA\Parameter(name="pageSize", in="query", description="每页数量", required=false),
-     *     @OA\Parameter(name="keywords", in="query", description="关键字", required=false),
+     *     @OA\Parameter(name="keywords", in="query", description="关键�?, required=false),
      *     @OA\Response(response=200, description="OK")
      * )
      *
@@ -30,7 +28,7 @@ final class ConfigController extends ApiController
      */
     public function page(): \think\Response
     {
-        [$list, $total] = (new ConfigService())->page($this->request->param());
+        [$list, $total] = $this->service(ConfigService::class)->page($this->request->param());
         return $this->okPage($list, $total);
     }
 
@@ -50,7 +48,7 @@ final class ConfigController extends ApiController
      */
     public function form(int $id): \think\Response
     {
-        $data = (new ConfigService())->getConfigFormData($id);
+        $data = $this->service(ConfigService::class)->getConfigFormData($id);
         return $this->ok($data);
     }
 
@@ -72,7 +70,7 @@ final class ConfigController extends ApiController
     {
         $userId = $this->getAuthUserId();
         $data = $this->mergeJsonParams();
-        (new ConfigService())->saveConfig($userId, $data);
+        $this->service(ConfigService::class)->saveConfig($userId, $data);
         return $this->ok();
     }
 
@@ -96,7 +94,7 @@ final class ConfigController extends ApiController
     {
         $userId = $this->getAuthUserId();
         $data = $this->mergeJsonParams();
-        (new ConfigService())->updateConfig($userId, $id, $data);
+        $this->service(ConfigService::class)->updateConfig($userId, $id, $data);
         return $this->ok();
     }
 
@@ -118,7 +116,7 @@ final class ConfigController extends ApiController
     public function delete(int $id): \think\Response
     {
         $userId = $this->getAuthUserId();
-        (new ConfigService())->deleteConfig($userId, $id);
+        $this->service(ConfigService::class)->deleteConfig($userId, $id);
         return $this->ok();
     }
 
@@ -136,7 +134,7 @@ final class ConfigController extends ApiController
      */
     public function refresh(): \think\Response
     {
-        (new ConfigService())->refreshCache();
+        $this->service(ConfigService::class)->refreshCache();
         return $this->ok();
     }
 }

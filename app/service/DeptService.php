@@ -1,270 +1,185 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\service;
 
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
 use app\model\Dept;
+use think\facade\Db;
 
+/**
+ * ²¿ÃÅ·þÎñ
+ */
 final class DeptService
 {
-    public function listDepts(?string $keywords = null, ?int $status = null, ?array $authUser = null): array
+    /**
+     * »ñÈ¡²¿ÃÅÊ÷
+     */
+    public function getTree(): array
     {
-        $query = Dept::where('is_deleted', 0)->order('sort', 'asc');
-
-        // æ•°æ®æƒé™è¿‡æ»¤ï¼ˆæ”¯æŒå¤šè§’è‰²å¹¶é›†ç­–ç•¥ï¼‰
-        if (is_array($authUser)) {
-            $dataPermissionService = new DataPermissionService();
-            $query = $dataPermissionService->apply($query, 'id', 'id', $authUser);
-        }
-
-        if ($keywords !== null && trim($keywords) !== '') {
-            $kw = '%' . trim($keywords) . '%';
-            $query = $query->whereLike('name', $kw);
-        }
-
-        if ($status !== null) {
-            $query = $query->where('status', (int) $status);
-        }
-
-        $rows = $query->select();
-        $list = [];
-        foreach ($rows as $row) {
-            $list[] = $row->toArray();
-        }
-
-        return $this->buildDeptTree(0, $list);
-    }
-
-    public function listDeptOptions(?array $authUser = null): array
-    {
-        $query = Dept::where('is_deleted', 0)
+        $list = Dept::where('status', 1)
             ->order('sort', 'asc')
-            ->field('id,name,parent_id,sort');
+            ->order('id', 'asc')
+            ->select()
+            ->toArray();
 
-        // æ•°æ®æƒé™è¿‡æ»¤ï¼ˆæ”¯æŒå¤šè§’è‰²å¹¶é›†ç­–ç•¥ï¼‰
-        if (is_array($authUser)) {
-            $dataPermissionService = new DataPermissionService();
-            $query = $dataPermissionService->apply($query, 'id', 'id', $authUser);
-        }
-
-        $rows = $query->select()->toArray();
-        return $this->buildDeptOptionsTree(0, $rows);
+        return $this->buildTree($list);
     }
 
-    public function getDeptForm(int $deptId): array
+    /**
+     * »ñÈ¡ËùÓÐ²¿ÃÅ£¨Æ½ÆÌ£©
+     */
+    public function getAll(): array
     {
-        $dept = Dept::where('id', $deptId)->where('is_deleted', 0)->find();
-        if ($dept === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, 'éƒ¨é—¨ä¸å­˜åœ¨');
-        }
-
-        $d = $dept->toArray();
-        return [
-            'id' => isset($d['id']) ? (string) $d['id'] : null,
-            'name' => $d['name'] ?? null,
-            'code' => $d['code'] ?? null,
-            'parentId' => isset($d['parent_id']) ? (string) $d['parent_id'] : '0',
-            'status' => isset($d['status']) ? (int) $d['status'] : null,
-            'sort' => isset($d['sort']) ? (int) $d['sort'] : null,
-        ];
+        return Dept::order('sort', 'asc')
+            ->order('id', 'asc')
+            ->select()
+            ->toArray();
     }
 
-    public function saveDept(array $data): int
+    /**
+     * ¸ù¾ÝID»ñÈ¡²¿ÃÅÏêÇé
+     */
+    public function getById(int $id): ?array
     {
-        $id = isset($data['id']) && (string) $data['id'] !== '' ? (int) $data['id'] : null;
-        $name = trim((string) ($data['name'] ?? ''));
-        $code = trim((string) ($data['code'] ?? ''));
-        $parentId = isset($data['parentId']) ? (int) $data['parentId'] : 0;
+        return Dept::find($id)?->toArray();
+    }
 
-        if ($name === '' || $code === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
+    /**
+     * ´´½¨²¿ÃÅ
+     */
+    public function create(array $data): int
+    {
+        $now = date('Y-m-d H:i:s');
 
-        if ($id !== null && $id > 0 && $parentId === $id) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, 'çˆ¶éƒ¨é—¨ä¸èƒ½ä¸ºå½“å‰éƒ¨é—¨');
-        }
+        // ¼ÆËãÊ÷Â·¾¶
+        $treePath = $this->buildTreePath((int) ($data['parent_id'] ?? 0));
 
-        $existsCode = Dept::where('is_deleted', 0)
-            ->where('code', $code)
-            ->when($id !== null, function ($q) use ($id) {
-                $q->where('id', '<>', $id);
-            })
-            ->count();
-
-        if ($existsCode > 0) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, 'éƒ¨é—¨ç¼–å·å·²å­˜åœ¨');
-        }
-
-        $treePath = $this->generateDeptTreePath($parentId);
-
-        $entity = [
-            'name' => $name,
-            'code' => $code,
-            'parent_id' => $parentId,
+        return (int) Dept::insertGetId([
+            'parent_id' => $data['parent_id'] ?? 0,
+            'name' => $data['name'],
+            'code' => $data['code'] ?? '',
+            'sort' => $data['sort'] ?? 0,
+            'status' => $data['status'] ?? 1,
+            'leader' => $data['leader'] ?? '',
+            'phone' => $data['phone'] ?? '',
+            'email' => $data['email'] ?? '',
             'tree_path' => $treePath,
-            'sort' => isset($data['sort']) ? (int) $data['sort'] : 0,
-            'status' => isset($data['status']) ? (int) $data['status'] : 1,
-            'update_time' => date('Y-m-d H:i:s'),
-        ];
-
-        if ($id === null || $id <= 0) {
-            $entity['create_time'] = date('Y-m-d H:i:s');
-            $entity['is_deleted'] = 0;
-            $dept = new Dept();
-            $dept->save($entity);
-            return (int) $dept->getAttr('id');
-        }
-
-        $dept = Dept::where('id', $id)->where('is_deleted', 0)->find();
-        if ($dept === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, 'éƒ¨é—¨ä¸å­˜åœ¨');
-        }
-
-        $dept->save($entity);
-        return $id;
-    }
-
-    public function deleteByIds(string $ids): bool
-    {
-        $ids = trim($ids);
-        if ($ids === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        $parts = array_values(array_filter(array_map('trim', explode(',', $ids)), fn($v) => $v !== ''));
-        $idList = [];
-        foreach ($parts as $p) {
-            if (!ctype_digit($p)) {
-                throw new BusinessException(ResultCode::PARAMETER_FORMAT_MISMATCH);
-            }
-            $idList[] = (int) $p;
-        }
-
-        foreach ($idList as $id) {
-            $childCount = Dept::where('is_deleted', 0)->where('parent_id', $id)->count();
-            if ($childCount > 0) {
-                throw new BusinessException(ResultCode::INVALID_USER_INPUT, 'å­˜åœ¨å­éƒ¨é—¨ï¼Œæ— æ³•åˆ é™¤');
-            }
-        }
-
-        Dept::whereIn('id', $idList)->update([
-            'is_deleted' => 1,
-            'update_time' => date('Y-m-d H:i:s'),
+            'create_time' => $now,
+            'update_time' => $now,
         ]);
-
-        return true;
     }
 
-    private function buildDeptTree(int $parentId, array $list): array
+    /**
+     * ¸üÐÂ²¿ÃÅ
+     */
+    public function update(int $id, array $data): bool
+    {
+        $dept = Dept::find($id);
+        if (!$dept) {
+            throw new BusinessException(ResultCode::USER_ERROR, '²¿ÃÅ²»´æÔÚ');
+        }
+
+        // ²»ÄÜ°Ñ×Ô¼ºÉèÎª¸¸¼¶
+        if (isset($data['parent_id']) && (int) $data['parent_id'] === $id) {
+            throw new BusinessException(ResultCode::USER_ERROR, '¸¸¼¶²¿ÃÅ²»ÄÜÊÇ×Ô¼º');
+        }
+
+        // ¸üÐÂÊ÷Â·¾¶
+        if (isset($data['parent_id']) && (int) $data['parent_id'] !== (int) $dept->parent_id) {
+            $dept->tree_path = $this->buildTreePath((int) $data['parent_id']);
+            // ¸üÐÂ×Ó²¿ÃÅµÄÊ÷Â·¾¶
+            $this->updateChildrenTreePath($id, $dept->tree_path . ',' . $id);
+        }
+
+        $dept->parent_id = $data['parent_id'] ?? $dept->parent_id;
+        $dept->name = $data['name'] ?? $dept->name;
+        $dept->code = $data['code'] ?? $dept->code;
+        $dept->sort = $data['sort'] ?? $dept->sort;
+        $dept->status = $data['status'] ?? $dept->status;
+        $dept->leader = $data['leader'] ?? $dept->leader;
+        $dept->phone = $data['phone'] ?? $dept->phone;
+        $dept->email = $data['email'] ?? $dept->email;
+
+        return $dept->save();
+    }
+
+    /**
+     * É¾³ý²¿ÃÅ
+     */
+    public function delete(int $id): bool
+    {
+        // ¼ì²éÊÇ·ñÓÐ×Ó²¿ÃÅ
+        $childCount = Dept::where('parent_id', $id)->count();
+        if ($childCount > 0) {
+            throw new BusinessException(ResultCode::USER_ERROR, '´æÔÚ×Ó²¿ÃÅ£¬ÎÞ·¨É¾³ý');
+        }
+
+        // ¼ì²éÊÇ·ñÓÐÓÃ»§
+        $userCount = Db::name('sys_user')->where('dept_id', $id)->count();
+        if ($userCount > 0) {
+            throw new BusinessException(ResultCode::USER_ERROR, '²¿ÃÅÏÂ´æÔÚÓÃ»§£¬ÎÞ·¨É¾³ý');
+        }
+
+        return Dept::destroy($id) > 0;
+    }
+
+    /**
+     * »ñÈ¡²¿ÃÅ¼°ËùÓÐ×Ó²¿ÃÅID
+     */
+    public function getDescendantIds(int $deptId): array
+    {
+        $dept = Dept::find($deptId);
+        if (!$dept) {
+            return [];
+        }
+
+        return $dept->getDescendantIds();
+    }
+
+    // ==================== Ë½ÓÐ·½·¨ ====================
+
+    private function buildTree(array $list, int $parentId = 0): array
     {
         $tree = [];
-        foreach ($list as $d) {
-            if ((int) ($d['parent_id'] ?? 0) !== $parentId) {
-                continue;
+
+        foreach ($list as $item) {
+            if ((int) $item['parent_id'] === $parentId) {
+                $children = $this->buildTree($list, (int) $item['id']);
+                if ($children) {
+                    $item['children'] = $children;
+                }
+                $tree[] = $item;
             }
-
-            $node = [
-                'id' => isset($d['id']) ? (string) $d['id'] : null,
-                'parentId' => isset($d['parent_id']) ? (string) $d['parent_id'] : null,
-                'name' => $d['name'] ?? null,
-                'code' => $d['code'] ?? null,
-                'sort' => isset($d['sort']) ? (int) $d['sort'] : null,
-                'status' => isset($d['status']) ? (int) $d['status'] : null,
-                'treePath' => $d['tree_path'] ?? null,
-                'createTime' => $d['create_time'] ?? null,
-                'updateTime' => $d['update_time'] ?? null,
-            ];
-
-            $children = $this->buildDeptTree((int) ($d['id'] ?? 0), $list);
-            if (!empty($children)) {
-                $node['children'] = $children;
-            }
-
-            $tree[] = $this->filterNulls($node);
         }
 
         return $tree;
     }
 
-    private function generateDeptTreePath(int $parentId): string
+    private function buildTreePath(int $parentId): string
     {
         if ($parentId <= 0) {
-            return '0';
+            return '';
         }
 
-        $parent = Dept::where('id', $parentId)->where('is_deleted', 0)->find();
-        if ($parent === null) {
-            return '0';
+        $parent = Dept::find($parentId);
+        if (!$parent) {
+            return '';
         }
 
-        $p = $parent->toArray();
-        $treePath = (string) ($p['tree_path'] ?? '0');
-        if ($treePath === '') {
-            $treePath = '0';
-        }
-
-        return $treePath . ',' . $parentId;
+        return $parent->tree_path ? $parent->tree_path . ',' . $parentId : (string) $parentId;
     }
 
-    private function getDeptAndSubDeptIds(int $deptId): array
+    private function updateChildrenTreePath(int $parentId, string $parentPath): void
     {
-        $ids = Dept::where('is_deleted', 0)
-            ->where(function ($q) use ($deptId) {
-                $q->where('id', $deptId)
-                    ->whereOrRaw('FIND_IN_SET(?, tree_path)', [$deptId]);
-            })
-            ->column('id');
+        $children = Dept::where('parent_id', $parentId)->select();
 
-        $ids = array_values(array_unique(array_filter(array_map('intval', $ids), fn($v) => $v > 0)));
-        return $ids;
-    }
+        foreach ($children as $child) {
+            $child->tree_path = $parentPath;
+            $child->save();
 
-    private function buildDeptOptionsTree(int $parentId, array $rows): array
-    {
-        $tree = [];
-        foreach ($rows as $r) {
-            if ((int) ($r['parent_id'] ?? 0) !== $parentId) {
-                continue;
-            }
-
-            $node = [
-                'value' => (string) ($r['id'] ?? ''),
-                'label' => (string) ($r['name'] ?? ''),
-            ];
-
-            $children = $this->buildDeptOptionsTree((int) ($r['id'] ?? 0), $rows);
-            if (!empty($children)) {
-                $node['children'] = $children;
-            }
-
-            $tree[] = $node;
+            // µÝ¹é¸üÐÂ×Ó²¿ÃÅ
+            $this->updateChildrenTreePath((int) $child->id, $parentPath . ',' . $child->id);
         }
-
-        return $tree;
-    }
-
-    private function filterNulls(array $data): array
-    {
-        foreach ($data as $k => $v) {
-            if (is_array($v)) {
-                $v = $this->filterNulls($v);
-                if ($v === []) {
-                    unset($data[$k]);
-                    continue;
-                }
-                $data[$k] = $v;
-                continue;
-            }
-
-            if ($v === null) {
-                unset($data[$k]);
-                continue;
-            }
-        }
-
-        return $data;
     }
 }

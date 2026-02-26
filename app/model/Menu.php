@@ -1,13 +1,111 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\model;
 
-use think\Model;
-
-// èœå•æ¨¡åž‹ï¼Œå¯¹åº” sys_menu
+/**
+ * ²Ëµ¥Ä£ÐÍ
+ *
+ * @property int    $id          ²Ëµ¥ID
+ * @property int    $parentId    ¸¸²Ëµ¥ID
+ * @property string $type        ÀàÐÍ menu/button
+ * @property string $name        ²Ëµ¥Ãû³Æ
+ * @property string $path        Â·ÓÉÂ·¾¶
+ * @property string $component   ×é¼þÂ·¾¶
+ * @property string $perm        È¨ÏÞ±êÊ¶
+ * @property string $icon        Í¼±ê
+ * @property int    $sort        ÅÅÐò
+ * @property int    $status      ×´Ì¬
+ * @property int    $visible     ÊÇ·ñ¿É¼û
+ * @property string $createTime  ´´½¨Ê±¼ä
+ *
+ * @property Menu   $parent      ¸¸²Ëµ¥
+ * @property Menu[] $children    ×Ó²Ëµ¥
+ */
 class Menu extends Model
 {
     protected $name = 'sys_menu';
+
+    protected $type = [
+        'id' => 'integer',
+        'parent_id' => 'integer',
+        'sort' => 'integer',
+        'status' => 'integer',
+        'visible' => 'integer',
+    ];
+
+    // ==================== ¹ØÁª¹ØÏµ ====================
+
+    /**
+     * ¸¸²Ëµ¥
+     */
+    public function parent(): \think\model\relation\BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id', 'id');
+    }
+
+    /**
+     * ×Ó²Ëµ¥
+     */
+    public function children(): \think\model\relation\HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id', 'id')
+            ->order('sort', 'asc');
+    }
+
+    /**
+     * ¹ØÁª½ÇÉ«
+     */
+    public function roles(): \think\model\relation\BelongsToMany
+    {
+        return $this->belongsToMany(
+            Role::class,
+            RoleMenu::class,
+            'role_id',
+            'menu_id'
+        );
+    }
+
+    // ==================== ·ÃÎÊÆ÷ ====================
+
+    /**
+     * ¸¸ID·ÃÎÊÆ÷
+     */
+    public function getParentIdAttr(mixed $value): string
+    {
+        return (string) $value;
+    }
+
+    // ==================== ²éÑ¯×÷ÓÃÓò ====================
+
+    /**
+     * Ä¿Â¼/²Ëµ¥ÀàÐÍ
+     */
+    public function scopeMenu($query)
+    {
+        return $query->whereIn('type', ['catalog', 'menu']);
+    }
+
+    /**
+     * °´Å¥ÀàÐÍ
+     */
+    public function scopeButton($query)
+    {
+        return $query->where('type', 'button');
+    }
+
+    /**
+     * ÆôÓÃ×´Ì¬
+     */
+    public function scopeEnabled($query)
+    {
+        return $query->where('status', 1);
+    }
+
+    /**
+     * ¿É¼û
+     */
+    public function scopeVisible($query)
+    {
+        return $query->where('visible', 1);
+    }
 }

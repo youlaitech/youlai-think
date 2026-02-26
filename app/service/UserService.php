@@ -1,1106 +1,452 @@
-<?php
-
+﻿<?php
 declare(strict_types=1);
 
 namespace app\service;
 
-use app\common\redis\RedisClient;
-use app\common\redis\RedisKey;
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
+use app\model\Dept;
+use app\model\Role;
 use app\model\User;
+use app\model\UserRole;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use think\facade\Db;
 
 /**
- * 用户业务
- *
- * 用户管理 个人中心 导入导出
+ * 用户服务。
+ * 负责用户相关的业务逻辑处理。
  */
 final class UserService
 {
     /**
-     * 根据用户名查询用户。
+     * 用户字段列表（用于列表查询）
      */
-    public function getUserByUsername(string $username): ?array
-    {
-        $row = User::where('username', $username)
-            ->where('is_deleted', 0)
-            ->find();
+    private const LIST_FIELDS = [
+        'id', 'username', 'nickname', 'mobile', 'email',
+        'avatar', 'gender', 'status', 'dept_id', 'create_time',
+    ];
 
-        if ($row === null) {
+    /**
+     * 根据ID获取用户详情
+     */
+    public function getById(int $id): ?array
+    {
+        $user = User::with(['dept', 'roles'])->find($id);
+
+        if (!$user) {
             return null;
         }
 
-        return $row->toArray();
-    }
+        $data = $user->toArray();
+        $data['roleIds'] = array_column($data['roles'] ?? [], 'id');
+        unset($data['roles']);
 
-    public function getUserByEmail(string $email): ?array
-    {
-        $row = User::where('email', $email)
-            ->where('is_deleted', 0)
-            ->find();
-
-        if ($row === null) {
-            return null;
-        }
-
-        return $row->toArray();
-    }
-
-    public function getUserByMobile(string $mobile): ?array
-    {
-        $row = User::where('mobile', $mobile)
-            ->where('is_deleted', 0)
-            ->find();
-
-        if ($row === null) {
-            return null;
-        }
-
-        return $row->toArray();
+        return $data;
     }
 
     /**
-     * 获取用户下拉选项。
+     * 根据用户名获取用户
      */
-    public function listUserOptions(): array
+    public function getByUsername(string $username): ?array
     {
-        $rows = Db::name('sys_user')
-            ->where('is_deleted', 0)
-            ->where('status', 1)
-            ->whereNotIn('id', function ($sub) {
-                $sub->name('sys_user_role')
-                    ->alias('ur')
-                    ->join('sys_role r', 'ur.role_id = r.id')
-                    ->where('r.code', 'ROOT')
-                    ->field('ur.user_id');
-            })
-            ->order('id', 'desc')
-            ->field('id,nickname')
-            ->select()
-            ->toArray();
-
-        $list = [];
-        foreach ($rows as $r) {
-            $list[] = [
-                'label' => (string) ($r['nickname'] ?? ''),
-                'value' => (string) ($r['id'] ?? ''),
-            ];
-        }
-
-        return $list;
+        return User::where('username', $username)->find()?->toArray();
     }
 
     /**
-     * 获取当前用户信息（含角色与权限）。
+     * 分页查询用户列表
      */
-    public function getCurrentUserDto(int $userId): array
+    public function paginate(array $params, array $authUser): array
     {
-        $user = User::where('id', $userId)
-            ->where('is_deleted', 0)
-            ->field('id,username,nickname,avatar')
-            ->find();
+        $page = (int) ($params['pageNum'] ?? 1);
+        $pageSize = min((int) ($params['pageSize'] ?? 10), 100);
 
-        $u = $user ? $user->toArray() : null;
+        $query = User::with(['dept'])
+            ->field(array_merge(self::LIST_FIELDS, ['dept_id']))
+            ->order('id', 'desc');
 
-        // 聚合当前用户角色编码（用于前端权限与菜单控制）
-        $roles = Db::name('sys_user_role')
-            ->alias('ur')
-            ->join('sys_role r', 'ur.role_id = r.id')
-            ->where('ur.user_id', $userId)
-            ->column('r.code');
+        // 条件筛选
+        $this->applyFilters($query, $params);
 
-        $roles = array_values(array_unique(array_filter($roles, fn($v) => $v !== null && $v !== '')));
+        // 数据权限过滤
+        $this->applyDataScope($query, $authUser);
 
-        // 通过角色关联菜单权限点，去重后下发给前端
-        $perms = [];
-        if (!empty($roles)) {
-            $menuPerms = Db::name('sys_role_menu')
-                ->alias('rm')
-                ->join('sys_role r', 'rm.role_id = r.id')
-                ->join('sys_menu m', 'rm.menu_id = m.id')
-                ->whereIn('r.code', $roles)
-                ->where('m.perm', '<>', '')
-                ->where('m.perm', 'not null')
-                ->column('m.perm');
+        $total = $query->count();
+        $list = $query->page($page, $pageSize)->select()->toArray();
 
-            $perms = array_values(array_unique(array_filter($menuPerms, fn($v) => $v !== null && $v !== '')));
-        }
-
-        return [
-            'userId' => (int) ($u['id'] ?? $userId),
-            'username' => (string) ($u['username'] ?? ''),
-            'nickname' => (string) ($u['nickname'] ?? ''),
-            'avatar' => (string) ($u['avatar'] ?? ''),
-            'roles' => $roles,
-            'perms' => $perms,
-        ];
-    }
-
-    /**
-     * 用户分页列表。
-     */
-    public function getUserPage(array $queryParams, ?array $authUser = null): array
-    {
-        $pageNum = (int) ($queryParams['pageNum'] ?? 1);
-        $pageSize = (int) ($queryParams['pageSize'] ?? 10);
-        $pageNum = $pageNum > 0 ? $pageNum : 1;
-        $pageSize = $pageSize > 0 ? $pageSize : 10;
-
-        $keywords = trim((string) ($queryParams['keywords'] ?? ''));
-        $status = $queryParams['status'] ?? null;
-        $deptId = $queryParams['deptId'] ?? null;
-        $createTime = $queryParams['createTime'] ?? null;
-
-        $q = Db::name('sys_user')
-            ->alias('u')
-            ->leftJoin('sys_dept d', 'u.dept_id = d.id')
-            ->where('u.is_deleted', 0);
-
-        // root 用户（ROOT 角色）不在用户列表中展示
-        $q = $q->whereNotIn('u.id', function ($sub) {
-            $sub->name('sys_user_role')
-                ->alias('ur')
-                ->join('sys_role r', 'ur.role_id = r.id')
-                ->where('r.code', 'ROOT')
-                ->field('ur.user_id');
-        });
-
-        // 数据权限过滤（支持多角色并集策略）
-        if (is_array($authUser)) {
-            $dataPermissionService = new DataPermissionService();
-            $q = $dataPermissionService->apply($q, 'u.dept_id', 'u.create_by', $authUser);
-        }
-
-        if ($keywords !== '') {
-            $kw = '%' . $keywords . '%';
-            $q = $q->whereLike('u.username|u.nickname|u.mobile', $kw);
-        }
-
-        if ($status !== null && $status !== '') {
-            $q = $q->where('u.status', (int) $status);
-        }
-
-        if ($deptId !== null && $deptId !== '' && ctype_digit((string) $deptId)) {
-            $deptId = (int) $deptId;
-            $q = $q->whereRaw("concat(',',concat(d.tree_path,',',d.id),',') like concat('%,',?,',%')", [$deptId]);
-        }
-
-        if (is_string($createTime)) {
-            $createTime = array_values(array_filter(array_map('trim', explode(',', $createTime)), fn($v) => $v !== ''));
-        }
-
-        if (is_array($createTime) && !empty($createTime)) {
-            $start = trim((string) ($createTime[0] ?? ''));
-            $end = trim((string) ($createTime[1] ?? ''));
-            if ($start !== '') {
-                $start = strlen($start) === 10 ? ($start . ' 00:00:00') : $start;
-                $q = $q->where('u.create_time', '>=', $start);
-            }
-            if ($end !== '') {
-                $end = strlen($end) === 10 ? ($end . ' 23:59:59') : $end;
-                $q = $q->where('u.create_time', '<=', $end);
-            }
-        }
-
-        $total = (int) (clone $q)->count('u.id');
-
-        $rows = $q
-            ->field('u.id,u.username,u.nickname,u.mobile,u.gender,u.avatar,u.email,u.status,u.create_time,u.dept_id,d.name as dept_name')
-            ->order('u.id', 'desc')
-            ->page($pageNum, $pageSize)
-            ->select()
-            ->toArray();
-
-        // 角色名称聚合
-        $userIds = array_values(array_filter(array_map(fn($r) => (int) ($r['id'] ?? 0), $rows), fn($v) => $v > 0));
-        $roleNamesMap = [];
-        if (!empty($userIds)) {
-            $roleRows = Db::name('sys_user_role')
-                ->alias('ur')
-                ->join('sys_role r', 'ur.role_id = r.id')
-                ->whereIn('ur.user_id', $userIds)
-                ->where('r.is_deleted', 0)
-                ->field('ur.user_id,r.name')
-                ->select()
-                ->toArray();
-
-            $tmp = [];
-            foreach ($roleRows as $rr) {
-                $uid = (int) ($rr['user_id'] ?? 0);
-                $rn = (string) ($rr['name'] ?? '');
-                if ($uid <= 0 || $rn === '') {
-                    continue;
-                }
-                $tmp[$uid] ??= [];
-                $tmp[$uid][] = $rn;
-            }
-
-            foreach ($tmp as $uid => $names) {
-                $names = array_values(array_unique($names));
-                $roleNamesMap[(int) $uid] = implode(',', $names);
-            }
-        }
-
-        $list = [];
-        foreach ($rows as $r) {
-            $id = (int) ($r['id'] ?? 0);
-            $list[] = [
-                'id' => (string) $id,
-                'username' => $r['username'] ?? null,
-                'nickname' => $r['nickname'] ?? null,
-                'mobile' => $r['mobile'] ?? null,
-                'gender' => isset($r['gender']) ? (int) $r['gender'] : null,
-                'avatar' => $r['avatar'] ?? null,
-                'email' => $r['email'] ?? null,
-                'status' => isset($r['status']) ? (int) $r['status'] : null,
-                'deptName' => $r['dept_name'] ?? null,
-                'roleNames' => $roleNamesMap[$id] ?? '',
-                'createTime' => $r['create_time'] ?? null,
-            ];
+        // 格式化输出
+        foreach ($list as &$item) {
+            $item['deptName'] = $item['dept']['name'] ?? '';
+            $item['genderText'] = $item['gender'] == 1 ? '男' : ($item['gender'] == 2 ? '女' : '未知');
+            $item['statusText'] = $item['status'] == 1 ? '启用' : '禁用';
+            unset($item['dept']);
         }
 
         return [$list, $total];
     }
 
     /**
-     * 获取用户表单数据。
+     * 创建用户
      */
-    public function getUserFormData(int $userId): array
+    public function create(array $data): int
     {
-        $row = Db::name('sys_user')
-            ->where('id', $userId)
-            ->where('is_deleted', 0)
-            ->find();
-
-        if (!$row) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '用户不存在');
+        // 检查用户名是否重复
+        if (User::where('username', $data['username'])->find()) {
+            throw new BusinessException(ResultCode::USER_ERROR, '用户名已存在');
         }
 
-        $roleIds = Db::name('sys_user_role')->where('user_id', $userId)->column('role_id');
-        $roleIds = array_values(array_unique(array_map('strval', $roleIds)));
-
-        return [
-            'id' => (string) ($row['id'] ?? $userId),
-            'username' => $row['username'] ?? null,
-            'nickname' => $row['nickname'] ?? null,
-            'mobile' => $row['mobile'] ?? null,
-            'gender' => isset($row['gender']) ? (int) $row['gender'] : null,
-            'avatar' => $row['avatar'] ?? null,
-            'email' => $row['email'] ?? null,
-            'status' => isset($row['status']) ? (int) $row['status'] : null,
-            'deptId' => isset($row['dept_id']) ? (string) $row['dept_id'] : null,
-            'roleIds' => $roleIds,
-        ];
-    }
-
-    /**
-     * 新增用户。
-     */
-    public function saveUser(array $data): bool
-    {
-        $username = trim((string) ($data['username'] ?? ''));
-        $nickname = trim((string) ($data['nickname'] ?? ''));
-        $roleIds = $data['roleIds'] ?? null;
-
-        if ($username === '' || $nickname === '' || !is_array($roleIds) || empty($roleIds)) {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        $exists = Db::name('sys_user')->where('username', $username)->where('is_deleted', 0)->count();
-        if ($exists > 0) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '用户名已存在');
-        }
-
-        $hash = password_hash('123456', PASSWORD_BCRYPT);
-
-        Db::transaction(function () use ($data, $username, $nickname, $hash, $roleIds) {
+        return Db::transaction(function () use ($data) {
             $now = date('Y-m-d H:i:s');
 
-            $insert = [
-                'username' => $username,
-                'nickname' => $nickname,
-                'mobile' => $data['mobile'] ?? null,
-                'gender' => isset($data['gender']) ? (int) $data['gender'] : 1,
-                'avatar' => $data['avatar'] ?? null,
-                'email' => $data['email'] ?? null,
-                'status' => isset($data['status']) ? (int) $data['status'] : 1,
-                'dept_id' => isset($data['deptId']) && $data['deptId'] !== '' ? (int) $data['deptId'] : null,
-                'password' => $hash,
+            $password = $data['password'] ?? '';
+            if ($password === '' || $password === null) {
+                $password = '123456';
+            }
+
+            // 创建用户
+            $userId = User::insertGetId([
+                'username' => $data['username'],
+                'password' => password_hash($password, PASSWORD_DEFAULT),
+                'nickname' => $data['nickname'],
+                'mobile' => $data['mobile'] ?? '',
+                'email' => $data['email'] ?? '',
+                'avatar' => $data['avatar'] ?? '',
+                'gender' => $data['gender'] ?? 0,
+                'status' => $data['status'] ?? 1,
+                'dept_id' => $data['dept_id'] ?? 0,
                 'create_time' => $now,
-                'update_time' => $now,
-                'is_deleted' => 0,
-            ];
-
-            $userId = (int) Db::name('sys_user')->insertGetId($insert);
-
-            $rows = [];
-            foreach ($roleIds as $rid) {
-                if (is_int($rid) || (is_string($rid) && ctype_digit($rid))) {
-                    $rows[] = ['user_id' => $userId, 'role_id' => (int) $rid];
-                }
-            }
-            if (!empty($rows)) {
-                Db::name('sys_user_role')->insertAll($rows);
-            }
-        });
-
-        return true;
-    }
-
-    /**
-     * 修改用户状态。
-     */
-    public function updateUserStatus(int $userId, int $status): bool
-    {
-        if (!in_array($status, [0, 1], true)) {
-            throw new BusinessException(ResultCode::PARAMETER_FORMAT_MISMATCH);
-        }
-
-        $row = Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->find();
-        if (!$row) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '用户不存在');
-        }
-
-        Db::name('sys_user')->where('id', $userId)->update([
-            'status' => $status,
-            'update_time' => date('Y-m-d H:i:s'),
-        ]);
-
-        return true;
-    }
-
-    /**
-     * 修改用户。
-     */
-    public function updateUser(int $userId, array $data): bool
-    {
-        $nickname = trim((string) ($data['nickname'] ?? ''));
-        $roleIds = $data['roleIds'] ?? null;
-
-        if ($nickname === '' || !is_array($roleIds) || empty($roleIds)) {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        $row = Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->find();
-        if (!$row) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '用户不存在');
-        }
-
-        Db::transaction(function () use ($userId, $data, $nickname, $roleIds) {
-            $now = date('Y-m-d H:i:s');
-
-            Db::name('sys_user')->where('id', $userId)->update([
-                'nickname' => $nickname,
-                'mobile' => $data['mobile'] ?? null,
-                'gender' => isset($data['gender']) ? (int) $data['gender'] : null,
-                'avatar' => $data['avatar'] ?? null,
-                'email' => $data['email'] ?? null,
-                'status' => isset($data['status']) ? (int) $data['status'] : 1,
-                'dept_id' => isset($data['deptId']) && $data['deptId'] !== '' ? (int) $data['deptId'] : null,
                 'update_time' => $now,
             ]);
 
-            Db::name('sys_user_role')->where('user_id', $userId)->delete();
+            // 分配角色
+            if (!empty($data['role_ids'])) {
+                $this->assignRoles($userId, $data['role_ids']);
+            }
 
-            $rows = [];
-            foreach ($roleIds as $rid) {
-                if (is_int($rid) || (is_string($rid) && ctype_digit($rid))) {
-                    $rows[] = ['user_id' => $userId, 'role_id' => (int) $rid];
-                }
-            }
-            if (!empty($rows)) {
-                Db::name('sys_user_role')->insertAll($rows);
-            }
+            return (int) $userId;
         });
-
-        return true;
     }
 
     /**
-     * 删除用户（批量）。
+     * 更新用户
      */
-    public function deleteUsers(string $ids): bool
+    public function update(int $id, array $data): bool
     {
-        $ids = trim($ids);
-        if ($ids === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+        $user = User::find($id);
+        if (!$user) {
+            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
         }
 
-        $parts = array_values(array_filter(array_map('trim', explode(',', $ids)), fn($v) => $v !== ''));
-        $idList = [];
-        foreach ($parts as $p) {
-            if (!ctype_digit($p)) {
-                throw new BusinessException(ResultCode::PARAMETER_FORMAT_MISMATCH);
+        return Db::transaction(function () use ($user, $data) {
+            // 更新基本信息
+            $user->nickname = $data['nickname'] ?? $user->nickname;
+            $user->mobile = $data['mobile'] ?? $user->mobile;
+            $user->email = $data['email'] ?? $user->email;
+            $user->avatar = $data['avatar'] ?? $user->avatar;
+            $user->gender = $data['gender'] ?? $user->gender;
+            $user->status = $data['status'] ?? $user->status;
+            $user->dept_id = $data['dept_id'] ?? $user->dept_id;
+
+            // 更新密码（如果提供了）
+            if (!empty($data['password'])) {
+                $user->password = password_hash($data['password'], PASSWORD_DEFAULT);
             }
-            $idList[] = (int) $p;
-        }
 
-        Db::name('sys_user')->whereIn('id', $idList)->update([
-            'is_deleted' => 1,
-            'update_time' => date('Y-m-d H:i:s'),
-        ]);
+            $user->save();
 
-        return true;
+            // 更新角色
+            if (isset($data['role_ids'])) {
+                $this->syncRoles($id, $data['role_ids']);
+            }
+
+            return true;
+        });
     }
 
     /**
-     * 重置指定用户密码。
+     * 批量删除用户
      */
-    public function resetUserPassword(int $userId, string $password): bool
+    public function deleteByIds(array $ids): int
     {
-        $password = (string) $password;
-        if ($password === '' || mb_strlen($password) < 6) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '密码至少需要6位字符');
+        // 不允许删除超级管理员
+        $adminIds = User::where('username', 'admin')->column('id');
+        $ids = array_diff($ids, $adminIds);
+
+        if (empty($ids)) {
+            return 0;
         }
 
-        $row = Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->find();
-        if (!$row) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '用户不存在');
-        }
+        return Db::transaction(function () use ($ids) {
+            // 删除用户角色关联
+            UserRole::whereIn('user_id', $ids)->delete();
 
-        $hash = password_hash($password, PASSWORD_BCRYPT);
-        Db::name('sys_user')->where('id', $userId)->update([
-            'password' => $hash,
-            'update_time' => date('Y-m-d H:i:s'),
-        ]);
-
-        $this->bumpUserSecurityVersion($userId);
-
-        return true;
+            // 软删除用户
+            return User::destroy($ids);
+        });
     }
 
     /**
-     * 用户下拉选项。
+     * 获取当前用户信息
      */
-    public function getUserProfile(int $userId): array
+    public function getCurrentUser(int $userId): array
     {
-        $row = Db::name('sys_user')
-            ->alias('u')
-            ->leftJoin('sys_dept d', 'u.dept_id = d.id')
-            ->where('u.id', $userId)
-            ->where('u.is_deleted', 0)
-            ->field('u.id,u.username,u.nickname,u.avatar,u.gender,u.mobile,u.email,u.create_time,d.name as dept_name')
-            ->find();
+        $user = User::with(['dept', 'roles'])->find($userId);
 
-        if (!$row) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '用户不存在');
+        if (!$user) {
+            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
         }
-
-        $roleNames = Db::name('sys_user_role')
-            ->alias('ur')
-            ->join('sys_role r', 'ur.role_id = r.id')
-            ->where('ur.user_id', $userId)
-            ->where('r.is_deleted', 0)
-            ->column('r.name');
-        $roleNames = array_values(array_unique(array_filter($roleNames, fn($v) => $v !== null && $v !== '')));
 
         return [
-            'id' => (string) ($row['id'] ?? $userId),
-            'username' => $row['username'] ?? null,
-            'nickname' => $row['nickname'] ?? null,
-            'avatar' => $row['avatar'] ?? null,
-            'gender' => isset($row['gender']) ? (int) $row['gender'] : null,
-            'mobile' => $row['mobile'] ?? null,
-            'email' => $row['email'] ?? null,
-            'deptName' => $row['dept_name'] ?? null,
-            'roleNames' => implode(',', $roleNames),
-            'createTime' => $row['create_time'] ?? null,
+            'id' => (string) $user->id,
+            'username' => $user->username,
+            'nickname' => $user->nickname,
+            'avatar' => $user->avatar,
+            'deptId' => (string) $user->dept_id,
+            'deptName' => $user->dept?->name ?? '',
+            'roleCodes' => array_column($user->roles->toArray() ?? [], 'code'),
         ];
     }
 
+    // ==================== 私有方法 ====================
+
     /**
-     * 个人中心修改用户信息。
+     * 应用查询条件
      */
-    public function updateUserProfile(int $userId, array $data): bool
+    private function applyFilters($query, array $params): void
     {
-        $row = Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->find();
-        if (!$row) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '用户不存在');
+        if (!empty($params['keyword'])) {
+            $keyword = $params['keyword'];
+            $query->where(function ($subQuery) use ($keyword) {
+                $subQuery->whereLike('username', "%{$keyword}%")
+                    ->whereOr('nickname', 'like', "%{$keyword}%")
+                    ->whereOr('mobile', 'like', "%{$keyword}%");
+            });
         }
 
-        $updates = [];
-        if (array_key_exists('nickname', $data)) {
-            $updates['nickname'] = trim((string) $data['nickname']);
-        }
-        if (array_key_exists('avatar', $data)) {
-            $updates['avatar'] = trim((string) $data['avatar']);
-        }
-        if (array_key_exists('gender', $data)) {
-            $gender = $data['gender'];
-            $updates['gender'] = $gender === null || $gender === '' ? null : (int) $gender;
+        if (isset($params['status']) && $params['status'] !== '') {
+            $query->where('status', (int) $params['status']);
         }
 
-        if (empty($updates)) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '请至少修改一项');
+        if (!empty($params['dept_id'])) {
+            $query->where('dept_id', (int) $params['dept_id']);
         }
 
-        $updates['update_time'] = date('Y-m-d H:i:s');
-        Db::name('sys_user')->where('id', $userId)->update($updates);
-
-        return true;
+        if (!empty($params['gender'])) {
+            $query->where('gender', (int) $params['gender']);
+        }
     }
 
     /**
-     * 当前用户修改密码。
+     * 应用数据权限
      */
-    public function changeCurrentUserPassword(int $userId, array $data): bool
+    private function applyDataScope($query, array $authUser): void
     {
-        $oldPassword = (string) ($data['oldPassword'] ?? '');
-        $newPassword = (string) ($data['newPassword'] ?? '');
-        $confirmPassword = (string) ($data['confirmPassword'] ?? '');
-
-        if ($oldPassword === '' || $newPassword === '' || $confirmPassword === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        if ($newPassword !== $confirmPassword) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '两次输入的密码不一致');
-        }
-
-        if (mb_strlen($newPassword) < 6) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '密码至少需要6位字符');
-        }
-
-        $row = Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->find();
-        if (!$row) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '用户不存在');
-        }
-
-        $hash = (string) ($row['password'] ?? '');
-        if ($hash === '' || !password_verify($oldPassword, $hash)) {
-            throw new BusinessException(ResultCode::USER_PASSWORD_ERROR);
-        }
-
-        if (password_verify($newPassword, $hash)) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '新密码不能与原密码相同');
-        }
-
-        Db::name('sys_user')->where('id', $userId)->update([
-            'password' => password_hash($newPassword, PASSWORD_BCRYPT),
-            'update_time' => date('Y-m-d H:i:s'),
-        ]);
-
-        $this->bumpUserSecurityVersion($userId);
-
-        return true;
-    }
-
-    /**
-     * 发送短信验证码（绑定或更换手机号）。
-     */
-    public function sendMobileCode(string $mobile): bool
-    {
-        $mobile = trim($mobile);
-        if ($mobile === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        $code = (string) random_int(100000, 999999);
-        $key = RedisKey::format('captcha:mobile:{}', $mobile);
-        RedisClient::get()->setex($key, 300, $code);
-        return true;
-    }
-
-    /**
-     * 绑定或更换手机号。
-     */
-    public function bindOrChangeMobile(int $userId, array $data): bool
-    {
-        $mobile = trim((string) ($data['mobile'] ?? ''));
-        $code = trim((string) ($data['code'] ?? ''));
-        $password = (string) ($data['password'] ?? '');
-        if ($mobile === '' || $code === '' || $password === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        $row = Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->find();
-        if (!$row) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '用户不存在');
-        }
-        $hash = (string) ($row['password'] ?? '');
-        if ($hash === '' || !password_verify($password, $hash)) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '当前密码错误');
-        }
-
-        $key = RedisKey::format('captcha:mobile:{}', $mobile);
-        $cached = (string) (RedisClient::get()->get($key) ?? '');
-        if ($cached === '' || $cached !== $code) {
-            throw new BusinessException(ResultCode::USER_VERIFICATION_CODE_ERROR);
-        }
-
-        $exists = Db::name('sys_user')
-            ->where('mobile', $mobile)
-            ->where('is_deleted', 0)
-            ->where('id', '<>', $userId)
-            ->find();
-        if ($exists) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '手机号已被其他账号绑定');
-        }
-
-        Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->update([
-            'mobile' => $mobile,
-            'update_time' => date('Y-m-d H:i:s'),
-        ]);
-        RedisClient::get()->del([$key]);
-        return true;
-    }
-
-    /**
-     * 发送邮箱验证码（绑定或更换邮箱）。
-     */
-    public function sendEmailCode(string $email): bool
-    {
-        $email = trim($email);
-        if ($email === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        $code = (string) random_int(100000, 999999);
-        $key = RedisKey::format('captcha:email:{}', $email);
-        RedisClient::get()->setex($key, 300, $code);
-        return true;
-    }
-
-    /**
-     * 绑定或更换邮箱。
-     */
-    public function bindOrChangeEmail(int $userId, array $data): bool
-    {
-        $email = trim((string) ($data['email'] ?? ''));
-        $code = trim((string) ($data['code'] ?? ''));
-        $password = (string) ($data['password'] ?? '');
-        if ($email === '' || $code === '' || $password === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        $row = Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->find();
-        if (!$row) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '用户不存在');
-        }
-        $hash = (string) ($row['password'] ?? '');
-        if ($hash === '' || !password_verify($password, $hash)) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '当前密码错误');
-        }
-
-        $key = RedisKey::format('captcha:email:{}', $email);
-        $cached = (string) (RedisClient::get()->get($key) ?? '');
-        if ($cached === '' || $cached !== $code) {
-            throw new BusinessException(ResultCode::USER_VERIFICATION_CODE_ERROR);
-        }
-
-        $exists = Db::name('sys_user')
-            ->where('email', $email)
-            ->where('is_deleted', 0)
-            ->where('id', '<>', $userId)
-            ->find();
-        if ($exists) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '邮箱已被其他账号绑定');
-        }
-
-        Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->update([
-            'email' => $email,
-            'update_time' => date('Y-m-d H:i:s'),
-        ]);
-        RedisClient::get()->del([$key]);
-        return true;
-    }
-
-    public function unbindMobile(int $userId, array $data): bool
-    {
-        $password = (string) ($data['password'] ?? '');
-        if ($password === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        $row = Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->find();
-        if (!$row) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '用户不存在');
-        }
-
-        $mobile = trim((string) ($row['mobile'] ?? ''));
-        if ($mobile === '') {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '当前账号未绑定手机号');
-        }
-
-        $hash = (string) ($row['password'] ?? '');
-        if ($hash === '' || !password_verify($password, $hash)) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '当前密码错误');
-        }
-
-        Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->update([
-            'mobile' => null,
-            'update_time' => date('Y-m-d H:i:s'),
-        ]);
-
-        return true;
-    }
-
-    public function unbindEmail(int $userId, array $data): bool
-    {
-        $password = (string) ($data['password'] ?? '');
-        if ($password === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        $row = Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->find();
-        if (!$row) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '用户不存在');
-        }
-
-        $email = trim((string) ($row['email'] ?? ''));
-        if ($email === '') {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '当前账号未绑定邮箱');
-        }
-
-        $hash = (string) ($row['password'] ?? '');
-        if ($hash === '' || !password_verify($password, $hash)) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '当前密码错误');
-        }
-
-        Db::name('sys_user')->where('id', $userId)->where('is_deleted', 0)->update([
-            'email' => null,
-            'update_time' => date('Y-m-d H:i:s'),
-        ]);
-
-        return true;
-    }
-
-    /**
-     * 生成用户导入模板（xlsx）。
-     */
-    public function buildUserImportTemplateXlsx(): string
-    {
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-
-        $headers = ['用户名', '昵称', '性别', '手机号码', '邮箱', '角色', '部门'];
-        $col = 'A';
-        foreach ($headers as $h) {
-            $sheet->setCellValue($col . '1', $h);
-            $col++;
-        }
-
-        $sheet->setCellValue('A2', 'demo');
-        $sheet->setCellValue('B2', '演示用户');
-        $sheet->setCellValue('C2', '男');
-        $sheet->setCellValue('D2', '13800138000');
-        $sheet->setCellValue('E2', 'demo@example.com');
-        $sheet->setCellValue('F2', 'ADMIN');
-        $sheet->setCellValue('G2', 'ROOT');
-
-        return $this->writeSpreadsheetToString($spreadsheet);
-    }
-
-    /**
-     * 导出用户（xlsx）。
-     */
-    public function exportUsersXlsx(array $queryParams, ?array $authUser = null): string
-    {
-        [$list] = $this->getUserPage($queryParams, $authUser);
-
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-
-        $headers = ['用户名', '用户昵称', '部门', '性别', '手机号码', '邮箱', '创建时间'];
-        $col = 'A';
-        foreach ($headers as $h) {
-            $sheet->setCellValue($col . '1', $h);
-            $col++;
-        }
-
-        $genderMap = $this->getGenderLabelMap();
-
-        $rowNum = 2;
-        foreach ($list as $u) {
-            $username = (string) ($u['username'] ?? '');
-            $nickname = (string) ($u['nickname'] ?? '');
-            $deptName = (string) ($u['deptName'] ?? '');
-            $gender = $u['gender'] ?? null;
-            $genderLabel = $gender === null ? '' : ($genderMap[(string) $gender] ?? (string) $gender);
-            $mobile = (string) ($u['mobile'] ?? '');
-            $email = (string) ($u['email'] ?? '');
-            $createTime = (string) ($u['createTime'] ?? '');
-
-            $sheet->setCellValue('A' . $rowNum, $username);
-            $sheet->setCellValue('B' . $rowNum, $nickname);
-            $sheet->setCellValue('C' . $rowNum, $deptName);
-            $sheet->setCellValue('D' . $rowNum, $genderLabel);
-            $sheet->setCellValue('E' . $rowNum, $mobile);
-            $sheet->setCellValue('F' . $rowNum, $email);
-            $sheet->setCellValue('G' . $rowNum, $createTime);
-            $rowNum++;
-        }
-
-        return $this->writeSpreadsheetToString($spreadsheet);
-    }
-
-    /**
-     * 导入用户（xlsx）。
-     */
-    public function importUsersFromXlsx(mixed $file, mixed $deptId = null): array
-    {
-        $path = null;
-        if (is_object($file) && method_exists($file, 'getPathname')) {
-            $path = (string) $file->getPathname();
-        }
-        if ($path === null || $path === '') {
-            throw new BusinessException(ResultCode::UPLOAD_FILE_EXCEPTION);
-        }
-
-        $spreadsheet = IOFactory::load($path);
-        $sheet = $spreadsheet->getActiveSheet();
-        $rows = $sheet->toArray(null, true, true, true);
-
-        $excelResult = [
-            'code' => ResultCode::SUCCESS->getCode(),
-            'validCount' => 0,
-            'invalidCount' => 0,
-            'messageList' => [],
-        ];
-
-        if (count($rows) <= 1) {
-            return $excelResult;
-        }
-
-        $deptId = $deptId === null || $deptId === '' ? null : (int) $deptId;
-        $roleCodeToId = $this->getRoleCodeToIdMap();
-        $deptCodeToId = $this->getDeptCodeToIdMap();
-        $genderLabelToValue = $this->getGenderLabelToValueMap();
-
-        $currentRow = 2;
-        foreach ($rows as $idx => $r) {
-            if ($idx === 1) {
-                continue;
-            }
-
-            $username = trim((string) ($r['A'] ?? ''));
-            $nickname = trim((string) ($r['B'] ?? ''));
-            $genderLabel = trim((string) ($r['C'] ?? ''));
-            $mobile = trim((string) ($r['D'] ?? ''));
-            $email = trim((string) ($r['E'] ?? ''));
-            $roleCodes = trim((string) ($r['F'] ?? ''));
-            $deptCode = trim((string) ($r['G'] ?? ''));
-
-            $validation = true;
-            $errorMsg = '第' . $currentRow . '行数据校验失败：';
-
-            if ($username === '') {
-                $errorMsg .= '用户名为空；';
-                $validation = false;
-            } else {
-                $exists = Db::name('sys_user')->where('username', $username)->where('is_deleted', 0)->count();
-                if ($exists > 0) {
-                    $errorMsg .= '用户名已存在；';
-                    $validation = false;
-                }
-            }
-
-            if ($nickname === '') {
-                $errorMsg .= '用户昵称为空；';
-                $validation = false;
-            }
-
-            if ($mobile === '') {
-                $errorMsg .= '手机号码为空；';
-                $validation = false;
-            } elseif (!preg_match('/^1\d{10}$/', $mobile)) {
-                $errorMsg .= '手机号码不正确；';
-                $validation = false;
-            }
-
-            $genderValue = null;
-            if ($genderLabel !== '') {
-                $genderValue = $genderLabelToValue[$genderLabel] ?? null;
-            }
-
-            $deptIdValue = null;
-            if ($deptCode !== '') {
-                $deptIdValue = $deptCodeToId[$deptCode] ?? null;
-                if ($deptIdValue === null) {
-                    $errorMsg .= '部门不存在；';
-                    $validation = false;
-                }
-            } elseif ($deptId !== null) {
-                $deptIdValue = $deptId;
-            }
-
-            $roleIds = [];
-            if ($roleCodes !== '') {
-                $codes = array_values(array_filter(array_map('trim', explode(',', $roleCodes)), fn($v) => $v !== ''));
-                foreach ($codes as $code) {
-                    if (isset($roleCodeToId[$code])) {
-                        $roleIds[] = (int) $roleCodeToId[$code];
-                    }
-                }
-                $roleIds = array_values(array_unique($roleIds));
-            }
-
-            if ($validation) {
-                try {
-                    Db::transaction(function () use ($username, $nickname, $genderValue, $mobile, $email, $deptIdValue, $roleIds) {
-                        $now = date('Y-m-d H:i:s');
-                        $hash = password_hash('123456', PASSWORD_BCRYPT);
-
-                        $userId = (int) Db::name('sys_user')->insertGetId([
-                            'username' => $username,
-                            'nickname' => $nickname,
-                            'gender' => $genderValue,
-                            'mobile' => $mobile,
-                            'email' => $email !== '' ? $email : null,
-                            'dept_id' => $deptIdValue,
-                            'status' => 1,
-                            'avatar' => null,
-                            'password' => $hash,
-                            'create_time' => $now,
-                            'update_time' => $now,
-                            'is_deleted' => 0,
-                        ]);
-
-                        if (!empty($roleIds)) {
-                            $rows = [];
-                            foreach ($roleIds as $rid) {
-                                $rows[] = ['user_id' => $userId, 'role_id' => (int) $rid];
-                            }
-                            Db::name('sys_user_role')->insertAll($rows);
-                        }
-                    });
-
-                    $excelResult['validCount']++;
-                } catch (\Throwable $e) {
-                    $excelResult['invalidCount']++;
-                    $excelResult['messageList'][] = $errorMsg . '保存失败；';
-                }
-            } else {
-                $excelResult['invalidCount']++;
-                $excelResult['messageList'][] = $errorMsg;
-            }
-
-            $currentRow++;
-        }
-
-        return $excelResult;
-    }
-
-    /**
-     * 输出 xlsx 为二进制字符串。
-     */
-    private function writeSpreadsheetToString(Spreadsheet $spreadsheet): string
-    {
-        $writer = new Xlsx($spreadsheet);
-        ob_start();
-        $writer->save('php://output');
-        $bin = (string) ob_get_clean();
-        $spreadsheet->disconnectWorksheets();
-        return $bin;
-    }
-
-    private function bumpUserSecurityVersion(int $userId): void
-    {
-        if ($userId <= 0) {
+        // 超级管理员不过滤
+        if (in_array('ROOT', $authUser['roleCodes'] ?? [], true)) {
             return;
         }
 
-        $keys = (array) (config('security.redis.keys') ?? []);
-        $pattern = (string) ($keys['user_token_version'] ?? 'auth:user:token_version:{}');
-        $key = RedisKey::format($pattern, $userId);
+        // 根据数据权限过滤
+        $dataScopes = $authUser['dataScopes'] ?? [];
+        if (empty($dataScopes)) {
+            $query->whereRaw('1 = 0'); // 无权限
+            return;
+        }
 
-        $redis = RedisClient::get();
-        $current = (int) ($redis->get($key) ?: 0);
-        $next = $current + 1;
-        $redis->set($key, (string) $next);
+        // 合并部门权限
+        $deptIds = [];
+        foreach ($dataScopes as $scope) {
+            if (!empty($scope['deptIds'])) {
+                $deptIds = array_merge($deptIds, $scope['deptIds']);
+            }
+        }
+
+        if (!empty($deptIds)) {
+            $query->whereIn('dept_id', array_unique($deptIds));
+        }
     }
 
     /**
-     * 性别字典：label -> value。
+     * 分配角色
      */
-    private function getGenderLabelToValueMap(): array
+    private function assignRoles(int $userId, array $roleIds): void
     {
-        $rows = Db::name('sys_dict_item')
-            ->where('dict_code', 'gender')
-            ->where('is_deleted', 0)
-            ->field('label,value')
-            ->select()
-            ->toArray();
+        $now = date('Y-m-d H:i:s');
+        $data = array_map(fn ($roleId) => [
+            'user_id' => $userId,
+            'role_id' => $roleId,
+            'create_time' => $now,
+        ], $roleIds);
 
-        $map = [];
-        foreach ($rows as $r) {
-            $label = (string) ($r['label'] ?? '');
-            $value = (string) ($r['value'] ?? '');
-            if ($label !== '' && $value !== '') {
-                $map[$label] = (int) $value;
-            }
-        }
-        return $map;
+        UserRole::insertAll($data);
     }
 
     /**
-     * 性别字典：value -> label。
+     * 同步角色
      */
-    private function getGenderLabelMap(): array
+    private function syncRoles(int $userId, array $roleIds): void
     {
-        $rows = Db::name('sys_dict_item')
-            ->where('dict_code', 'gender')
-            ->where('is_deleted', 0)
-            ->field('label,value')
-            ->select()
-            ->toArray();
+        UserRole::where('user_id', $userId)->delete();
 
-        $map = [];
-        foreach ($rows as $r) {
-            $label = (string) ($r['label'] ?? '');
-            $value = (string) ($r['value'] ?? '');
-            if ($label !== '' && $value !== '') {
-                $map[$value] = $label;
-            }
+        if (!empty($roleIds)) {
+            $this->assignRoles($userId, $roleIds);
         }
-        return $map;
+    }
+
+    // ==================== 导入导出 ====================
+
+    /**
+     * 生成用户导入模板
+     */
+    public function generateImportTemplate(): string
+    {
+        // 使用静态模板文件
+        $templatePath = public_path() . 'static/templates/excel/用户导入模板.xlsx';
+        
+        if (!file_exists($templatePath)) {
+            throw new BusinessException(ResultCode::SYSTEM_ERROR, '模板文件不存在');
+        }
+        
+        return $templatePath;
     }
 
     /**
-     * 角色编码 -> 角色ID。
+     * 从Excel导入用户
      */
-    private function getRoleCodeToIdMap(): array
+    public function importFromExcel(string $filePath): array
     {
-        $rows = Db::name('sys_role')
-            ->where('is_deleted', 0)
-            ->field('id,code')
-            ->select()
-            ->toArray();
+        $spreadsheet = IOFactory::load($filePath);
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray();
 
-        $map = [];
-        foreach ($rows as $r) {
-            $code = (string) ($r['code'] ?? '');
-            $id = (int) ($r['id'] ?? 0);
-            if ($code !== '' && $id > 0) {
-                $map[$code] = $id;
+        if (count($rows) < 2) {
+            return ['validCount' => 0, 'invalidCount' => 0, 'messageList' => ['Excel文件没有数据']];
+        }
+
+        // 预加载角色和部门数据（支持编码或名称匹配）
+        $roleMap = [];
+        $roles = Role::where('status', 1)->select();
+        foreach ($roles as $role) {
+            if ($role->code) {
+                $roleMap[$role->code] = $role->id;
+            }
+            if ($role->name) {
+                $roleMap[$role->name] = $role->id;
             }
         }
-        return $map;
-    }
 
-    /**
-     * 部门编码 -> 部门ID。
-     */
-    private function getDeptCodeToIdMap(): array
-    {
-        $rows = Db::name('sys_dept')
-            ->where('is_deleted', 0)
-            ->field('id,code')
-            ->select()
-            ->toArray();
-
-        $map = [];
-        foreach ($rows as $r) {
-            $code = (string) ($r['code'] ?? '');
-            $id = (int) ($r['id'] ?? 0);
-            if ($code !== '' && $id > 0) {
-                $map[$code] = $id;
+        $deptMap = [];
+        $depts = Dept::select();
+        foreach ($depts as $dept) {
+            if ($dept->code) {
+                $deptMap[$dept->code] = $dept->id;
+            }
+            if ($dept->name) {
+                $deptMap[$dept->name] = $dept->id;
             }
         }
-        return $map;
+
+        // 获取已存在的用户名
+        $existingUsernames = User::column('username');
+
+        $validCount = 0;
+        $invalidCount = 0;
+        $messageList = [];
+
+        // 跳过表头
+        for ($i = 1; $i < count($rows); $i++) {
+            $row = $rows[$i];
+            $rowNum = $i + 1;
+
+            $username = trim((string)($row[0] ?? ''));
+            $nickname = trim((string)($row[1] ?? ''));
+            $genderStr = trim((string)($row[2] ?? ''));
+            $mobile = trim((string)($row[3] ?? ''));
+            $email = trim((string)($row[4] ?? ''));
+            $roleStr = trim((string)($row[5] ?? ''));
+            $deptStr = trim((string)($row[6] ?? ''));
+
+            // 校验必填字段
+            if ($username === '' || $nickname === '') {
+                $messageList[] = "第{$rowNum}行：用户名和昵称不能为空";
+                $invalidCount++;
+                continue;
+            }
+
+            // 检查用户名是否已存在
+            if (in_array($username, $existingUsernames, true)) {
+                $messageList[] = "第{$rowNum}行：用户名\"{$username}\"已存在";
+                $invalidCount++;
+                continue;
+            }
+
+            // 解析性别
+            $gender = 0;
+            if ($genderStr !== '') {
+                if (in_array($genderStr, ['1', '男'], true)) {
+                    $gender = 1;
+                } elseif (in_array($genderStr, ['2', '女'], true)) {
+                    $gender = 2;
+                }
+            }
+
+            // 解析角色
+            $roleIds = [];
+            if ($roleStr !== '') {
+                $roleParts = array_map('trim', explode(',', $roleStr));
+                foreach ($roleParts as $part) {
+                    if ($part === '') {
+                        continue;
+                    }
+                    if (isset($roleMap[$part])) {
+                        $roleIds[] = $roleMap[$part];
+                    }
+                }
+            }
+
+            if (empty($roleIds)) {
+                $messageList[] = "第{$rowNum}行：角色不存在或为空";
+                $invalidCount++;
+                continue;
+            }
+
+            // 解析部门
+            $deptId = 0;
+            if ($deptStr !== '') {
+                if (isset($deptMap[$deptStr])) {
+                    $deptId = $deptMap[$deptStr];
+                } else {
+                    $messageList[] = "第{$rowNum}行：部门\"{$deptStr}\"不存在";
+                    $invalidCount++;
+                    continue;
+                }
+            }
+
+            // 创建用户
+            $now = date('Y-m-d H:i:s');
+            $userId = User::insertGetId([
+                'username' => $username,
+                'password' => password_hash('123456', PASSWORD_DEFAULT),
+                'nickname' => $nickname,
+                'mobile' => $mobile,
+                'email' => $email,
+                'gender' => $gender,
+                'status' => 1,
+                'dept_id' => $deptId,
+                'create_time' => $now,
+                'update_time' => $now,
+            ]);
+
+            // 分配角色
+            $this->assignRoles($userId, array_unique($roleIds));
+
+            $existingUsernames[] = $username;
+            $validCount++;
+        }
+
+        return [
+            'validCount' => $validCount,
+            'invalidCount' => $invalidCount,
+            'messageList' => $messageList,
+        ];
     }
 }

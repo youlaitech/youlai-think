@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace app\controller;
 
-use app\common\controller\ApiController;
+use app\controller\ApiController;
 use app\service\{{entityName}}Service;
 
 /**

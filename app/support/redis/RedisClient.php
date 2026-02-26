@@ -1,8 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 
-declare(strict_types=1);
-
-namespace app\common\redis;
+namespace app\support\redis;
 
 use Predis\Client;
 

@@ -44,13 +44,19 @@
 ```text
 youlai-think/
 ├─ app/                       # 应用核心目录
-│  ├─ controller/             # 控制器 (用户/角色/菜单等)
+│  ├─ controller/             # 控制器
 │  ├─ service/                # 业务服务
 │  ├─ model/                  # 数据模型
-│  ├─ common/                 # 公共模块(认证/权限/异常)
-│  └─ ...                     # 其他(中间件/验证器等)
+│  ├─ job/                    # 队列任务
+│  ├─ validate/               # 验证器
+│  ├─ traits/                 # 复用特性
+│  ├─ middleware/             # 中间件
+│  ├─ common/                 # 公共模块
+│  └─ database/               # 数据库迁移
+│     ├─ migrations/          # 迁移文件
+│     └─ seeds/               # 数据填充
 ├─ config/                    # 配置文件
-├─ public/                    # Web 入口目录
+├─ public/                    # Web入口
 ├─ route/                     # 路由定义
 ├─ runtime/                   # 运行时缓存
 ├─ .env                       # 环境变量

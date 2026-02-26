@@ -1,11 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\middleware;
 
 use app\common\exception\BusinessException;
-use app\common\security\TokenManagerResolver;
+use app\support\security\TokenManagerResolver;
 use app\common\web\ResultCode;
 
 final class AuthMiddleware

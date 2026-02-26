@@ -1,12 +1,10 @@
-<?php
+<?php declare(strict_types=1);
 
-declare(strict_types=1);
-
-namespace app\common\websocket;
+namespace app\support\websocket;
 
 /**
  * 在线用户信息DTO
- * 用于返回在线用户的基本信息，包括用户名、会话数量和登录时间。
+ * 用于返回在线用户的基本信息，包括用户名、会话数量和登录时间�?
  */
 class OnlineUserDto
 {
@@ -27,28 +25,28 @@ class OnlineUserDto
 }
 
 /**
- * WebSocket 用户会话注册表
- * 维护WebSocket连接的用户会话信息，支持多设备同时登录。
- * 采用双数组结构实现高效查询。
+ * WebSocket 用户会话注册�?
+ * 维护WebSocket连接的用户会话信息，支持多设备同时登录�?
+ * 采用双数组结构实现高效查询�?
  */
 class UserSessionRegistry
 {
     /**
-     * 用户会话映射表
-     * Key: 用户名
-     * Value: 会话ID集合（支持多设备登录）
+     * 用户会话映射�?
+     * Key: 用户�?
+     * Value: 会话ID集合（支持多设备登录�?
      */
     private array $userSessionsMap = [];
 
     /**
-     * 会话详情映射表
+     * 会话详情映射�?
      * Key: 会话ID
      * Value: 会话详情
      */
     private array $sessionDetailsMap = [];
 
     /**
-     * 用户上线（建立WebSocket连接）
+     * 用户上线（建立WebSocket连接�?
      */
     public function userConnected(string $username, string $sessionId): void
     {
@@ -64,8 +62,8 @@ class UserSessionRegistry
     }
 
     /**
-     * 用户下线（断开所有WebSocket连接）
-     * 移除该用户的所有会话信息
+     * 用户下线（断开所有WebSocket连接�?
+     * 移除该用户的所有会话信�?
      */
     public function userDisconnected(string $username): void
     {
@@ -78,8 +76,8 @@ class UserSessionRegistry
     }
 
     /**
-     * 移除指定会话（单设备下线）
-     * 当用户某一设备断开连接时调用，保留其他设备的会话
+     * 移除指定会话（单设备下线�?
+     * 当用户某一设备断开连接时调用，保留其他设备的会�?
      */
     public function removeSession(string $sessionId): void
     {
@@ -107,7 +105,7 @@ class UserSessionRegistry
     }
 
     /**
-     * 获取指定用户的会话数量
+     * 获取指定用户的会话数�?
      */
     public function getUserSessionCount(string $username): int
     {
@@ -123,7 +121,7 @@ class UserSessionRegistry
     }
 
     /**
-     * 检查用户是否在线
+     * 检查用户是否在�?
      */
     public function isUserOnline(string $username): bool
     {
@@ -131,7 +129,7 @@ class UserSessionRegistry
     }
 
     /**
-     * 获取所有在线用户列表
+     * 获取所有在线用户列�?
      */
     public function getOnlineUsers(): array
     {

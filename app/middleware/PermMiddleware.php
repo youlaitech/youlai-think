@@ -1,6 +1,4 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\middleware;
 
@@ -9,7 +7,7 @@ use app\common\web\ResultCode;
 use think\facade\Db;
 
 /**
- * 权限校验中间件
+ * 权限校验中间�?
  *
  * 路由上用 middleware('perm:xxx') 传入权限标识
  * ROOT/ADMIN 直接放行
@@ -24,7 +22,7 @@ final class PermMiddleware
      * @param string   $perm
      *
      * @return mixed
-     * @throws BusinessException 无权限或认证信息异常时抛出
+     * @throws BusinessException 无权限或认证信息异常时抛�?
      */
     public function handle($request, \Closure $next, string $perm = '')
     {
@@ -42,7 +40,7 @@ final class PermMiddleware
             throw new BusinessException(ResultCode::ACCESS_TOKEN_INVALID);
         }
 
-        // ROOT/ADMIN 直接跳过细粒度权限校验
+        // ROOT/ADMIN 直接跳过细粒度权限校�?
         $roleCodes = Db::name('sys_user_role')
             ->alias('ur')
             ->join('sys_role r', 'ur.role_id = r.id')
@@ -55,7 +53,7 @@ final class PermMiddleware
             return $next($request);
         }
 
-        // 汇总当前用户的菜单权限点
+        // 汇总当前用户的菜单权限�?
         $perms = Db::name('sys_role_menu')
             ->alias('rm')
             ->join('sys_user_role ur', 'rm.role_id = ur.role_id')

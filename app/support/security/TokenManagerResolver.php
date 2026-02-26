@@ -1,8 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 
-declare(strict_types=1);
-
-namespace app\common\security;
+namespace app\support\security;
 
 final class TokenManagerResolver
 {

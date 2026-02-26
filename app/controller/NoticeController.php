@@ -1,10 +1,8 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\controller;
 
-use app\common\controller\ApiController;
+use app\controller\ApiController;
 use app\service\NoticeService;
 use OpenApi\Annotations as OA;
 
@@ -22,7 +20,7 @@ final class NoticeController extends ApiController
      *     tags={"08.通知公告"},
      *     @OA\Parameter(name="pageNum", in="query", description="页码", required=false),
      *     @OA\Parameter(name="pageSize", in="query", description="每页数量", required=false),
-     *     @OA\Parameter(name="keywords", in="query", description="关键字", required=false),
+     *     @OA\Parameter(name="keywords", in="query", description="关键�?, required=false),
      *     @OA\Response(response=200, description="OK")
      * )
      *
@@ -34,7 +32,7 @@ final class NoticeController extends ApiController
         // 需要用户身份与数据权限
         $userId = $this->getAuthUserId();
         $authUser = $this->getAuthUser();
-        [$list, $total] = (new NoticeService())->getNoticePage($userId, $this->request->param(), $authUser);
+        [$list, $total] = $this->service(NoticeService::class)->getNoticePage($userId, $this->request->param(), $authUser);
         return $this->okPage($list, $total);
     }
 
@@ -57,7 +55,7 @@ final class NoticeController extends ApiController
         $userId = $this->getAuthUserId();
         // 统一读取 body 参数
         $data = $this->mergeJsonParams();
-        (new NoticeService())->saveNotice($userId, $data);
+        $this->service(NoticeService::class)->saveNotice($userId, $data);
         return $this->ok();
     }
 
@@ -77,7 +75,7 @@ final class NoticeController extends ApiController
      */
     public function form(int $id): \think\Response
     {
-        $data = (new NoticeService())->getNoticeFormData($id);
+        $data = $this->service(NoticeService::class)->getNoticeFormData($id);
         return $this->ok($data);
     }
 
@@ -99,7 +97,7 @@ final class NoticeController extends ApiController
     public function detail(int $id): \think\Response
     {
         $userId = $this->getAuthUserId();
-        $data = (new NoticeService())->getNoticeDetail($userId, $id);
+        $data = $this->service(NoticeService::class)->getNoticeDetail($userId, $id);
         return $this->ok($data);
     }
 
@@ -124,7 +122,7 @@ final class NoticeController extends ApiController
         $userId = $this->getAuthUserId();
         // 统一读取 body 参数
         $data = $this->mergeJsonParams();
-        (new NoticeService())->updateNotice($userId, $id, $data);
+        $this->service(NoticeService::class)->updateNotice($userId, $id, $data);
         return $this->ok();
     }
 
@@ -146,7 +144,7 @@ final class NoticeController extends ApiController
     public function publish(int $id): \think\Response
     {
         $userId = $this->getAuthUserId();
-        (new NoticeService())->publishNotice($userId, $id);
+        $this->service(NoticeService::class)->publishNotice($userId, $id);
         return $this->ok();
     }
 
@@ -168,7 +166,7 @@ final class NoticeController extends ApiController
     public function revoke(int $id): \think\Response
     {
         $userId = $this->getAuthUserId();
-        (new NoticeService())->revokeNotice($userId, $id);
+        $this->service(NoticeService::class)->revokeNotice($userId, $id);
         return $this->ok();
     }
 
@@ -188,12 +186,12 @@ final class NoticeController extends ApiController
      */
     public function delete(string $ids): \think\Response
     {
-        (new NoticeService())->deleteNotices($ids);
+        $this->service(NoticeService::class)->deleteNotices($ids);
         return $this->ok();
     }
 
     /**
-     * 全部标记为已读
+     * 全部标记为已�?
      *
      * @OA\Put(
      *     path="/api/v1/notices/read-all",
@@ -209,7 +207,7 @@ final class NoticeController extends ApiController
     {
         $userId = $this->getAuthUserId();
         // 批量标记已读
-        (new NoticeService())->readAll($userId);
+        $this->service(NoticeService::class)->readAll($userId);
         return $this->ok();
     }
 
@@ -232,7 +230,7 @@ final class NoticeController extends ApiController
     {
         $userId = $this->getAuthUserId();
         // 仅查询我的通知列表
-        [$list, $total] = (new NoticeService())->getMyNoticePage($userId, $this->request->param());
+        [$list, $total] = $this->service(NoticeService::class)->getMyNoticePage($userId, $this->request->param());
         return $this->okPage($list, $total);
     }
 }

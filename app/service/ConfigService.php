@@ -1,11 +1,9 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\service;
 
 use app\common\exception\BusinessException;
-use app\common\redis\RedisClient;
+use app\support\redis\RedisClient;
 use app\common\web\ResultCode;
 use app\model\Config;
 use think\facade\Db;
@@ -13,14 +11,14 @@ use think\facade\Db;
 /**
  * 系统配置业务
  *
- * 配置分页 表单 增删改 缓存
+ * 配置分页 表单 增删�?缓存
  */
 final class ConfigService
 {
     private const CACHE_KEY = 'system:config';
 
     /**
-     * 系统配置分页列表。
+     * 系统配置分页列表�?
      */
     public function page(array $queryParams): array
     {
@@ -61,13 +59,13 @@ final class ConfigService
     }
 
     /**
-     * 获取系统配置表单数据。
+     * 获取系统配置表单数据�?
      */
     public function getConfigFormData(int $id): array
     {
         $row = Config::where('id', $id)->where('is_deleted', 0)->find();
         if ($row === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '系统配置不存在');
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '系统配置不存�?);
         }
 
         $r = $row->toArray();
@@ -81,7 +79,7 @@ final class ConfigService
     }
 
     /**
-     * 新增系统配置。
+     * 新增系统配置�?
      */
     public function saveConfig(int $userId, array $data): bool
     {
@@ -94,7 +92,7 @@ final class ConfigService
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
-        // 配置键唯一性校验
+        // 配置键唯一性校�?
         $exists = Db::name('sys_config')
             ->where('is_deleted', 0)
             ->where('config_key', $configKey)
@@ -120,13 +118,13 @@ final class ConfigService
     }
 
     /**
-     * 修改系统配置。
+     * 修改系统配置�?
      */
     public function updateConfig(int $userId, int $id, array $data): bool
     {
         $row = Db::name('sys_config')->where('id', $id)->where('is_deleted', 0)->find();
         if (!$row) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '系统配置不存在');
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '系统配置不存�?);
         }
 
         $configName = trim((string) ($data['configName'] ?? ''));
@@ -138,7 +136,7 @@ final class ConfigService
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
-        // 更新时排除自身
+        // 更新时排除自�?
         $exists = Db::name('sys_config')
             ->where('is_deleted', 0)
             ->where('config_key', $configKey)
@@ -161,13 +159,13 @@ final class ConfigService
     }
 
     /**
-     * 删除系统配置。
+     * 删除系统配置�?
      */
     public function deleteConfig(int $userId, int $id): bool
     {
         $row = Db::name('sys_config')->where('id', $id)->where('is_deleted', 0)->find();
         if (!$row) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '系统配置不存在');
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '系统配置不存�?);
         }
 
         Db::name('sys_config')->where('id', $id)->update([
@@ -180,7 +178,7 @@ final class ConfigService
     }
 
     /**
-     * 刷新系统配置缓存。
+     * 刷新系统配置缓存�?
      */
     public function refreshCache(): bool
     {
@@ -210,7 +208,7 @@ final class ConfigService
     }
 
     /**
-     * 获取系统配置（优先读缓存）。
+     * 获取系统配置（优先读缓存）�?
      */
     public function getSystemConfig(string $key): mixed
     {

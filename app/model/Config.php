@@ -1,15 +1,25 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\model;
 
-use think\Model;
-
 /**
- * ç³»ç»Ÿé…ç½®æ¨¡å‹ï¼Œå¯¹åº” sys_config
+ * ÏµÍ³ÅäÖÃÄ£ĞÍ
+ *
+ * @property int    $id          ÅäÖÃID
+ * @property string $key         ÅäÖÃ¼ü
+ * @property string $value       ÅäÖÃÖµ
+ * @property string $name        ÅäÖÃÃû³Æ
+ * @property string $remark      ±¸×¢
+ * @property string $createTime  ´´½¨Ê±¼ä
  */
 class Config extends Model
 {
     protected $name = 'sys_config';
+
+    protected $type = [
+        'id' => 'integer',
+    ];
+
+    // ÎŞÈíÉ¾³ı
+    protected $deleteTime = false;
 }

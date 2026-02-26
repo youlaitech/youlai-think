@@ -1,13 +1,11 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace tests;
 
 use PHPUnit\Framework\TestCase;
 
 /**
- * API 冒烟测试。
+ * API 冒烟测试�?
  *
  * @author Ray.Hao
  * @version 0.0.1

@@ -1,222 +1,100 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\controller;
 
-use app\common\controller\ApiController;
-use app\common\exception\BusinessException;
-use app\common\web\ResultCode;
+use app\controller\ApiController;
 use app\service\RoleService;
+use app\validate\RoleValidate;
 use OpenApi\Annotations as OA;
 
 /**
- * @OA\Tag(name="03.角色接口")
+ * @OA\Tag(name="03.角色管理")
  */
 final class RoleController extends ApiController
 {
     /**
-     * @OA\Get(
-     *     path="/api/v1/roles",
-     *     summary="角色分页列表",
-     *     tags={"03.角色接口"},
-     *     @OA\Parameter(name="pageNum", in="query", description="页码", required=false),
-     *     @OA\Parameter(name="pageSize", in="query", description="每页数量", required=false),
-     *     @OA\Parameter(name="keywords", in="query", description="关键字", required=false),
-     *     @OA\Response(response=200, description="OK")
-     * )
+     * 分页查询角色列表
      */
-    public function page(): \think\Response
+    public function page(): \think\response\Json
     {
-        $pageNum = (int) $this->request->param('pageNum', 1);
-        $pageSize = (int) $this->request->param('pageSize', 10);
-        $keywords = (string) $this->request->param('keywords', '');
+        [$list, $total] = $this->service(RoleService::class)->paginate(
+            $this->getAllParams()
+        );
 
-        [$list, $total] = (new RoleService())->getRolePage($pageNum, $pageSize, $keywords);
-        return $this->okPage($list, $total);
+        $pagination = $this->getPaginationParams();
+
+        return $this->successPaginate($list, $total, $pagination['page'], $pagination['pageSize']);
     }
 
     /**
-     * @OA\Get(
-     *     path="/api/v1/roles/options",
-     *     summary="角色下拉列表",
-     *     tags={"03.角色接口"},
-     *     @OA\Response(response=200, description="OK")
-     * )
+     * 获取所有启用的角色（下拉框用）
      */
-    public function options(): \think\Response
+    public function options(): \think\response\Json
     {
-        $list = (new RoleService())->listRoleOptions();
-        return $this->ok($list);
+        $list = $this->service(RoleService::class)->getAllEnabled();
+
+        return $this->success($list);
     }
 
     /**
-     * @OA\Get(
-     *     path="/api/v1/roles/{roleId}/form",
-     *     summary="获取角色表单数据",
-     *     tags={"03.角色接口"},
-     *     @OA\Parameter(name="roleId", in="path", description="角色ID", required=true),
-     *     @OA\Response(response=200, description="OK")
-     * )
+     * 获取角色详情
      */
-    public function form(int $roleId): \think\Response
+    public function detail(): \think\response\Json
     {
-        $data = (new RoleService())->getRoleForm($roleId);
-        return $this->ok($data);
-    }
+        $id = $this->getIdParam();
+        $data = $this->service(RoleService::class)->getById($id);
 
-    /**
-     * @OA\Post(
-     *     path="/api/v1/roles",
-     *     summary="新增角色",
-     *     tags={"03.角色接口"},
-     *     @OA\RequestBody(required=true, @OA\JsonContent()),
-     *     @OA\Response(response=200, description="OK")
-     * )
-     */
-    public function create(): \think\Response
-    {
-        $data = $this->mergeJsonParams();
-        (new RoleService())->saveRole($data, null);
-        return $this->ok();
-    }
-
-    /**
-     * @OA\Put(
-     *     path="/api/v1/roles/{id}",
-     *     summary="修改角色",
-     *     tags={"03.角色接口"},
-     *     @OA\Parameter(name="id", in="path", description="角色ID", required=true),
-     *     @OA\RequestBody(required=true, @OA\JsonContent()),
-     *     @OA\Response(response=200, description="OK")
-     * )
-     */
-    public function update(int $id): \think\Response
-    {
-        $data = $this->mergeJsonParams();
-        (new RoleService())->saveRole($data, $id);
-        return $this->ok();
-    }
-
-    /**
-     * @OA\Delete(
-     *     path="/api/v1/roles/{ids}",
-     *     summary="删除角色",
-     *     tags={"03.角色接口"},
-     *     @OA\Parameter(name="ids", in="path", description="删除角色，多个以英文逗号(,)拼接", required=true),
-     *     @OA\Response(response=200, description="OK")
-     * )
-     */
-    public function delete(string $ids): \think\Response
-    {
-        (new RoleService())->deleteRoles($ids);
-        return $this->ok();
-    }
-
-    /**
-     * @OA\Put(
-     *     path="/api/v1/roles/{roleId}/status",
-     *     summary="修改角色状态",
-     *     tags={"03.角色接口"},
-     *     @OA\Parameter(name="roleId", in="path", description="角色ID", required=true),
-     *     @OA\Parameter(name="status", in="query", description="状态(1:启用;0:禁用)", required=true),
-     *     @OA\Response(response=200, description="OK")
-     * )
-     */
-    public function updateStatus(int $roleId): \think\Response
-    {
-        $status = $this->request->param('status');
-        if ($status === null || $status === '') {
-            $json = $this->getJsonBody();
-            $status = is_array($json) ? ($json['status'] ?? null) : null;
+        if (!$data) {
+            return $this->fail('A0400', '角色不存�?);
         }
 
-        if ($status === null || $status === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
-        }
-
-        // 状态转为整型
-        (new RoleService())->updateRoleStatus($roleId, (int) $status);
-        return $this->ok();
+        return $this->success($data);
     }
 
     /**
-     * @OA\Get(
-     *     path="/api/v1/roles/{roleId}/menuIds",
-     *     summary="获取角色的菜单ID集合",
-     *     tags={"03.角色接口"},
-     *     @OA\Parameter(name="roleId", in="path", description="角色ID", required=true),
-     *     @OA\Response(response=200, description="OK")
-     * )
+     * 创建角色
      */
-    public function menuIds(int $roleId): \think\Response
+    public function create(): \think\response\Json
     {
-        $list = (new RoleService())->getRoleMenuIds($roleId);
-        if (is_array($list)) {
-            $list = array_values(array_map(static fn($v) => (string) $v, $list));
-        }
-        return $this->ok($list);
+        $this->checkDemo();
+
+        $data = $this->validate($this->getAllParams(), RoleValidate::class, 'create');
+
+        $id = $this->service(RoleService::class)->create($data);
+
+        return $this->success(['id' => (string) $id], '创建成功');
     }
 
     /**
-     * @OA\Put(
-     *     path="/api/v1/roles/{roleId}/menus",
-     *     summary="角色分配菜单权限",
-     *     tags={"03.角色接口"},
-     *     @OA\Parameter(name="roleId", in="path", description="角色ID", required=true),
-     *     @OA\RequestBody(required=true, @OA\JsonContent(type="array", @OA\Items(type="integer"))),
-     *     @OA\Response(response=200, description="OK")
-     * )
+     * 更新角色
      */
-    public function assignMenus(int $roleId): \think\Response
+    public function update(): \think\response\Json
     {
-        $json = $this->getJsonBody();
-        if (!is_array($json)) {
-            throw new BusinessException(ResultCode::USER_REQUEST_PARAMETER_ERROR);
-        }
+        $this->checkDemo();
 
-        // menuIds 为空时表示清空角色菜单权限
-        (new RoleService())->assignMenusToRole($roleId, $json);
-        return $this->ok();
+        $id = $this->getIdParam();
+        $data = $this->validate($this->getAllParams(), RoleValidate::class, 'update');
+
+        $this->service(RoleService::class)->update($id, $data);
+
+        return $this->success(null, '更新成功');
     }
 
     /**
-     * @OA\Get(
-     *     path="/api/v1/roles/{roleId}/dept-ids",
-     *     summary="获取角色的自定义部门ID集合",
-     *     tags={"03.角色接口"},
-     *     @OA\Parameter(name="roleId", in="path", description="角色ID", required=true),
-     *     @OA\Response(response=200, description="OK")
-     * )
+     * 批量删除角色
      */
-    public function deptIds(int $roleId): \think\Response
+    public function delete(): \think\response\Json
     {
-        // 返回该角色已配置的自定义部门列表，用于数据权限为“自定义部门”时的勾选回显
-        $list = (new RoleService())->getRoleDeptIds($roleId);
-        if (is_array($list)) {
-            $list = array_values(array_map(static fn($v) => (string) $v, $list));
-        }
-        return $this->ok($list);
-    }
+        $this->checkDemo();
 
-    /**
-     * @OA\Put(
-     *     path="/api/v1/roles/{roleId}/depts",
-     *     summary="角色分配自定义部门",
-     *     tags={"03.角色接口"},
-     *     @OA\Parameter(name="roleId", in="path", description="角色ID", required=true),
-     *     @OA\RequestBody(required=true, @OA\JsonContent(type="array", @OA\Items(type="integer"))),
-     *     @OA\Response(response=200, description="OK")
-     * )
-     */
-    public function assignDepts(int $roleId): \think\Response
-    {
-        $json = $this->getJsonBody();
-        if (!is_array($json)) {
-            throw new BusinessException(ResultCode::USER_REQUEST_PARAMETER_ERROR);
+        $ids = $this->getIdsParam();
+
+        if (empty($ids)) {
+            return $this->fail('A0410', '请选择要删除的角色');
         }
 
-        (new RoleService())->assignDeptsToRole($roleId, $json);
-        return $this->ok();
+        $count = $this->service(RoleService::class)->deleteByIds($ids);
+
+        return $this->success(['count' => $count], "成功删除 {$count} 个角�?);
     }
 }

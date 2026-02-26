@@ -1,13 +1,10 @@
-<?php
+<?php declare(strict_types=1);
 
-declare(strict_types=1);
-
-namespace app\common\security;
+namespace app\support\security;
 
 final class JwtClaimConstants
 {
-    // JWT 载荷字段名约定
-    public const TOKEN_TYPE = 'tokenType';
+    // JWT 载荷字段名约�?    public const TOKEN_TYPE = 'tokenType';
     public const USER_ID = 'userId';
     public const DEPT_ID = 'deptId';
     public const DATA_SCOPE = 'dataScope';

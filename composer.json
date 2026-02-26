@@ -1,6 +1,6 @@
 {
   "name": "topthink/think",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "the new thinkphp framework",
   "type": "project",
   "keywords": [
@@ -21,12 +21,14 @@
     "topthink/framework": "^8.0",
     "topthink/think-orm": "^3.0|^4.0",
     "topthink/think-filesystem": "^2.0|^3.0",
+    "topthink/think-queue": "^3.0",
+    "topthink/think-migration": "^3.0",
     "firebase/php-jwt": "^6.10",
     "predis/predis": "^2.3",
     "doctrine/annotations": "^2.0",
     "phpoffice/phpspreadsheet": "^3.10",
     "zircote/swagger-php": "^4.10",
-    "gregwar/captcha": "^1.2"
+    "guzzlehttp/guzzle": "^7.8"
   },
   "require-dev": {
     "topthink/think-dumper": "^1.0",

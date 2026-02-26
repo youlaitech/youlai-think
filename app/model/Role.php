@@ -1,13 +1,81 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace app\model;
 
-use think\Model;
-
-// è§’è‰²æ¨¡åž‹ï¼Œå¯¹åº” sys_role
+/**
+ * ½ÇÉ«Ä£ÐÍ¡£
+ */
 class Role extends Model
 {
     protected $name = 'sys_role';
+
+    protected $type = [
+        'id' => 'integer',
+        'status' => 'integer',
+        'sort' => 'integer',
+    ];
+
+    // ==================== ¹ØÁª¹ØÏµ ====================
+
+    /**
+     * ¹ØÁªÓÃ»§
+     */
+    public function users(): \think\model\relation\BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            UserRole::class,
+            'user_id',
+            'role_id'
+        );
+    }
+
+    /**
+     * ¹ØÁª²Ëµ¥
+     */
+    public function menus(): \think\model\relation\BelongsToMany
+    {
+        return $this->belongsToMany(
+            Menu::class,
+            RoleMenu::class,
+            'menu_id',
+            'role_id'
+        );
+    }
+
+    // ==================== ·ÃÎÊÆ÷ ====================
+
+    /**
+     * ×´Ì¬ÎÄ±¾
+     */
+    public function getStatusTextAttr(mixed $value, array $data): string
+    {
+        return (int) ($data['status'] ?? 0) === 1 ? 'ÆôÓÃ' : '½ûÓÃ';
+    }
+
+    // ==================== ²éÑ¯×÷ÓÃÓò ====================
+
+    /**
+     * ÆôÓÃ×´Ì¬
+     */
+    public function scopeEnabled($query)
+    {
+        return $query->where('status', 1);
+    }
+
+    /**
+     * °´±àÂë²éÑ¯
+     */
+    public function scopeByCode($query, string $code)
+    {
+        return $query->where('code', $code);
+    }
+
+    /**
+     * ÊÇ·ñ³¬¼¶¹ÜÀíÔ±
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->code === 'ROOT';
+    }
 }
