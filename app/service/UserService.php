@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 declare(strict_types=1);
 
 namespace app\service;
@@ -90,7 +90,7 @@ final class UserService
     public function create(array $data): int
     {
         // 检查用户名是否重复
-        if (User::where('username', $data['username'])->find()) {
+        if (User::where('username', $data['username'])->where('is_deleted', 0)->find()) {
             throw new BusinessException(ResultCode::USER_ERROR, '用户名已存在');
         }
 
@@ -346,7 +346,7 @@ final class UserService
         }
 
         // 获取已存在的用户名
-        $existingUsernames = User::column('username');
+        $existingUsernames = User::where('is_deleted', 0)->column('username');
 
         $validCount = 0;
         $invalidCount = 0;
