@@ -82,7 +82,7 @@ final class DictService
     {
         $dict = Dict::where('id', $id)->where('is_deleted', 0)->find();
         if ($dict === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '字典不存�?);
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '字典不存在');
         }
 
         $d = $dict->toArray();
@@ -107,7 +107,7 @@ final class DictService
 
         $exists = Dict::where('is_deleted', 0)->where('dict_code', $dictCode)->count();
         if ($exists > 0) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '字典编码已存�?);
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '字典编码已存在');
         }
 
         $now = date('Y-m-d H:i:s');
@@ -129,7 +129,7 @@ final class DictService
     {
         $dict = Dict::where('id', $id)->where('is_deleted', 0)->find();
         if ($dict === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '字典不存�?);
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '字典不存在');
         }
 
         $name = trim((string) ($data['name'] ?? ''));
@@ -144,13 +144,13 @@ final class DictService
             ->where('id', '<>', $id)
             ->count();
         if ($exists > 0) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '字典编码已存�?);
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '字典编码已存在');
         }
 
         $old = $dict->toArray();
         $oldCode = (string) ($old['dict_code'] ?? '');
 
-        // 关键点：如果字典编码发生变化，需要同步更�?sys_dict_item.dict_code
+        // 关键点：如果字典编码发生变化，需要同步更新 sys_dict_item.dict_code
         Db::transaction(function () use ($dict, $id, $data, $name, $dictCode, $oldCode) {
             $dict->save([
                 'name' => $name,
@@ -186,7 +186,7 @@ final class DictService
             $idList[] = (int) $p;
         }
 
-        // 关键点：字典删除需要同时清理字典项（sys_dict_item �?is_deleted 字段�?
+        // 关键点：字典删除需要同时清理字典项（sys_dict_item 无 is_deleted 字段）
         Db::transaction(function () use ($idList) {
             $dictCodes = Db::name('sys_dict')
                 ->whereIn('id', $idList)

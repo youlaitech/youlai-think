@@ -7,13 +7,13 @@ use think\Request;
 use think\Response;
 
 /**
- * ¿çÓòÖÐ¼ä¼þ
+ * è·¨åŸŸä¸­é—´ä»¶
  */
 final class Cors
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Ô¤¼ìÇëÇóÖ±½Ó·µ»Ø
+        // é¢„æ£€è¯·æ±‚ç›´æŽ¥è¿”å›ž
         if (strtoupper($request->method()) === 'OPTIONS') {
             return $this->createCorsResponse();
         }
@@ -21,7 +21,7 @@ final class Cors
         /** @var Response $response */
         $response = $next($request);
 
-        // Ìí¼Ó CORS Í·
+        // æ·»åŠ  CORS å¤´
         $response->header([
             'Access-Control-Allow-Origin' => $request->header('origin', '*'),
             'Access-Control-Allow-Methods' => 'GET,POST,PUT,DELETE,PATCH,OPTIONS',

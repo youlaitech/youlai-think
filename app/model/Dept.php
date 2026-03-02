@@ -3,20 +3,20 @@
 namespace app\model;
 
 /**
- * ²¿ÃÅÄ£ĞÍ
+ * éƒ¨é—¨æ¨¡å‹
  *
- * @property int    $id          ²¿ÃÅID
- * @property int    $parentId    ¸¸²¿ÃÅID
- * @property string $name        ²¿ÃÅÃû³Æ
- * @property string $code        ²¿ÃÅ±àÂë
- * @property int    $sort        ÅÅĞò
- * @property int    $status      ×´Ì¬
- * @property string $treePath    Ê÷Â·¾¶£¨¶ººÅ·Ö¸ôµÄIDÁ´£©
- * @property string $createTime  ´´½¨Ê±¼ä
+ * @property int    $id          éƒ¨é—¨ID
+ * @property int    $parentId    çˆ¶éƒ¨é—¨ID
+ * @property string $name        éƒ¨é—¨åç§°
+ * @property string $code        éƒ¨é—¨ç¼–ç 
+ * @property int    $sort        æ’åº
+ * @property int    $status      çŠ¶æ€
+ * @property string $treePath    æ ‘è·¯å¾„ï¼ˆé€—å·åˆ†éš”çš„IDé“¾ï¼‰
+ * @property string $createTime  åˆ›å»ºæ—¶é—´
  *
- * @property Dept   $parent      ¸¸²¿ÃÅ
- * @property Dept[] $children    ×Ó²¿ÃÅ
- * @property User[] $users       ²¿ÃÅÓÃ»§
+ * @property Dept   $parent      çˆ¶éƒ¨é—¨
+ * @property Dept[] $children    å­éƒ¨é—¨
+ * @property User[] $users       éƒ¨é—¨ç”¨æˆ·
  */
 class Dept extends Model
 {
@@ -29,10 +29,10 @@ class Dept extends Model
         'status' => 'integer',
     ];
 
-    // ==================== ¹ØÁª¹ØÏµ ====================
+    // ==================== å…³è”å…³ç³» ====================
 
     /**
-     * ¸¸²¿ÃÅ
+     * çˆ¶éƒ¨é—¨
      */
     public function parent(): \think\model\relation\BelongsTo
     {
@@ -40,7 +40,7 @@ class Dept extends Model
     }
 
     /**
-     * ×Ó²¿ÃÅ
+     * å­éƒ¨é—¨
      */
     public function children(): \think\model\relation\HasMany
     {
@@ -49,17 +49,17 @@ class Dept extends Model
     }
 
     /**
-     * ²¿ÃÅÓÃ»§
+     * éƒ¨é—¨ç”¨æˆ·
      */
     public function users(): \think\model\relation\HasMany
     {
         return $this->hasMany(User::class, 'dept_id', 'id');
     }
 
-    // ==================== ·ÃÎÊÆ÷ ====================
+    // ==================== è®¿é—®å™¨ ====================
 
     /**
-     * ¸¸ID·ÃÎÊÆ÷
+     * çˆ¶IDè®¿é—®å™¨
      */
     public function getParentIdAttr(mixed $value): string
     {
@@ -67,17 +67,17 @@ class Dept extends Model
     }
 
     /**
-     * ×´Ì¬ÎÄ±¾
+     * çŠ¶æ€æ–‡æœ¬
      */
     public function getStatusTextAttr(mixed $value, array $data): string
     {
-        return (int) ($data['status'] ?? 0) === 1 ? 'ÆôÓÃ' : '½ûÓÃ';
+        return (int) ($data['status'] ?? 0) === 1 ? 'å¯ç”¨' : 'ç¦ç”¨';
     }
 
-    // ==================== ²éÑ¯×÷ÓÃÓò ====================
+    // ==================== æŸ¥è¯¢ä½œç”¨åŸŸ ====================
 
     /**
-     * ÆôÓÃ×´Ì¬
+     * å¯ç”¨çŠ¶æ€
      */
     public function scopeEnabled($query)
     {
@@ -85,17 +85,17 @@ class Dept extends Model
     }
 
     /**
-     * °´±àÂë²éÑ¯
+     * æŒ‰ç¼–ç æŸ¥è¯¢
      */
     public function scopeByCode($query, string $code)
     {
         return $query->where('code', $code);
     }
 
-    // ==================== ÒµÎñ·½·¨ ====================
+    // ==================== ä¸šåŠ¡æ–¹æ³• ====================
 
     /**
-     * »ñÈ¡ËùÓĞ×Ó²¿ÃÅID£¨°üº¬×Ô¼º£©
+     * è·å–æ‰€æœ‰å­éƒ¨é—¨IDï¼ˆåŒ…å«è‡ªå·±ï¼‰
      */
     public function getDescendantIds(): array
     {

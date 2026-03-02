@@ -3,15 +3,15 @@
 namespace app\model;
 
 /**
- * ÓÃ»§½ÇÉ«¹ØÁª±í
+ * ç”¨æˆ·è§’è‰²å…³è”è¡¨
  */
 class UserRole extends Model
 {
     protected $name = 'sys_user_role';
 
-    // ²»×Ô¶¯Ğ´ÈëÊ±¼ä´Á
+    // ä¸è‡ªåŠ¨å†™å…¥æ—¶é—´æˆ³
     protected $autoWriteTimestamp = false;
 
-    // ÎŞÈíÉ¾³ı
+    // æ— è½¯åˆ é™¤
     protected $deleteTime = false;
 }

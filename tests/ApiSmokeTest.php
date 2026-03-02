@@ -5,7 +5,7 @@ namespace tests;
 use PHPUnit\Framework\TestCase;
 
 /**
- * API 冒烟测试�?
+ * API 鍐掔儫娴嬭瘯銆?
  *
  * @author Ray.Hao
  * @version 0.0.1

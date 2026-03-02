@@ -45,7 +45,7 @@ final class RoleController extends ApiController
         $data = $this->service(RoleService::class)->getById($id);
 
         if (!$data) {
-            return $this->fail('A0400', '角色不存�?);
+            return $this->fail('A0400', '角色不存在');
         }
 
         return $this->success($data);
@@ -95,6 +95,6 @@ final class RoleController extends ApiController
 
         $count = $this->service(RoleService::class)->deleteByIds($ids);
 
-        return $this->success(['count' => $count], "成功删除 {$count} 个角�?);
+        return $this->success(['count' => $count], "成功删除 {$count} 个角色");
     }
 }

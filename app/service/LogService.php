@@ -7,14 +7,14 @@ use app\common\web\ResultCode;
 use think\facade\Db;
 
 /**
- * 日志与统计业�?
+ * 鏃ュ織涓庣粺璁′笟鍔?
  *
- * 日志分页 趋势统计 概览统计
+ * 鏃ュ織鍒嗛〉 瓒嬪娍缁熻 姒傝缁熻
  */
 final class LogService
 {
     /**
-     * 日志分页列表�?
+     * 鏃ュ織鍒嗛〉鍒楄〃銆?
      */
     public function getLogPage(array $queryParams): array
     {
@@ -28,18 +28,18 @@ final class LogService
 
         $q = Db::name('sys_log')->alias('l');
 
-        // sys_log �?is_deleted 字段，按 create_time 过滤即可
+        // sys_log 鏃?is_deleted 瀛楁锛屾寜 create_time 杩囨护鍗冲彲
         if ($keywords !== '') {
             $kw = '%' . $keywords . '%';
             $q = $q->whereLike('l.content|l.request_uri|l.request_method|l.province|l.city|l.browser|l.os', $kw);
         }
 
-        // 仅支持时间范围查�?
+        // 浠呮敮鎸佹椂闂磋寖鍥存煡璇?
         if (is_array($createTime) && count($createTime) === 2) {
             $start = trim((string) ($createTime[0] ?? ''));
             $end = trim((string) ($createTime[1] ?? ''));
             if ($start !== '' && $end !== '') {
-                // 前端�?YYYY-MM-DD，后端补全时分秒
+                // 鍓嶇浼?YYYY-MM-DD锛屽悗绔ˉ鍏ㄦ椂鍒嗙
                 $q = $q->whereBetweenTime('l.create_time', $start . ' 00:00:00', $end . ' 23:59:59');
             }
         }
@@ -85,7 +85,7 @@ final class LogService
     }
 
     /**
-     * 获取访问趋势�?
+     * 鑾峰彇璁块棶瓒嬪娍銆?
      */
     public function getVisitTrend(string $startDate, string $endDate): array
     {
@@ -95,7 +95,7 @@ final class LogService
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
-        // 归一化日期范�?
+        // 褰掍竴鍖栨棩鏈熻寖鍥?
         $startTs = strtotime($startDate);
         $endTs = strtotime($endDate);
         if ($startTs === false || $endTs === false) {
@@ -106,7 +106,7 @@ final class LogService
             [$startTs, $endTs] = [$endTs, $startTs];
         }
 
-        // 生成连续日期坐标
+        // 鐢熸垚杩炵画鏃ユ湡鍧愭爣
         $dates = [];
         for ($ts = $startTs; $ts <= $endTs; $ts += 86400) {
             $dates[] = date('Y-m-d', $ts);
@@ -115,7 +115,7 @@ final class LogService
         $start = $dates[0] . ' 00:00:00';
         $end = $dates[count($dates) - 1] . ' 23:59:59';
 
-        // PV 统计
+        // PV 缁熻
         $pvRows = Db::name('sys_log')
             ->whereBetweenTime('create_time', $start, $end)
             ->fieldRaw("COUNT(1) AS count, DATE_FORMAT(create_time,'%Y-%m-%d') AS date")
@@ -123,7 +123,7 @@ final class LogService
             ->select()
             ->toArray();
 
-        // IP 去重统计
+        // IP 鍘婚噸缁熻
         $ipRows = Db::name('sys_log')
             ->whereBetweenTime('create_time', $start, $end)
             ->fieldRaw("COUNT(DISTINCT ip) AS count, DATE_FORMAT(create_time,'%Y-%m-%d') AS date")
@@ -141,7 +141,7 @@ final class LogService
             $ipMap[(string) ($r['date'] ?? '')] = (int) ($r['count'] ?? 0);
         }
 
-        // 补齐没有日志的日�?
+        // 琛ラ綈娌℃湁鏃ュ織鐨勬棩鏈?
         $pvList = [];
         $ipList = [];
         foreach ($dates as $d) {
@@ -158,14 +158,14 @@ final class LogService
     }
 
     /**
-     * 获取访问概览�?
+     * 鑾峰彇璁块棶姒傝銆?
      */
     public function getVisitStats(): array
     {
         $today = date('Y-m-d');
         $nowTime = date('H:i:s');
 
-        // 访问量与访客数概�?
+        // 璁块棶閲忎笌璁垮鏁版瑙?
         $pvTotal = (int) Db::name('sys_log')->count('id');
         $pvToday = (int) Db::name('sys_log')->whereBetweenTime('create_time', $today . ' 00:00:00', $today . ' 23:59:59')->count('id');
 

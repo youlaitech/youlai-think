@@ -20,7 +20,7 @@ final class NoticeController extends ApiController
      *     tags={"08.通知公告"},
      *     @OA\Parameter(name="pageNum", in="query", description="页码", required=false),
      *     @OA\Parameter(name="pageSize", in="query", description="每页数量", required=false),
-     *     @OA\Parameter(name="keywords", in="query", description="关键�?, required=false),
+     *     @OA\Parameter(name="keywords", in="query", description="关键字", required=false),
      *     @OA\Response(response=200, description="OK")
      * )
      *
@@ -191,7 +191,7 @@ final class NoticeController extends ApiController
     }
 
     /**
-     * 全部标记为已�?
+     * 全部标记为已读
      *
      * @OA\Put(
      *     path="/api/v1/notices/read-all",

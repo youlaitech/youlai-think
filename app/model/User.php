@@ -3,16 +3,16 @@
 namespace app\model;
 
 /**
- * ÓÃ»§Ä£ĞÍ¡£
+ * ç”¨æˆ·æ¨¡å‹ã€‚
  */
 class User extends Model
 {
     protected $name = 'sys_user';
 
-    // JSON ×Ö¶Î
+    // JSON å­—æ®µ
     protected $json = ['data_scope'];
 
-    // ÀàĞÍ×ª»»
+    // ç±»å‹è½¬æ¢
     protected $type = [
         'id' => 'integer',
         'gender' => 'integer',
@@ -20,10 +20,10 @@ class User extends Model
         'dept_id' => 'integer',
     ];
 
-    // ==================== ¹ØÁª¹ØÏµ ====================
+    // ==================== å…³è”å…³ç³» ====================
 
     /**
-     * ËùÊô²¿ÃÅ
+     * æ‰€å±éƒ¨é—¨
      */
     public function dept(): \think\model\relation\BelongsTo
     {
@@ -31,7 +31,7 @@ class User extends Model
     }
 
     /**
-     * ¹ØÁª½ÇÉ«£¨¶à¶Ô¶à£©
+     * å…³è”è§’è‰²ï¼ˆå¤šå¯¹å¤šï¼‰
      */
     public function roles(): \think\model\relation\BelongsToMany
     {
@@ -43,10 +43,10 @@ class User extends Model
         );
     }
 
-    // ==================== ·ÃÎÊÆ÷ ====================
+    // ==================== è®¿é—®å™¨ ====================
 
     /**
-     * ²¿ÃÅID·ÃÎÊÆ÷
+     * éƒ¨é—¨IDè®¿é—®å™¨
      */
     public function getDeptIdAttr(mixed $value): string
     {
@@ -54,29 +54,29 @@ class User extends Model
     }
 
     /**
-     * ĞÔ±ğÎÄ±¾
+     * æ€§åˆ«æ–‡æœ¬
      */
     public function getGenderTextAttr(mixed $value, array $data): string
     {
         return match ((int) ($data['gender'] ?? 0)) {
-            1 => 'ÄĞ',
-            2 => 'Å®',
-            default => 'Î´Öª',
+            1 => 'ç”·',
+            2 => 'å¥³',
+            default => 'æœªçŸ¥',
         };
     }
 
     /**
-     * ×´Ì¬ÎÄ±¾
+     * çŠ¶æ€æ–‡æœ¬
      */
     public function getStatusTextAttr(mixed $value, array $data): string
     {
-        return (int) ($data['status'] ?? 0) === 1 ? 'ÆôÓÃ' : '½ûÓÃ';
+        return (int) ($data['status'] ?? 0) === 1 ? 'å¯ç”¨' : 'ç¦ç”¨';
     }
 
-    // ==================== ²éÑ¯×÷ÓÃÓò ====================
+    // ==================== æŸ¥è¯¢ä½œç”¨åŸŸ ====================
 
     /**
-     * ÆôÓÃ×´Ì¬
+     * å¯ç”¨çŠ¶æ€
      */
     public function scopeEnabled($query)
     {
@@ -84,7 +84,7 @@ class User extends Model
     }
 
     /**
-     * °´²¿ÃÅ²éÑ¯
+     * æŒ‰éƒ¨é—¨æŸ¥è¯¢
      */
     public function scopeByDept($query, int $deptId)
     {

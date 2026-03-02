@@ -21,7 +21,7 @@ final class DictController extends ApiController
      *     tags={"06.字典接口"},
      *     @OA\Parameter(name="pageNum", in="query", description="页码", required=false),
      *     @OA\Parameter(name="pageSize", in="query", description="每页数量", required=false),
-     *     @OA\Parameter(name="keywords", in="query", description="关键�?, required=false),
+     *     @OA\Parameter(name="keywords", in="query", description="关键字", required=false),
      *     @OA\Response(response=200, description="OK")
      * )
      */
@@ -114,7 +114,7 @@ final class DictController extends ApiController
     /**
      * @OA\Get(
      *     path="/api/v1/dicts/{dictCode}/items",
-     *     summary="字典项分页列�?,
+     *     summary="字典项分页列表",
      *     tags={"06.字典接口"},
      *     @OA\Parameter(name="dictCode", in="path", description="字典编码", required=true),
      *     @OA\Parameter(name="pageNum", in="query", description="页码", required=false),
@@ -131,7 +131,7 @@ final class DictController extends ApiController
     /**
      * @OA\Get(
      *     path="/api/v1/dicts/{dictCode}/items/options",
-     *     summary="字典项下拉列�?,
+     *     summary="字典项下拉列表",
      *     tags={"06.字典接口"},
      *     @OA\Parameter(name="dictCode", in="path", description="字典编码", required=true),
      *     @OA\Response(response=200, description="OK")
@@ -146,7 +146,7 @@ final class DictController extends ApiController
     /**
      * @OA\Get(
      *     path="/api/v1/dicts/{dictCode}/items/{itemId}/form",
-     *     summary="获取字典项表单数�?,
+     *     summary="获取字典项表单数据",
      *     tags={"06.字典接口"},
      *     @OA\Parameter(name="dictCode", in="path", description="字典编码", required=true),
      *     @OA\Parameter(name="itemId", in="path", description="字典项ID", required=true),
@@ -163,7 +163,7 @@ final class DictController extends ApiController
     /**
      * @OA\Post(
      *     path="/api/v1/dicts/{dictCode}/items",
-     *     summary="新增字典�?,
+     *     summary="新增字典项",
      *     tags={"06.字典接口"},
      *     @OA\Parameter(name="dictCode", in="path", description="字典编码", required=true),
      *     @OA\RequestBody(required=true, @OA\JsonContent()),
@@ -180,7 +180,7 @@ final class DictController extends ApiController
     /**
      * @OA\Put(
      *     path="/api/v1/dicts/{dictCode}/items/{itemId}",
-     *     summary="修改字典�?,
+     *     summary="修改字典项",
      *     tags={"06.字典接口"},
      *     @OA\Parameter(name="dictCode", in="path", description="字典编码", required=true),
      *     @OA\Parameter(name="itemId", in="path", description="字典项ID", required=true),
@@ -198,7 +198,7 @@ final class DictController extends ApiController
     /**
      * @OA\Delete(
      *     path="/api/v1/dicts/{dictCode}/items/{itemIds}",
-     *     summary="删除字典�?,
+     *     summary="删除字典项",
      *     tags={"06.字典接口"},
      *     @OA\Parameter(name="dictCode", in="path", description="字典编码", required=true),
      *     @OA\Parameter(name="itemIds", in="path", description="字典项ID，多个以英文逗号(,)分割", required=true),

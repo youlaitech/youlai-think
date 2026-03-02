@@ -3,17 +3,17 @@
 namespace app\model;
 
 /**
- * ×ÖµäÏîÄ£ĞÍ
+ * å­—å…¸é¡¹æ¨¡å‹
  *
- * @property int    $id          ×ÖµäÏîID
- * @property int    $dictId      ×ÖµäID
- * @property string $label       ±êÇ©
- * @property string $value       Öµ
- * @property int    $sort        ÅÅĞò
- * @property int    $status      ×´Ì¬
- * @property string $createTime  ´´½¨Ê±¼ä
+ * @property int    $id          å­—å…¸é¡¹ID
+ * @property int    $dictId      å­—å…¸ID
+ * @property string $label       æ ‡ç­¾
+ * @property string $value       å€¼
+ * @property int    $sort        æ’åº
+ * @property int    $status      çŠ¶æ€
+ * @property string $createTime  åˆ›å»ºæ—¶é—´
  *
- * @property Dict   $dict        ËùÊô×Öµä
+ * @property Dict   $dict        æ‰€å±å­—å…¸
  */
 class DictItem extends Model
 {
@@ -27,7 +27,7 @@ class DictItem extends Model
     ];
 
     /**
-     * ËùÊô×Öµä
+     * æ‰€å±å­—å…¸
      */
     public function dict(): \think\model\relation\BelongsTo
     {
@@ -35,7 +35,7 @@ class DictItem extends Model
     }
 
     /**
-     * ×ÖµäID·ÃÎÊÆ÷
+     * å­—å…¸IDè®¿é—®å™¨
      */
     public function getDictIdAttr(mixed $value): string
     {
@@ -43,7 +43,7 @@ class DictItem extends Model
     }
 
     /**
-     * ÆôÓÃ×´Ì¬
+     * å¯ç”¨çŠ¶æ€
      */
     public function scopeEnabled($query)
     {

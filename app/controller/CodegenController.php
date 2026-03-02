@@ -12,15 +12,15 @@ use OpenApi\Annotations as OA;
 final class CodegenController extends ApiController
 {
     /**
-     * 数据表分�?
+     * 数据表分页
      *
      * @OA\Get(
      *     path="/api/v1/codegen/table",
-     *     summary="获取数据表分页列�?,
+     *     summary="获取数据表分页列表",
      *     tags={"11.代码生成"},
      *     @OA\Parameter(name="pageNum", in="query", description="页码", required=false),
      *     @OA\Parameter(name="pageSize", in="query", description="每页数量", required=false),
-     *     @OA\Parameter(name="keywords", in="query", description="关键�?, required=false),
+     *     @OA\Parameter(name="keywords", in="query", description="关键字", required=false),
      *     @OA\Response(response=200, description="OK")
      * )
      */

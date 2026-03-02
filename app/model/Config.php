@@ -3,14 +3,14 @@
 namespace app\model;
 
 /**
- * ÏµÍ³ÅäÖÃÄ£ĞÍ
+ * ç³»ç»Ÿé…ç½®æ¨¡å‹
  *
- * @property int    $id          ÅäÖÃID
- * @property string $key         ÅäÖÃ¼ü
- * @property string $value       ÅäÖÃÖµ
- * @property string $name        ÅäÖÃÃû³Æ
- * @property string $remark      ±¸×¢
- * @property string $createTime  ´´½¨Ê±¼ä
+ * @property int    $id          é…ç½®ID
+ * @property string $key         é…ç½®é”®
+ * @property string $value       é…ç½®å€¼
+ * @property string $name        é…ç½®åç§°
+ * @property string $remark      å¤‡æ³¨
+ * @property string $createTime  åˆ›å»ºæ—¶é—´
  */
 class Config extends Model
 {
@@ -20,6 +20,6 @@ class Config extends Model
         'id' => 'integer',
     ];
 
-    // ÎŞÈíÉ¾³ı
+    // æ— è½¯åˆ é™¤
     protected $deleteTime = false;
 }

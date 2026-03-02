@@ -59,7 +59,7 @@ final class FileController extends ApiController
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
-        // 删除 storage 内文�?
+        // 删除 storage 内文件
         $result = $this->service(FileService::class)->deleteFile($filePath);
         return json(Result::judge($result)->toArray());
     }

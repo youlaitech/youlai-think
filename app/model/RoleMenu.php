@@ -3,7 +3,7 @@
 namespace app\model;
 
 /**
- * ½ÇÉ«²Ëµ¥¹ØÁª±í
+ * è§’è‰²èœå•å…³è”è¡¨
  */
 class RoleMenu extends Model
 {

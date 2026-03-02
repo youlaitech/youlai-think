@@ -3,14 +3,14 @@
 namespace app\common\util;
 
 /**
- * ID 序列化工�?
+ * ID 序列化工具
  *
- * 把响应数组里�?id / xxxId 转成字符�?
+ * 把响应数组里的 id / xxxId 转成字符串
  */
 final class IdStringify
 {
     /**
-     * 将返回数据中�?ID 字段转为字符�?
+     * 将返回数据中的 ID 字段转为字符串
      *
      * @param mixed $data
      * @return mixed
@@ -48,7 +48,7 @@ final class IdStringify
     }
 
     /**
-     * 是否�?ID/外键字段�?
+     * 是否为 ID/外键字段。
      */
     private static function isIdKey(string $key): bool
     {

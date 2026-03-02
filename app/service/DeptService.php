@@ -8,12 +8,12 @@ use app\model\Dept;
 use think\facade\Db;
 
 /**
- * ²¿ÃÅ·şÎñ
+ * éƒ¨é—¨æœåŠ¡
  */
 final class DeptService
 {
     /**
-     * »ñÈ¡²¿ÃÅÊ÷
+     * è·å–éƒ¨é—¨æ ‘
      */
     public function getTree(): array
     {
@@ -27,7 +27,7 @@ final class DeptService
     }
 
     /**
-     * »ñÈ¡ËùÓĞ²¿ÃÅ£¨Æ½ÆÌ£©
+     * è·å–æ‰€æœ‰éƒ¨é—¨ï¼ˆå¹³é“ºï¼‰
      */
     public function getAll(): array
     {
@@ -38,7 +38,7 @@ final class DeptService
     }
 
     /**
-     * ¸ù¾İID»ñÈ¡²¿ÃÅÏêÇé
+     * æ ¹æ®IDè·å–éƒ¨é—¨è¯¦æƒ…
      */
     public function getById(int $id): ?array
     {
@@ -46,13 +46,13 @@ final class DeptService
     }
 
     /**
-     * ´´½¨²¿ÃÅ
+     * åˆ›å»ºéƒ¨é—¨
      */
     public function create(array $data): int
     {
         $now = date('Y-m-d H:i:s');
 
-        // ¼ÆËãÊ÷Â·¾¶
+        // è®¡ç®—æ ‘è·¯å¾„
         $treePath = $this->buildTreePath((int) ($data['parent_id'] ?? 0));
 
         return (int) Dept::insertGetId([
@@ -71,24 +71,24 @@ final class DeptService
     }
 
     /**
-     * ¸üĞÂ²¿ÃÅ
+     * æ›´æ–°éƒ¨é—¨
      */
     public function update(int $id, array $data): bool
     {
         $dept = Dept::find($id);
         if (!$dept) {
-            throw new BusinessException(ResultCode::USER_ERROR, '²¿ÃÅ²»´æÔÚ');
+            throw new BusinessException(ResultCode::USER_ERROR, 'éƒ¨é—¨ä¸å­˜åœ¨');
         }
 
-        // ²»ÄÜ°Ñ×Ô¼ºÉèÎª¸¸¼¶
+        // ä¸èƒ½æŠŠè‡ªå·±è®¾ä¸ºçˆ¶çº§
         if (isset($data['parent_id']) && (int) $data['parent_id'] === $id) {
-            throw new BusinessException(ResultCode::USER_ERROR, '¸¸¼¶²¿ÃÅ²»ÄÜÊÇ×Ô¼º');
+            throw new BusinessException(ResultCode::USER_ERROR, 'çˆ¶çº§éƒ¨é—¨ä¸èƒ½æ˜¯è‡ªå·±');
         }
 
-        // ¸üĞÂÊ÷Â·¾¶
+        // æ›´æ–°æ ‘è·¯å¾„
         if (isset($data['parent_id']) && (int) $data['parent_id'] !== (int) $dept->parent_id) {
             $dept->tree_path = $this->buildTreePath((int) $data['parent_id']);
-            // ¸üĞÂ×Ó²¿ÃÅµÄÊ÷Â·¾¶
+            // æ›´æ–°å­éƒ¨é—¨çš„æ ‘è·¯å¾„
             $this->updateChildrenTreePath($id, $dept->tree_path . ',' . $id);
         }
 
@@ -105,27 +105,27 @@ final class DeptService
     }
 
     /**
-     * É¾³ı²¿ÃÅ
+     * åˆ é™¤éƒ¨é—¨
      */
     public function delete(int $id): bool
     {
-        // ¼ì²éÊÇ·ñÓĞ×Ó²¿ÃÅ
+        // æ£€æŸ¥æ˜¯å¦æœ‰å­éƒ¨é—¨
         $childCount = Dept::where('parent_id', $id)->count();
         if ($childCount > 0) {
-            throw new BusinessException(ResultCode::USER_ERROR, '´æÔÚ×Ó²¿ÃÅ£¬ÎŞ·¨É¾³ı');
+            throw new BusinessException(ResultCode::USER_ERROR, 'å­˜åœ¨å­éƒ¨é—¨ï¼Œæ— æ³•åˆ é™¤');
         }
 
-        // ¼ì²éÊÇ·ñÓĞÓÃ»§
+        // æ£€æŸ¥æ˜¯å¦æœ‰ç”¨æˆ·
         $userCount = Db::name('sys_user')->where('dept_id', $id)->count();
         if ($userCount > 0) {
-            throw new BusinessException(ResultCode::USER_ERROR, '²¿ÃÅÏÂ´æÔÚÓÃ»§£¬ÎŞ·¨É¾³ı');
+            throw new BusinessException(ResultCode::USER_ERROR, 'éƒ¨é—¨ä¸‹å­˜åœ¨ç”¨æˆ·ï¼Œæ— æ³•åˆ é™¤');
         }
 
         return Dept::destroy($id) > 0;
     }
 
     /**
-     * »ñÈ¡²¿ÃÅ¼°ËùÓĞ×Ó²¿ÃÅID
+     * è·å–éƒ¨é—¨åŠæ‰€æœ‰å­éƒ¨é—¨ID
      */
     public function getDescendantIds(int $deptId): array
     {
@@ -137,7 +137,7 @@ final class DeptService
         return $dept->getDescendantIds();
     }
 
-    // ==================== Ë½ÓĞ·½·¨ ====================
+    // ==================== ç§æœ‰æ–¹æ³• ====================
 
     private function buildTree(array $list, int $parentId = 0): array
     {
@@ -178,7 +178,7 @@ final class DeptService
             $child->tree_path = $parentPath;
             $child->save();
 
-            // µİ¹é¸üĞÂ×Ó²¿ÃÅ
+            // é€’å½’æ›´æ–°å­éƒ¨é—¨
             $this->updateChildrenTreePath((int) $child->id, $parentPath . ',' . $child->id);
         }
     }

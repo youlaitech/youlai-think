@@ -4,14 +4,14 @@ namespace app\support\security;
 
 interface TokenManager
 {
-    // 生成登录令牌
+    // 鐢熸垚鐧诲綍浠ょ墝
     public function generateToken(array $userAuthInfo): AuthenticationToken;
 
-    // 解析 access token 并返回用户信�?    public function parseAccessToken(string $accessToken): array;
+    // 瑙ｆ瀽 access token 骞惰繑鍥炵敤鎴蜂俊鎭?    public function parseAccessToken(string $accessToken): array;
 
-    // 刷新 access/refresh token
+    // 鍒锋柊 access/refresh token
     public function refreshToken(string $refreshToken): AuthenticationToken;
 
-    // 主动失效 token
+    // 涓诲姩澶辨晥 token
     public function invalidate(?string $accessToken, ?string $refreshToken): void;
 }

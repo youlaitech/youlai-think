@@ -5,29 +5,29 @@ namespace app\model;
 use think\model\concern\SoftDelete;
 
 /**
- * Ä£ĞÍ»ùÀà
+ * æ¨¡å‹åŸºç±»
  *
- * Ìá¹©Í¨ÓÃ¹¦ÄÜ£º
- * - ×Ô¶¯Ê±¼ä´Á
- * - ÈíÉ¾³ıÖ§³Ö
- * - ID ·ÃÎÊÆ÷£¨½â¾ö JS ¾«¶ÈÎÊÌâ£©
+ * æä¾›é€šç”¨åŠŸèƒ½ï¼š
+ * - è‡ªåŠ¨æ—¶é—´æˆ³
+ * - è½¯åˆ é™¤æ”¯æŒ
+ * - ID è®¿é—®å™¨ï¼ˆè§£å†³ JS ç²¾åº¦é—®é¢˜ï¼‰
  */
 abstract class Model extends \think\Model
 {
     use SoftDelete;
 
-    // ×Ô¶¯Ğ´ÈëÊ±¼ä´Á
+    // è‡ªåŠ¨å†™å…¥æ—¶é—´æˆ³
     protected $autoWriteTimestamp = true;
 
-    // ÈíÉ¾³ı×Ö¶Î
+    // è½¯åˆ é™¤å­—æ®µ
     protected $deleteTime = 'delete_time';
     protected $defaultSoftDelete = 0;
 
-    // Òş²ØµÄ×Ö¶Î
+    // éšè—çš„å­—æ®µ
     protected $hidden = ['delete_time'];
 
     /**
-     * »ñÈ¡±íÃû£¨²»º¬Ç°×º£©
+     * è·å–è¡¨åï¼ˆä¸å«å‰ç¼€ï¼‰
      */
     public static function getTableName(): string
     {
@@ -35,7 +35,7 @@ abstract class Model extends \think\Model
     }
 
     /**
-     * ID ×Ö¶Î·ÃÎÊÆ÷ - ×ªÎª×Ö·û´®±ÜÃâ JS ¾«¶È¶ªÊ§
+     * ID å­—æ®µè®¿é—®å™¨ - è½¬ä¸ºå­—ç¬¦ä¸²é¿å… JS ç²¾åº¦ä¸¢å¤±
      */
     public function getIdAttr(mixed $value): string
     {
@@ -43,11 +43,11 @@ abstract class Model extends \think\Model
     }
 
     /**
-     * ÅúÁ¿ÉèÖÃ ID ×Ö¶Î·ÃÎÊÆ÷
-     * ×ÓÀà¿Éµ÷ÓÃ´Ë·½·¨Îª xxxId ×Ö¶ÎÌí¼Ó·ÃÎÊÆ÷
+     * æ‰¹é‡è®¾ç½® ID å­—æ®µè®¿é—®å™¨
+     * å­ç±»å¯è°ƒç”¨æ­¤æ–¹æ³•ä¸º xxxId å­—æ®µæ·»åŠ è®¿é—®å™¨
      */
     protected function stringifyIdFields(): void
     {
-        // ÓÉ×ÓÀàÊµÏÖ¾ßÌåÂß¼­
+        // ç”±å­ç±»å®ç°å…·ä½“é€»è¾‘
     }
 }

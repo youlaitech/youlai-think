@@ -5,15 +5,15 @@ namespace app\controller;
 use OpenApi\Annotations as OA;
 
 /**
- * @OA\Tag(name="99.基础示例")
+ * @OA\Tag(name="99.鍩虹绀轰緥")
  */
 class Index extends BaseController
 {
     /**
      * @OA\Get(
      *     path="/",
-     *     summary="欢迎�?,
-     *     tags={"99.基础示例"},
+     *     summary="娆㈣繋椤?,
+     *     tags={"99.鍩虹绀轰緥"},
      *     @OA\Response(response=200, description="OK")
      * )
      */
@@ -26,8 +26,8 @@ class Index extends BaseController
      * @OA\Get(
      *     path="/hello/{name}",
      *     summary="Hello",
-     *     tags={"99.基础示例"},
-     *     @OA\Parameter(name="name", in="path", description="名称", required=false),
+     *     tags={"99.鍩虹绀轰緥"},
+     *     @OA\Parameter(name="name", in="path", description="鍚嶇О", required=false),
      *     @OA\Response(response=200, description="OK")
      * )
      */

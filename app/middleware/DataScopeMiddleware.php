@@ -3,15 +3,15 @@
 namespace app\middleware;
 
 /**
- * 数据范围中间�?
+ * 数据范围中间件
  *
- * �?JWT 中读取多角色数据权限列表（dataScopes�?
- * 支持多角色数据权限合并（并集策略�?
+ * 从 JWT 中读取多角色数据权限列表（dataScopes）
+ * 支持多角色数据权限合并（并集策略）
  */
 final class DataScopeMiddleware
 {
     /**
-     * 确保 authUser 中包�?dataScopes
+     * 确保 authUser 中包含 dataScopes
      *
      * @param mixed    $request
      * @param \Closure $next
@@ -30,8 +30,8 @@ final class DataScopeMiddleware
             return $next($request);
         }
 
-        // dataScopes 已经�?JWT 中解析，直接使用
-        // 如果 JWT 中没�?dataScopes（兼容旧 token），设置为空数组
+        // dataScopes 已经在 JWT 中解析，直接使用
+        // 如果 JWT 中没有 dataScopes（兼容旧 token），设置为空数组
         if (!isset($authUser['dataScopes'])) {
             $authUser['dataScopes'] = [];
         }

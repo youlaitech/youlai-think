@@ -20,7 +20,7 @@ final class ConfigController extends ApiController
      *     tags={"07.系统配置"},
      *     @OA\Parameter(name="pageNum", in="query", description="页码", required=false),
      *     @OA\Parameter(name="pageSize", in="query", description="每页数量", required=false),
-     *     @OA\Parameter(name="keywords", in="query", description="关键�?, required=false),
+     *     @OA\Parameter(name="keywords", in="query", description="关键字", required=false),
      *     @OA\Response(response=200, description="OK")
      * )
      *

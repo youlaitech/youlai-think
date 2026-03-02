@@ -3,16 +3,16 @@
 namespace app\model;
 
 /**
- * ×ÖµäÄ£ĞÍ
+ * å­—å…¸æ¨¡å‹
  *
- * @property int    $id          ×ÖµäID
- * @property string $code        ×Öµä±àÂë
- * @property string $name        ×ÖµäÃû³Æ
- * @property int    $status      ×´Ì¬
- * @property string $remark      ±¸×¢
- * @property string $createTime  ´´½¨Ê±¼ä
+ * @property int    $id          å­—å…¸ID
+ * @property string $code        å­—å…¸ç¼–ç 
+ * @property string $name        å­—å…¸åç§°
+ * @property int    $status      çŠ¶æ€
+ * @property string $remark      å¤‡æ³¨
+ * @property string $createTime  åˆ›å»ºæ—¶é—´
  *
- * @property DictItem[] $items   ×ÖµäÏî
+ * @property DictItem[] $items   å­—å…¸é¡¹
  */
 class Dict extends Model
 {
@@ -24,7 +24,7 @@ class Dict extends Model
     ];
 
     /**
-     * ×ÖµäÏî
+     * å­—å…¸é¡¹
      */
     public function items(): \think\model\relation\HasMany
     {
@@ -33,7 +33,7 @@ class Dict extends Model
     }
 
     /**
-     * ÆôÓÃ×´Ì¬
+     * å¯ç”¨çŠ¶æ€
      */
     public function scopeEnabled($query)
     {

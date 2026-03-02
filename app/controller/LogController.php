@@ -20,7 +20,7 @@ final class LogController extends ApiController
      *     tags={"09.日志接口"},
      *     @OA\Parameter(name="pageNum", in="query", description="页码", required=false),
      *     @OA\Parameter(name="pageSize", in="query", description="每页数量", required=false),
-     *     @OA\Parameter(name="keywords", in="query", description="关键�?, required=false),
+     *     @OA\Parameter(name="keywords", in="query", description="关键字", required=false),
      *     @OA\Response(response=200, description="OK")
      * )
      *

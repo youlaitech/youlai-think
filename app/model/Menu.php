@@ -3,23 +3,23 @@
 namespace app\model;
 
 /**
- * ²Ëµ¥Ä£ĞÍ
+ * èœå•æ¨¡å‹
  *
- * @property int    $id          ²Ëµ¥ID
- * @property int    $parentId    ¸¸²Ëµ¥ID
- * @property string $type        ÀàĞÍ menu/button
- * @property string $name        ²Ëµ¥Ãû³Æ
- * @property string $path        Â·ÓÉÂ·¾¶
- * @property string $component   ×é¼şÂ·¾¶
- * @property string $perm        È¨ÏŞ±êÊ¶
- * @property string $icon        Í¼±ê
- * @property int    $sort        ÅÅĞò
- * @property int    $status      ×´Ì¬
- * @property int    $visible     ÊÇ·ñ¿É¼û
- * @property string $createTime  ´´½¨Ê±¼ä
+ * @property int    $id          èœå•ID
+ * @property int    $parentId    çˆ¶èœå•ID
+ * @property string $type        ç±»å‹ menu/button
+ * @property string $name        èœå•åç§°
+ * @property string $path        è·¯ç”±è·¯å¾„
+ * @property string $component   ç»„ä»¶è·¯å¾„
+ * @property string $perm        æƒé™æ ‡è¯†
+ * @property string $icon        å›¾æ ‡
+ * @property int    $sort        æ’åº
+ * @property int    $status      çŠ¶æ€
+ * @property int    $visible     æ˜¯å¦å¯è§
+ * @property string $createTime  åˆ›å»ºæ—¶é—´
  *
- * @property Menu   $parent      ¸¸²Ëµ¥
- * @property Menu[] $children    ×Ó²Ëµ¥
+ * @property Menu   $parent      çˆ¶èœå•
+ * @property Menu[] $children    å­èœå•
  */
 class Menu extends Model
 {
@@ -33,10 +33,10 @@ class Menu extends Model
         'visible' => 'integer',
     ];
 
-    // ==================== ¹ØÁª¹ØÏµ ====================
+    // ==================== å…³è”å…³ç³» ====================
 
     /**
-     * ¸¸²Ëµ¥
+     * çˆ¶èœå•
      */
     public function parent(): \think\model\relation\BelongsTo
     {
@@ -44,7 +44,7 @@ class Menu extends Model
     }
 
     /**
-     * ×Ó²Ëµ¥
+     * å­èœå•
      */
     public function children(): \think\model\relation\HasMany
     {
@@ -53,7 +53,7 @@ class Menu extends Model
     }
 
     /**
-     * ¹ØÁª½ÇÉ«
+     * å…³è”è§’è‰²
      */
     public function roles(): \think\model\relation\BelongsToMany
     {
@@ -65,20 +65,20 @@ class Menu extends Model
         );
     }
 
-    // ==================== ·ÃÎÊÆ÷ ====================
+    // ==================== è®¿é—®å™¨ ====================
 
     /**
-     * ¸¸ID·ÃÎÊÆ÷
+     * çˆ¶IDè®¿é—®å™¨
      */
     public function getParentIdAttr(mixed $value): string
     {
         return (string) $value;
     }
 
-    // ==================== ²éÑ¯×÷ÓÃÓò ====================
+    // ==================== æŸ¥è¯¢ä½œç”¨åŸŸ ====================
 
     /**
-     * Ä¿Â¼/²Ëµ¥ÀàĞÍ
+     * ç›®å½•/èœå•ç±»å‹
      */
     public function scopeMenu($query)
     {
@@ -86,7 +86,7 @@ class Menu extends Model
     }
 
     /**
-     * °´Å¥ÀàĞÍ
+     * æŒ‰é’®ç±»å‹
      */
     public function scopeButton($query)
     {
@@ -94,7 +94,7 @@ class Menu extends Model
     }
 
     /**
-     * ÆôÓÃ×´Ì¬
+     * å¯ç”¨çŠ¶æ€
      */
     public function scopeEnabled($query)
     {
@@ -102,7 +102,7 @@ class Menu extends Model
     }
 
     /**
-     * ¿É¼û
+     * å¯è§
      */
     public function scopeVisible($query)
     {

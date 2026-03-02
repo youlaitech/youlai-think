@@ -8,12 +8,12 @@ use app\model\Menu;
 use think\facade\Db;
 
 /**
- * ²Ëµ¥·şÎñ¡£
+ * èœå•æœåŠ¡ã€‚
  */
 final class MenuService
 {
     /**
-     * »ñÈ¡²Ëµ¥Ê÷
+     * è·å–èœå•æ ‘
      */
     public function getTree(): array
     {
@@ -27,11 +27,11 @@ final class MenuService
     }
 
     /**
-     * »ñÈ¡ÓÃ»§µÄ²Ëµ¥Ê÷£¨Â·ÓÉÓÃ£©
+     * è·å–ç”¨æˆ·çš„èœå•æ ‘ï¼ˆè·¯ç”±ç”¨ï¼‰
      */
     public function getUserMenuTree(int $userId, array $roleCodes): array
     {
-        // ³¬¼¶¹ÜÀíÔ±»ñÈ¡ËùÓĞ²Ëµ¥
+        // è¶…çº§ç®¡ç†å‘˜è·å–æ‰€æœ‰èœå•
         if (in_array('ROOT', $roleCodes, true)) {
             $menus = Menu::where('status', 1)
                 ->whereIn('type', ['catalog', 'menu'])
@@ -39,7 +39,7 @@ final class MenuService
                 ->select()
                 ->toArray();
         } else {
-            // ¸ù¾İ½ÇÉ«»ñÈ¡²Ëµ¥
+            // æ ¹æ®è§’è‰²è·å–èœå•
             $roleIds = Db::name('sys_user_role')
                 ->where('user_id', $userId)
                 ->column('role_id');
@@ -60,7 +60,7 @@ final class MenuService
     }
 
     /**
-     * ¸ù¾İID»ñÈ¡²Ëµ¥ÏêÇé
+     * æ ¹æ®IDè·å–èœå•è¯¦æƒ…
      */
     public function getById(int $id): ?array
     {
@@ -68,7 +68,7 @@ final class MenuService
     }
 
     /**
-     * »ñÈ¡ËùÓĞ²Ëµ¥£¨Æ½ÆÌ£©
+     * è·å–æ‰€æœ‰èœå•ï¼ˆå¹³é“ºï¼‰
      */
     public function getAll(): array
     {
@@ -79,7 +79,7 @@ final class MenuService
     }
 
     /**
-     * ´´½¨²Ëµ¥
+     * åˆ›å»ºèœå•
      */
     public function create(array $data): int
     {
@@ -103,18 +103,18 @@ final class MenuService
     }
 
     /**
-     * ¸üĞÂ²Ëµ¥
+     * æ›´æ–°èœå•
      */
     public function update(int $id, array $data): bool
     {
         $menu = Menu::find($id);
         if (!$menu) {
-            throw new BusinessException(ResultCode::USER_ERROR, '²Ëµ¥²»´æÔÚ');
+            throw new BusinessException(ResultCode::USER_ERROR, 'èœå•ä¸å­˜åœ¨');
         }
 
-        // ²»ÄÜ°Ñ×Ô¼ºÉèÎª¸¸¼¶
+        // ä¸èƒ½æŠŠè‡ªå·±è®¾ä¸ºçˆ¶çº§
         if (isset($data['parent_id']) && (int) $data['parent_id'] === $id) {
-            throw new BusinessException(ResultCode::USER_ERROR, '¸¸¼¶²Ëµ¥²»ÄÜÊÇ×Ô¼º');
+            throw new BusinessException(ResultCode::USER_ERROR, 'çˆ¶çº§èœå•ä¸èƒ½æ˜¯è‡ªå·±');
         }
 
         $menu->parent_id = $data['parent_id'] ?? $menu->parent_id;
@@ -133,26 +133,26 @@ final class MenuService
     }
 
     /**
-     * É¾³ı²Ëµ¥
+     * åˆ é™¤èœå•
      */
     public function delete(int $id): bool
     {
-        // ¼ì²éÊÇ·ñÓĞ×Ó²Ëµ¥
+        // æ£€æŸ¥æ˜¯å¦æœ‰å­èœå•
         $childCount = Menu::where('parent_id', $id)->count();
         if ($childCount > 0) {
-            throw new BusinessException(ResultCode::USER_ERROR, '´æÔÚ×Ó²Ëµ¥£¬ÎŞ·¨É¾³ı');
+            throw new BusinessException(ResultCode::USER_ERROR, 'å­˜åœ¨å­èœå•ï¼Œæ— æ³•åˆ é™¤');
         }
 
-        // É¾³ı¹ØÁª
+        // åˆ é™¤å…³è”
         Db::name('sys_role_menu')->where('menu_id', $id)->delete();
 
         return Menu::destroy($id) > 0;
     }
 
-    // ==================== Ë½ÓĞ·½·¨ ====================
+    // ==================== ç§æœ‰æ–¹æ³• ====================
 
     /**
-     * ¹¹½¨Ê÷½á¹¹
+     * æ„å»ºæ ‘ç»“æ„
      */
     private function buildTree(array $list, int $parentId = 0): array
     {

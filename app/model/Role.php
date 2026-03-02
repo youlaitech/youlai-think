@@ -3,7 +3,7 @@
 namespace app\model;
 
 /**
- * ½ÇÉ«Ä£ĞÍ¡£
+ * è§’è‰²æ¨¡å‹ã€‚
  */
 class Role extends Model
 {
@@ -15,10 +15,10 @@ class Role extends Model
         'sort' => 'integer',
     ];
 
-    // ==================== ¹ØÁª¹ØÏµ ====================
+    // ==================== å…³è”å…³ç³» ====================
 
     /**
-     * ¹ØÁªÓÃ»§
+     * å…³è”ç”¨æˆ·
      */
     public function users(): \think\model\relation\BelongsToMany
     {
@@ -31,7 +31,7 @@ class Role extends Model
     }
 
     /**
-     * ¹ØÁª²Ëµ¥
+     * å…³è”èœå•
      */
     public function menus(): \think\model\relation\BelongsToMany
     {
@@ -43,20 +43,20 @@ class Role extends Model
         );
     }
 
-    // ==================== ·ÃÎÊÆ÷ ====================
+    // ==================== è®¿é—®å™¨ ====================
 
     /**
-     * ×´Ì¬ÎÄ±¾
+     * çŠ¶æ€æ–‡æœ¬
      */
     public function getStatusTextAttr(mixed $value, array $data): string
     {
-        return (int) ($data['status'] ?? 0) === 1 ? 'ÆôÓÃ' : '½ûÓÃ';
+        return (int) ($data['status'] ?? 0) === 1 ? 'å¯ç”¨' : 'ç¦ç”¨';
     }
 
-    // ==================== ²éÑ¯×÷ÓÃÓò ====================
+    // ==================== æŸ¥è¯¢ä½œç”¨åŸŸ ====================
 
     /**
-     * ÆôÓÃ×´Ì¬
+     * å¯ç”¨çŠ¶æ€
      */
     public function scopeEnabled($query)
     {
@@ -64,7 +64,7 @@ class Role extends Model
     }
 
     /**
-     * °´±àÂë²éÑ¯
+     * æŒ‰ç¼–ç æŸ¥è¯¢
      */
     public function scopeByCode($query, string $code)
     {
@@ -72,7 +72,7 @@ class Role extends Model
     }
 
     /**
-     * ÊÇ·ñ³¬¼¶¹ÜÀíÔ±
+     * æ˜¯å¦è¶…çº§ç®¡ç†å‘˜
      */
     public function isSuperAdmin(): bool
     {

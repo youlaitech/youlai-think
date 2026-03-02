@@ -6,8 +6,10 @@ use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
 
 /**
- * API 控制器基�? *
- * 专门用于 API 接口，包含认证检�? */
+ * API 控制器基类
+ *
+ * 专门用于 API 接口，包含认证检查
+ */
 abstract class ApiController extends BaseController
 {
     protected function ok(mixed $data = null): \think\Response
@@ -28,7 +30,8 @@ abstract class ApiController extends BaseController
     }
 
     /**
-     * 初始�?- 检查认�?     */
+     * 初始化 - 检查认证
+     */
     protected function initialize(): void
     {
         // 检查是否已登录
@@ -38,7 +41,8 @@ abstract class ApiController extends BaseController
     }
 
     /**
-     * 演示模式检�?     */
+     * 演示模式检查
+     */
     protected function checkDemo(): void
     {
         if (env('IS_DEMO', false)) {

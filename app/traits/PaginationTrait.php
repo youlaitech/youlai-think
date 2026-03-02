@@ -3,20 +3,20 @@
 namespace app\traits;
 
 /**
- * ·ÖÒ³²ÎÊıTrait¡£
- * Í³Ò»´¦Àí·ÖÒ³²ÎÊı»ñÈ¡£¬±ÜÃâÖØ¸´´úÂë¡£
+ * åˆ†é¡µå‚æ•°Traitã€‚
+ * ç»Ÿä¸€å¤„ç†åˆ†é¡µå‚æ•°è·å–ï¼Œé¿å…é‡å¤ä»£ç ã€‚
  */
 trait PaginationTrait
 {
     /**
-     * »ñÈ¡·ÖÒ³²ÎÊı
+     * è·å–åˆ†é¡µå‚æ•°
      */
     protected function getPaginationParams(): array
     {
         $pageNum = (int) $this->request->param('pageNum', 1);
         $pageSize = (int) $this->request->param('pageSize', 10);
 
-        // ÏŞÖÆÃ¿Ò³×î´óÌõÊı
+        // é™åˆ¶æ¯é¡µæœ€å¤§æ¡æ•°
         $pageSize = min($pageSize, 200);
         $pageSize = max($pageSize, 1);
 
@@ -27,14 +27,14 @@ trait PaginationTrait
     }
 
     /**
-     * »ñÈ¡ÅÅĞò²ÎÊı
+     * è·å–æ’åºå‚æ•°
      */
     protected function getOrderParams(string $defaultField = 'id', string $defaultOrder = 'desc'): array
     {
         $field = $this->request->param('sortField', $defaultField);
         $order = $this->request->param('sortOrder', $defaultOrder);
 
-        // ·ÀÖ¹ SQL ×¢Èë
+        // é˜²æ­¢ SQL æ³¨å…¥
         $order = strtolower($order) === 'asc' ? 'asc' : 'desc';
 
         return [$field => $order];

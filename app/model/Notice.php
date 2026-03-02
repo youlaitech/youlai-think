@@ -3,18 +3,18 @@
 namespace app\model;
 
 /**
- * Í¨Öª¹«¸æÄ£ĞÍ
+ * é€šçŸ¥å…¬å‘Šæ¨¡å‹
  *
- * @property int    $id           ¹«¸æID
- * @property string $title        ±êÌâ
- * @property string $content      ÄÚÈİ
- * @property int    $type         ÀàĞÍ 1Í¨Öª 2¹«¸æ
- * @property int    $publishStatus ·¢²¼×´Ì¬ 0²İ¸å 1ÒÑ·¢²¼
- * @property string $publishTime  ·¢²¼Ê±¼ä
- * @property int    $createBy     ´´½¨ÈËID
- * @property string $createTime   ´´½¨Ê±¼ä
+ * @property int    $id           å…¬å‘ŠID
+ * @property string $title        æ ‡é¢˜
+ * @property string $content      å†…å®¹
+ * @property int    $type         ç±»å‹ 1é€šçŸ¥ 2å…¬å‘Š
+ * @property int    $publishStatus å‘å¸ƒçŠ¶æ€ 0è‰ç¨¿ 1å·²å‘å¸ƒ
+ * @property string $publishTime  å‘å¸ƒæ—¶é—´
+ * @property int    $createBy     åˆ›å»ºäººID
+ * @property string $createTime   åˆ›å»ºæ—¶é—´
  *
- * @property User   $creator      ´´½¨ÈË
+ * @property User   $creator      åˆ›å»ºäºº
  */
 class Notice extends Model
 {
@@ -28,7 +28,7 @@ class Notice extends Model
     ];
 
     /**
-     * ´´½¨ÈË
+     * åˆ›å»ºäºº
      */
     public function creator(): \think\model\relation\BelongsTo
     {
@@ -36,7 +36,7 @@ class Notice extends Model
     }
 
     /**
-     * ÒÑ·¢²¼
+     * å·²å‘å¸ƒ
      */
     public function scopePublished($query)
     {

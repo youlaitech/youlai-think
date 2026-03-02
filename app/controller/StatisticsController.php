@@ -18,7 +18,7 @@ final class StatisticsController extends ApiController
      *     path="/api/v1/statistics/visits/trend",
      *     summary="访问趋势统计",
      *     tags={"12.统计分析"},
-     *     @OA\Parameter(name="startDate", in="query", description="开始时�?, required=true, example="2024-01-01"),
+     *     @OA\Parameter(name="startDate", in="query", description="开始时间", required=true, example="2024-01-01"),
      *     @OA\Parameter(name="endDate", in="query", description="结束时间", required=true, example="2024-12-31"),
      *     @OA\Response(response=200, description="OK")
      * )

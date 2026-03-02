@@ -10,7 +10,7 @@ use app\model\User;
 use think\facade\Db;
 
 /**
- * ÈÏÖ¤·þÎñ
+ * è®¤è¯æœåŠ¡
  */
 final class AuthService
 {
@@ -22,32 +22,32 @@ final class AuthService
     }
 
     /**
-     * ÓÃ»§µÇÂ¼
+     * ç”¨æˆ·ç™»å½•
      */
     public function login(string $username, string $password): array
     {
-        // ²éÕÒÓÃ»§
+        // æŸ¥æ‰¾ç”¨æˆ·
         $user = User::where('username', $username)->find();
 
         if (!$user) {
             throw new BusinessException(ResultCode::USER_PASSWORD_ERROR);
         }
 
-        // ÑéÖ¤ÃÜÂë
+        // éªŒè¯å¯†ç 
         if (!password_verify($password, $user->password)) {
             throw new BusinessException(ResultCode::USER_PASSWORD_ERROR);
         }
 
-        // ¼ì²é×´Ì¬
+        // æ£€æŸ¥çŠ¶æ€
         if ($user->status != 1) {
-            throw new BusinessException(ResultCode::USER_ERROR, 'ÕËºÅÒÑ±»½ûÓÃ');
+            throw new BusinessException(ResultCode::USER_ERROR, 'è´¦å·å·²è¢«ç¦ç”¨');
         }
 
-        // »ñÈ¡ÓÃ»§½ÇÉ«ºÍÈ¨ÏÞ
+        // èŽ·å–ç”¨æˆ·è§’è‰²å’Œæƒé™
         $roleCodes = $this->getUserRoleCodes((int) $user->id);
         $dataScopes = $this->getUserDataScopes((int) $user->id, $roleCodes);
 
-        // Éú³É Token
+        // ç”Ÿæˆ Token
         $token = $this->jwt->generateAccessToken([
             'id' => $user->id,
             'username' => $user->username,
@@ -68,16 +68,16 @@ final class AuthService
     }
 
     /**
-     * µÇ³ö
+     * ç™»å‡º
      */
     public function logout(string $token): void
     {
-        // ½« Token ¼ÓÈëºÚÃûµ¥
+        // å°† Token åŠ å…¥é»‘åå•
         $this->jwt->blacklist($token);
     }
 
     /**
-     * Ë¢ÐÂ Token
+     * åˆ·æ–° Token
      */
     public function refresh(string $refreshToken): array
     {
@@ -106,7 +106,7 @@ final class AuthService
     }
 
     /**
-     * »ñÈ¡ÓÃ»§½ÇÉ«±àÂë
+     * èŽ·å–ç”¨æˆ·è§’è‰²ç¼–ç 
      */
     private function getUserRoleCodes(int $userId): array
     {
@@ -125,11 +125,11 @@ final class AuthService
     }
 
     /**
-     * »ñÈ¡ÓÃ»§Êý¾ÝÈ¨ÏÞ·¶Î§
+     * èŽ·å–ç”¨æˆ·æ•°æ®æƒé™èŒƒå›´
      */
     private function getUserDataScopes(int $userId, array $roleCodes): array
     {
-        // ³¬¼¶¹ÜÀíÔ±·µ»ØÈ«²¿È¨ÏÞ
+        // è¶…çº§ç®¡ç†å‘˜è¿”å›žå…¨éƒ¨æƒé™
         if (in_array('ROOT', $roleCodes, true)) {
             return [[
                 'type' => 'ALL',
@@ -145,7 +145,7 @@ final class AuthService
             return [];
         }
 
-        // »ñÈ¡½ÇÉ«µÄÊý¾ÝÈ¨ÏÞÅäÖÃ
+        // èŽ·å–è§’è‰²çš„æ•°æ®æƒé™é…ç½®
         $dataScopes = Db::name('sys_role')
             ->whereIn('id', $roleIds)
             ->where('status', 1)
@@ -171,30 +171,30 @@ final class AuthService
     }
 
     /**
-     * ½âÎöÊý¾ÝÈ¨ÏÞ·¶Î§
+     * è§£æžæ•°æ®æƒé™èŒƒå›´
      */
     private function resolveDataScope(int $type, string $scopeDeptIds, int $userId): array
     {
         switch ($type) {
-            case 1: // È«²¿Êý¾Ý
+            case 1: // å…¨éƒ¨æ•°æ®
                 return [];
 
-            case 2: // ×Ô¶¨Òå
+            case 2: // è‡ªå®šä¹‰
                 return array_map('intval', explode(',', $scopeDeptIds));
 
-            case 3: // ±¾²¿ÃÅ
+            case 3: // æœ¬éƒ¨é—¨
                 $deptId = Db::name('sys_user')->where('id', $userId)->value('dept_id');
                 return $deptId ? [(int) $deptId] : [];
 
-            case 4: // ±¾²¿ÃÅ¼°ÒÔÏÂ
+            case 4: // æœ¬éƒ¨é—¨åŠä»¥ä¸‹
                 $deptId = Db::name('sys_user')->where('id', $userId)->value('dept_id');
                 if (!$deptId) {
                     return [];
                 }
-                // »ñÈ¡×Ó²¿ÃÅ
+                // èŽ·å–å­éƒ¨é—¨
                 return app(DeptService::class)->getDescendantIds((int) $deptId);
 
-            case 5: // ½ö±¾ÈË
+            case 5: // ä»…æœ¬äºº
                 return [];
 
             default:

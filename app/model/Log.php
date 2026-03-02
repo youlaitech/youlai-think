@@ -3,21 +3,21 @@
 namespace app\model;
 
 /**
- * ²Ù×÷ÈÕÖ¾Ä£ĞÍ
+ * æ“ä½œæ—¥å¿—æ¨¡å‹
  *
- * @property int    $id          ÈÕÖ¾ID
- * @property string $module      Ä£¿é
- * @property string $action      ²Ù×÷
- * @property string $method      ÇëÇó·½·¨
- * @property string $url         ÇëÇóµØÖ·
- * @property string $ip          IPµØÖ·
+ * @property int    $id          æ—¥å¿—ID
+ * @property string $module      æ¨¡å—
+ * @property string $action      æ“ä½œ
+ * @property string $method      è¯·æ±‚æ–¹æ³•
+ * @property string $url         è¯·æ±‚åœ°å€
+ * @property string $ip          IPåœ°å€
  * @property string $userAgent   UA
- * @property string $params      ÇëÇó²ÎÊı
- * @property string $result      Ö´ĞĞ½á¹û
- * @property int    $userId      ²Ù×÷ÓÃ»§ID
- * @property string $username    ²Ù×÷ÓÃ»§Ãû
- * @property int    $executeTime Ö´ĞĞºÄÊ±(ms)
- * @property string $createTime  ´´½¨Ê±¼ä
+ * @property string $params      è¯·æ±‚å‚æ•°
+ * @property string $result      æ‰§è¡Œç»“æœ
+ * @property int    $userId      æ“ä½œç”¨æˆ·ID
+ * @property string $username    æ“ä½œç”¨æˆ·å
+ * @property int    $executeTime æ‰§è¡Œè€—æ—¶(ms)
+ * @property string $createTime  åˆ›å»ºæ—¶é—´
  */
 class Log extends Model
 {
@@ -29,11 +29,11 @@ class Log extends Model
         'execute_time' => 'integer',
     ];
 
-    // ÎŞÈíÉ¾³ı
+    // æ— è½¯åˆ é™¤
     protected $deleteTime = false;
 
     /**
-     * ÓÃ»§ID·ÃÎÊÆ÷
+     * ç”¨æˆ·IDè®¿é—®å™¨
      */
     public function getUserIdAttr(mixed $value): string
     {

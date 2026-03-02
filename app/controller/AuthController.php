@@ -10,17 +10,17 @@ use OpenApi\Annotations as OA;
 use think\response\Json;
 
 /**
- * @OA\Tag(name="01.ÈÏÖ¤½Ó¿Ú")
+ * @OA\Tag(name="01.è®¤è¯æ¥å£")
  */
 final class AuthController extends BaseController
 {
     /**
-     * »ñÈ¡ÑéÖ¤Âë
+     * è·å–éªŒè¯ç 
      *
      * @OA\Get(
      *     path="/api/v1/auth/captcha",
-     *     summary="»ñÈ¡ÑéÖ¤Âë",
-     *     @OA\Response(response="200", description="³É¹¦")
+     *     summary="è·å–éªŒè¯ç ",
+     *     @OA\Response(response="200", description="æˆåŠŸ")
      * )
      */
     public function captcha(): Json
@@ -30,7 +30,7 @@ final class AuthController extends BaseController
 
         $uuid = uniqid('', true);
 
-        // ´æ´¢ÑéÖ¤Âëµ½ Redis£¨5·ÖÖÓ¹ıÆÚ£©
+        // å­˜å‚¨éªŒè¯ç åˆ° Redisï¼ˆ5åˆ†é’Ÿè¿‡æœŸï¼‰
         \app\common\redis\RedisClient::get()->setex(
             "captcha:{$uuid}",
             300,
@@ -44,7 +44,7 @@ final class AuthController extends BaseController
     }
 
     /**
-     * µÇÂ¼
+     * ç™»å½•
      */
     public function login(): Json
     {
@@ -53,17 +53,17 @@ final class AuthController extends BaseController
         $uuid = $this->getParam('uuid', '');
         $code = $this->getParam('code', '');
 
-        // ÑéÖ¤ÂëĞ£Ñé
+        // éªŒè¯ç æ ¡éªŒ
         $this->validateCaptcha($uuid, $code);
 
-        // Ö´ĞĞµÇÂ¼
+        // æ‰§è¡Œç™»å½•
         $result = $this->service(AuthService::class)->login($username, $password);
 
-        return $this->success($result, 'µÇÂ¼³É¹¦');
+        return $this->success($result, 'ç™»å½•æˆåŠŸ');
     }
 
     /**
-     * µÇ³ö
+     * ç™»å‡º
      */
     public function logout(): Json
     {
@@ -73,11 +73,11 @@ final class AuthController extends BaseController
             $this->service(AuthService::class)->logout($token);
         }
 
-        return $this->success(null, 'µÇ³ö³É¹¦');
+        return $this->success(null, 'ç™»å‡ºæˆåŠŸ');
     }
 
     /**
-     * Ë¢ĞÂ Token
+     * åˆ·æ–° Token
      */
     public function refresh(): Json
     {
@@ -88,15 +88,15 @@ final class AuthController extends BaseController
         return $this->success($result);
     }
 
-    // ==================== Ë½ÓĞ·½·¨ ====================
+    // ==================== ç§æœ‰æ–¹æ³• ====================
 
     /**
-     * ÑéÖ¤ÑéÖ¤Âë
+     * éªŒè¯éªŒè¯ç 
      */
     private function validateCaptcha(string $uuid, string $code): void
     {
         if (empty($uuid) || empty($code)) {
-            throw new BusinessException(ResultCode::USER_REQUEST_PARAMETER_ERROR, 'ÑéÖ¤Âë²»ÄÜÎª¿Õ');
+            throw new BusinessException(ResultCode::USER_REQUEST_PARAMETER_ERROR, 'éªŒè¯ç ä¸èƒ½ä¸ºç©º');
         }
 
         $redis = \app\common\redis\RedisClient::get();
@@ -104,10 +104,10 @@ final class AuthController extends BaseController
         $storedCode = $redis->get($key);
 
         if (!$storedCode || strtolower($storedCode) !== strtolower($code)) {
-            throw new BusinessException(ResultCode::USER_ERROR, 'ÑéÖ¤Âë´íÎó');
+            throw new BusinessException(ResultCode::USER_ERROR, 'éªŒè¯ç é”™è¯¯');
         }
 
-        // É¾³ıÒÑÊ¹ÓÃµÄÑéÖ¤Âë
+        // åˆ é™¤å·²ä½¿ç”¨çš„éªŒè¯ç 
         $redis->del($key);
     }
 }

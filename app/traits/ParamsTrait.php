@@ -3,23 +3,23 @@
 namespace app\traits;
 
 /**
- * 请求参数Trait�?
- * 统一处理请求参数获取，支持JSON body和query params�?
+ * 请求参数 Trait。
+ * 统一处理请求参数获取，支持 JSON body 和 query params。
  */
 trait ParamsTrait
 {
     /**
-     * 获取请求参数（兼�?JSON body�?
+     * 获取请求参数（兼容 JSON body）
      */
     protected function getParam(string $key, mixed $default = null): mixed
     {
-        // 优先从路由参数获�?
+        // 优先从路由参数获取
         $value = $this->request->param($key);
         if ($value !== null && $value !== '') {
             return $value;
         }
 
-        // �?JSON body 获取
+        // 从 JSON body 获取
         $json = $this->getJsonBody();
         if (is_array($json) && isset($json[$key])) {
             return $json[$key];
@@ -29,7 +29,7 @@ trait ParamsTrait
     }
 
     /**
-     * 获取所有请求参�?
+     * 获取所有请求参数
      */
     protected function getAllParams(): array
     {
