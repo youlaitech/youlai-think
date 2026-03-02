@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace app\middleware;
+namespace app\Http\Middleware;
 
 /**
  * 数据范围中间件
@@ -31,7 +31,7 @@ final class DataScopeMiddleware
         }
 
         // dataScopes 已经在 JWT 中解析，直接使用
-        // 如果 JWT 中没有 dataScopes（兼容旧 token），设置为空数组
+        // 确保 dataScopes 字段存在
         if (!isset($authUser['dataScopes'])) {
             $authUser['dataScopes'] = [];
         }

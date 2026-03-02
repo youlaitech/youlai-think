@@ -1,0 +1,88 @@
+# 有来后台管理系统(ThinkPHP) Docker Compose 配置
+# 使用方法：在 docker 目录下执行 docker-compose up -d
+
+networks:
+  youlai-think:
+    driver: bridge
+
+services:
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0.29
+    container_name: youlai-think-mysql
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=youlai_admin
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ../sql/mysql:/docker-entrypoint-initdb.d:ro
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --explicit_defaults_for_timestamp=true
+      - --lower_case_table_names=1
+    ports:
+      - 3306:3306
+    networks:
+      - youlai-think
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis 缓存
+  redis:
+    image: redis:7.2.3
+    container_name: youlai-think-redis
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./redis/data:/data
+    command: redis-server --requirepass 123456 --appendonly no
+    ports:
+      - 6379:6379
+    networks:
+      - youlai-think
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "123456", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # PHP 应用服务（可选，生产环境使用）
+  # 如需部署应用，取消下方注释
+  # web:
+  #   build:
+  #     context: ..
+  #     dockerfile: Dockerfile
+  #   container_name: youlai-think-web
+  #   restart: unless-stopped
+  #   ports:
+  #     - 8000:80
+  #   environment:
+  #     - DB_HOST=mysql
+  #     - DB_PORT=3306
+  #     - DB_USER=root
+  #     - DB_PASS=123456
+  #     - DB_NAME=youlai_admin
+  #     - REDIS_HOST=redis
+  #     - REDIS_PORT=6379
+  #     - REDIS_PASSWORD=123456
+  #   volumes:
+  #     - ../app:/var/www/html/app
+  #     - ../config:/var/www/html/config
+  #     - ../public:/var/www/html/public
+  #     - ../route:/var/www/html/route
+  #     - ../runtime:/var/www/html/runtime
+  #   depends_on:
+  #     mysql:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   networks:
+  #     - youlai-think

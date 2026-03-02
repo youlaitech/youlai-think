@@ -1,10 +1,11 @@
 <?php declare(strict_types=1);
 
-use app\controller\AuthController;
-use app\controller\UserController;
-use app\controller\RoleController;
-use app\controller\MenuController;
-use app\controller\DeptController;
+use app\Auth\Controller\AuthController;
+use app\Codegen\Controller\CodegenController;
+use app\System\Controller\UserController;
+use app\System\Controller\RoleController;
+use app\System\Controller\MenuController;
+use app\System\Controller\DeptController;
 use think\facade\Route;
 
 // ==================== 认证接口（无需登录） ====================
@@ -63,6 +64,16 @@ Route::group('api/v1', function () {
         Route::post('', [DeptController::class, 'create'])->middleware('perm', 'sys:dept:create');
         Route::put(':id', [DeptController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:dept:update');
         Route::delete(':id', [DeptController::class, 'delete'])->middleware('perm', 'sys:dept:delete');
+    });
+
+    // 代码生成
+    Route::group('codegen', function () {
+        Route::get('table', [CodegenController::class, 'tablePage']);
+        Route::get(':tableName/config', [CodegenController::class, 'getConfig']);
+        Route::post(':tableName/config', [CodegenController::class, 'saveConfig']);
+        Route::delete(':tableName/config', [CodegenController::class, 'deleteConfig']);
+        Route::get(':tableName/preview', [CodegenController::class, 'preview']);
+        Route::get(':tableName/download', [CodegenController::class, 'download']);
     });
 
 })->middleware([

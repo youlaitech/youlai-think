@@ -16,12 +16,12 @@ use think\Response;
 use Throwable;
 
 /**
- * 搴旂敤寮傚父澶勭悊绫?
+ * 应用异常处理类
  */
 class ExceptionHandle extends Handle
 {
     /**
-     * 涓嶉渶瑕佽褰曚俊鎭紙鏃ュ織锛夌殑寮傚父绫诲垪琛?
+     * 不需要记录信息（日志）的异常类列表
      */
     protected array $ignoreReport = [
         HttpException::class,
@@ -33,7 +33,7 @@ class ExceptionHandle extends Handle
     ];
 
     /**
-     * 璁板綍寮傚父淇℃伅
+     * 记录异常信息
      */
     public function report(Throwable $exception): void
     {
@@ -41,7 +41,7 @@ class ExceptionHandle extends Handle
     }
 
     /**
-     * 娓叉煋寮傚父涓篐TTP鍝嶅簲
+     * 渲染异常为 HTTP 响应
      */
     public function render($request, Throwable $e): Response
     {
@@ -52,7 +52,7 @@ class ExceptionHandle extends Handle
         $resultCode = ResultCode::SYSTEM_ERROR;
         $msg = $e->getMessage();
 
-        // 鏍规嵁寮傚父绫诲瀷鏄犲皠閿欒鐮?
+        // 根据异常类型映射错误码
         if ($e instanceof BusinessException) {
             $resultCode = $e->getResultCode();
         } elseif ($e instanceof ValidateException) {
@@ -67,18 +67,18 @@ class ExceptionHandle extends Handle
             };
         } elseif ($e instanceof ModelNotFoundException || $e instanceof DataNotFoundException) {
             $resultCode = ResultCode::INTERFACE_NOT_EXIST;
-            $msg = '鏁版嵁涓嶅瓨鍦?;
+            $msg = '数据不存在';
         }
 
-        // 闈炶皟璇曟ā寮忛殣钘忚缁嗛敊璇俊鎭?
+        // 非调试模式隐藏详细错误信息
         if (!config('app.show_error_msg')) {
             $msg = $resultCode->getMsg();
         }
 
-        // 鏋勫缓鍝嶅簲
+        // 构建响应
         $result = Result::failedWith($resultCode, $msg);
 
-        // 娣诲姞杩借釜ID锛堜究浜庢棩蹇楁帓鏌ワ級
+        // 添加追踪ID（便于日志排查）
         $traceId = $request->header('X-Request-Id') ?: $this->generateTraceId();
         $result->withTraceId($traceId);
 
@@ -86,7 +86,7 @@ class ExceptionHandle extends Handle
     }
 
     /**
-     * 鐢熸垚杩借釜ID
+     * 生成追踪ID
      */
     private function generateTraceId(): string
     {

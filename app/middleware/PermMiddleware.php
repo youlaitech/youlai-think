@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace app\middleware;
+namespace app\Http\Middleware;
 
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;

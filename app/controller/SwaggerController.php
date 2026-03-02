@@ -10,7 +10,7 @@ use think\facade\App;
  * @OA\Info(
  *     title="youlai-think",
  *     version="1.0",
- *     description="youlai 鍏ㄥ妗讹紙ThinkPHP 8锛夋潈闄愮鐞嗗悗鍙版帴鍙ｆ枃妗?
+ *     description="youlai 全家桶（ThinkPHP 8）权限管理后台接口文档"
  * )
  */
 final class SwaggerController

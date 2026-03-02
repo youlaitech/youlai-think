@@ -10,3 +10,9 @@ Thumbs.db
 /.buildpath
 /.project
 .history
+
+# Docker 数据目录
+docker/*/data
+
+# 环境变量
+.env
