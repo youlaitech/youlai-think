@@ -3,8 +3,8 @@
 namespace app\common\web;
 
 /**
- * 统一响应封装�?
- * 支持普通响应和分页响应�?
+ * 统一响应封装
+ * 支持普通响应和分页响应
  */
 final class Result
 {
@@ -17,7 +17,7 @@ final class Result
     }
 
     /**
-     * 成功响应�?
+     * 成功响应
      */
     public static function success(mixed $data = null, string $msg = ''): self
     {
@@ -29,7 +29,7 @@ final class Result
     }
 
     /**
-     * 分页成功响应�?
+     * 分页成功响应
      */
     public static function page(array $list, int $total): self
     {
@@ -41,7 +41,7 @@ final class Result
     }
 
     /**
-     * 失败响应�?
+     * 失败响应
      */
     public static function failed(?string $msg = null): self
     {
@@ -50,7 +50,7 @@ final class Result
     }
 
     /**
-     * 指定错误码的失败响应�?
+     * 指定错误码的失败响应
      */
     public static function failedWith(IResultCode $resultCode, ?string $msg = null, mixed $data = null): self
     {
@@ -62,7 +62,7 @@ final class Result
     }
 
     /**
-     * 布尔判断响应�?
+     * 布尔判断响应
      */
     public static function judge(bool $status): self
     {
@@ -70,7 +70,7 @@ final class Result
     }
 
     /**
-     * 设置追踪ID�?
+     * 设置追踪ID
      */
     public function withTraceId(string $traceId): self
     {
@@ -79,7 +79,7 @@ final class Result
     }
 
     /**
-     * 转换为数组�?
+     * 转换为数组
      */
     public function toArray(): array
     {

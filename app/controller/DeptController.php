@@ -12,7 +12,7 @@ use OpenApi\Annotations as OA;
 final class DeptController extends ApiController
 {
     /**
-     * 获取部门�?
+     * 获取部门树
      */
     public function tree(): \think\response\Json
     {
@@ -22,7 +22,7 @@ final class DeptController extends ApiController
     }
 
     /**
-     * 获取所有部门（平铺列表�?
+     * 获取所有部门（平铺列表）
      */
     public function list(): \think\response\Json
     {
@@ -40,7 +40,7 @@ final class DeptController extends ApiController
         $data = $this->service(DeptService::class)->getById($id);
 
         if (!$data) {
-            return $this->fail('A0400', '部门不存�?);
+            return $this->fail('A0400', '部门不存在');
         }
 
         return $this->success($data);
@@ -51,8 +51,6 @@ final class DeptController extends ApiController
      */
     public function create(): \think\response\Json
     {
-        $this->checkDemo();
-
         $id = $this->service(DeptService::class)->create($this->getAllParams());
 
         return $this->success(['id' => (string) $id], '创建成功');
@@ -63,8 +61,6 @@ final class DeptController extends ApiController
      */
     public function update(): \think\response\Json
     {
-        $this->checkDemo();
-
         $id = $this->getIdParam();
         $this->service(DeptService::class)->update($id, $this->getAllParams());
 
@@ -76,8 +72,6 @@ final class DeptController extends ApiController
      */
     public function delete(): \think\response\Json
     {
-        $this->checkDemo();
-
         $id = $this->getIdParam();
         $this->service(DeptService::class)->delete($id);
 

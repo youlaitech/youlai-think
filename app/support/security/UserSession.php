@@ -4,7 +4,8 @@ namespace app\support\security;
 
 /**
  * 角色数据权限信息
- * 用于存储单个角色的数据权限范围信息，支持多角色数据权限合并（并集策略�? */
+ * 用于存储单个角色的数据权限范围信息，支持多角色数据权限合并（并集策略）
+ */
 class RoleDataScope
 {
     public function __construct(
@@ -60,7 +61,9 @@ class RoleDataScope
 
 /**
  * 用户会话信息
- * 存储在Token中的用户会话快照，包含用户身份、数据权限和角色权限信息�? * 用于Redis-Token模式下的会话管理，支持在线用户查询和会话控制�? */
+ * 存储在Token中的用户会话快照，包含用户身份、数据权限和角色权限信息
+ * 用于Redis-Token模式下的会话管理，支持在线用户查询和会话控制
+ */
 class UserSession
 {
     public function __construct(

@@ -7,7 +7,7 @@ use app\controller\MenuController;
 use app\controller\DeptController;
 use think\facade\Route;
 
-// ==================== 认证接口（无需登录�?====================
+// ==================== 认证接口（无需登录） ====================
 
 Route::group('api/v1/auth', function () {
     Route::get('captcha', [AuthController::class, 'captcha']);

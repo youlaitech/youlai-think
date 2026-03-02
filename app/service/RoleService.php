@@ -59,13 +59,13 @@ final class RoleService
             ->order('sort', 'asc')
             ->order('id', 'desc');
 
-        // 条件筛�?
+        // 条件筛选
         $this->applyFilters($query, $params);
 
         $total = $query->count();
         $list = $query->page($page, $pageSize)->select()->toArray();
 
-        // 格式�?
+        // 格式化
         foreach ($list as &$item) {
             $item['statusText'] = $item['status'] == 1 ? '启用' : '禁用';
         }
@@ -90,9 +90,9 @@ final class RoleService
      */
     public function create(array $data): int
     {
-        // 检查编码是否重�?
+        // 检查编码是否重复
         if (Role::where('code', $data['code'])->find()) {
-            throw new BusinessException(ResultCode::USER_ERROR, '角色编码已存�?);
+            throw new BusinessException(ResultCode::USER_ERROR, '角色编码已存在');
         }
 
         return Db::transaction(function () use ($data) {
@@ -124,10 +124,10 @@ final class RoleService
     {
         $role = Role::find($id);
         if (!$role) {
-            throw new BusinessException(ResultCode::USER_ERROR, '角色不存�?);
+            throw new BusinessException(ResultCode::USER_ERROR, '角色不存在');
         }
 
-        // ROOT 角色不允许修�?
+        // ROOT 角色不允许修改
         if ($role->code === 'ROOT') {
             throw new BusinessException(ResultCode::USER_ERROR, '超级管理员角色不允许修改');
         }
@@ -153,7 +153,7 @@ final class RoleService
      */
     public function deleteByIds(array $ids): int
     {
-        // 不允许删除系统内置角�?
+        // 不允许删除系统内置角色
         $protectedCodes = ['ROOT', 'ADMIN'];
         $protectedIds = Role::whereIn('code', $protectedCodes)->column('id');
         $ids = array_diff($ids, $protectedIds);
@@ -172,7 +172,7 @@ final class RoleService
     }
 
     /**
-     * 获取角色的菜单权限标�?
+     * 获取角色的菜单权限标识
      */
     public function getPermissionsByRoleId(int $roleId): array
     {
@@ -193,7 +193,7 @@ final class RoleService
      */
     public function getPermissionsByUserId(int $userId): array
     {
-        // 获取用户所有角�?
+        // 获取用户所有角色
         $roleIds = Db::name('sys_user_role')
             ->where('user_id', $userId)
             ->column('role_id');

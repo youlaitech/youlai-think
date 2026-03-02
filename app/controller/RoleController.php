@@ -56,8 +56,6 @@ final class RoleController extends ApiController
      */
     public function create(): \think\response\Json
     {
-        $this->checkDemo();
-
         $data = $this->validate($this->getAllParams(), RoleValidate::class, 'create');
 
         $id = $this->service(RoleService::class)->create($data);
@@ -70,8 +68,6 @@ final class RoleController extends ApiController
      */
     public function update(): \think\response\Json
     {
-        $this->checkDemo();
-
         $id = $this->getIdParam();
         $data = $this->validate($this->getAllParams(), RoleValidate::class, 'update');
 
@@ -85,8 +81,6 @@ final class RoleController extends ApiController
      */
     public function delete(): \think\response\Json
     {
-        $this->checkDemo();
-
         $ids = $this->getIdsParam();
 
         if (empty($ids)) {

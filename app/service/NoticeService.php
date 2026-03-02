@@ -15,7 +15,7 @@ use think\facade\Db;
 final class NoticeService
 {
     /**
-     * 通知公告分页列表�?
+     * 通知公告分页列表
      *
      * @param int   $userId
      * @param array $queryParams
@@ -32,7 +32,7 @@ final class NoticeService
         $title = trim((string) ($queryParams['title'] ?? ''));
         $publishStatus = $queryParams['publishStatus'] ?? null;
 
-        // 关联发布人、创建人、阅读状�?
+        // 关联发布人、创建人、阅读状态
         $q = Db::name('sys_notice')
             ->alias('n')
             ->leftJoin('sys_user pu', 'n.publisher_id = pu.id')
@@ -40,7 +40,7 @@ final class NoticeService
             ->leftJoin('sys_user_notice un', 'un.notice_id = n.id AND un.user_id = ' . (int) $userId . ' AND un.is_deleted = 0')
             ->where('n.is_deleted', 0);
 
-        // 数据权限过滤（支持多角色并集策略�?
+        // 数据权限过滤（支持多角色并集策略）
         if (is_array($authUser)) {
             $dataPermissionService = app(DataPermissionService::class);
             $q = $dataPermissionService->apply($q, 'cu.dept_id', 'n.create_by', $authUser);
@@ -50,7 +50,7 @@ final class NoticeService
             $q = $q->whereLike('n.title', '%' . $title . '%');
         }
 
-        // 前端状态转数据库状�?
+        // 前端状态转数据库状态
         if ($publishStatus !== null && $publishStatus !== '') {
             $dbStatus = $this->toDbPublishStatus((int) $publishStatus);
             $q = $q->where('n.publish_status', $dbStatus);
@@ -86,7 +86,7 @@ final class NoticeService
     }
 
     /**
-     * 获取通知公告表单数据�?
+     * 获取通知公告表单数据
      *
      * @param int $id
      *
@@ -96,7 +96,7 @@ final class NoticeService
     {
         $notice = Notice::where('id', $id)->where('is_deleted', 0)->find();
         if ($notice === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告不存�?);
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告不存在');
         }
 
         $n = $notice->toArray();
@@ -114,14 +114,14 @@ final class NoticeService
             'type' => isset($n['type']) ? (int) $n['type'] : null,
             'level' => $n['level'] ?? null,
             'publishStatus' => $this->fromDbPublishStatus((int) ($n['publish_status'] ?? 0)),
-            'targetType' => isset($n['target_type']) ? (int) $n['target_type'] : null,
-            // 关键点：前端指定用户是多选（数组），数据库存逗号分隔字符串�?
+            'targetType' => isset($n['target_type']) ? (int) ($n['target_type']) : null,
+            // 关键点：前端指定用户是多选（数组），数据库存逗号分隔字符串
             'targetUserIds' => $targetUserIds,
         ];
     }
 
     /**
-     * 新增通知公告�?
+     * 新增通知公告
      *
      * @param int   $userId
      * @param array $data
@@ -135,7 +135,7 @@ final class NoticeService
         $type = (int) ($data['type'] ?? 0);
         $level = (string) ($data['level'] ?? 'L');
         $targetType = (int) ($data['targetType'] ?? 1);
-        // 支持数组/逗号分隔字符�?
+        // 支持数组/逗号分隔字符串
         $targetUserIds = $this->normalizeTargetUserIds($data['targetUserIds'] ?? null);
 
         if ($title === '' || trim(strip_tags($content)) === '') {
@@ -143,7 +143,7 @@ final class NoticeService
         }
 
         if ($targetType === 2 && empty($targetUserIds)) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '推送指定用户不能为�?);
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '推送指定用户不能为空');
         }
 
         $now = date('Y-m-d H:i:s');
@@ -167,7 +167,7 @@ final class NoticeService
     }
 
     /**
-     * 修改通知公告�?
+     * 修改通知公告
      *
      * @param int   $userId
      * @param int   $id
@@ -179,7 +179,7 @@ final class NoticeService
     {
         $notice = Notice::where('id', $id)->where('is_deleted', 0)->find();
         if ($notice === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告不存�?);
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告不存在');
         }
 
         $title = trim((string) ($data['title'] ?? ''));
@@ -187,7 +187,7 @@ final class NoticeService
         $type = (int) ($data['type'] ?? 0);
         $level = (string) ($data['level'] ?? 'L');
         $targetType = (int) ($data['targetType'] ?? 1);
-        // 支持数组/逗号分隔字符�?
+        // 支持数组/逗号分隔字符串
         $targetUserIds = $this->normalizeTargetUserIds($data['targetUserIds'] ?? null);
 
         if ($title === '' || trim(strip_tags($content)) === '') {
@@ -195,7 +195,7 @@ final class NoticeService
         }
 
         if ($targetType === 2 && empty($targetUserIds)) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '推送指定用户不能为�?);
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '推送指定用户不能为空');
         }
 
         $notice->save([
@@ -213,7 +213,7 @@ final class NoticeService
     }
 
     /**
-     * 发布通知公告并生成用户通知�?
+     * 发布通知公告并生成用户通知
      *
      * @param int $userId
      * @param int $id
@@ -224,23 +224,23 @@ final class NoticeService
     {
         $notice = Db::name('sys_notice')->where('id', $id)->where('is_deleted', 0)->find();
         if (!$notice) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告不存�?);
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告不存在');
         }
 
         if ((int) ($notice['publish_status'] ?? 0) === 1) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告已发�?);
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告已发布');
         }
 
         $targetType = (int) ($notice['target_type'] ?? 1);
-        // 指定用户模式需要目标用户列�?
+        // 指定用户模式需要目标用户列表
         $targetUserIds = (string) ($notice['target_user_ids'] ?? '');
         if ($targetType === 2 && trim($targetUserIds) === '') {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '推送指定用户不能为�?);
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '推送指定用户不能为空');
         }
 
         $now = date('Y-m-d H:i:s');
 
-        // 关键点：发布需要写入用户通知表（sys_user_notice），用于“我的通知/已读状态”�?
+        // 关键点：发布需要写入用户通知表（sys_user_notice），用于“我的通知/已读状态”等。
         Db::transaction(function () use ($userId, $id, $targetType, $targetUserIds, $now) {
             Db::name('sys_notice')->where('id', $id)->update([
                 'publish_status' => 1,
@@ -294,7 +294,7 @@ final class NoticeService
     }
 
     /**
-     * 撤回通知公告并清理用户通知�?
+     * 撤回通知公告并清理用户通知
      *
      * @param int $userId
      * @param int $id
@@ -305,11 +305,11 @@ final class NoticeService
     {
         $notice = Db::name('sys_notice')->where('id', $id)->where('is_deleted', 0)->find();
         if (!$notice) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告不存�?);
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告不存在');
         }
 
         if ((int) ($notice['publish_status'] ?? 0) !== 1) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告未发布或已撤�?);
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告未发布或已撤回');
         }
 
         $now = date('Y-m-d H:i:s');
@@ -329,7 +329,7 @@ final class NoticeService
     }
 
     /**
-     * 删除通知公告（批量）�?
+     * 删除通知公告（批量）
      *
      * @param string $ids
      *
@@ -369,7 +369,7 @@ final class NoticeService
     }
 
     /**
-     * 全部标记为已读�?
+     * 全部标记为已读
      *
      * @param int $userId
      *
@@ -392,7 +392,7 @@ final class NoticeService
     }
 
     /**
-     * 阅读并获取通知公告详情�?
+     * 阅读并获取通知公告详情
      *
      * @param int $userId
      * @param int $id
@@ -410,10 +410,10 @@ final class NoticeService
             ->find();
 
         if (!$row) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告不存�?);
+            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告不存在');
         }
 
-        // 关键点：阅读详情时，更新用户通知已读状态�?
+        // 关键点：阅读详情时，更新用户通知已读状态
         $now = date('Y-m-d H:i:s');
         Db::name('sys_user_notice')
             ->where('notice_id', $id)
@@ -435,7 +435,7 @@ final class NoticeService
     }
 
     /**
-     * 我的通知分页列表�?
+     * 我的通知分页列表
      *
      * @param int   $userId
      * @param array $queryParams
@@ -495,7 +495,7 @@ final class NoticeService
     }
 
     /**
-     * 规范�?targetUserIds（支持字符串/数组）�?
+     * 规范化 targetUserIds（支持字符串/数组）
      *
      * @param mixed $value
      *
@@ -530,7 +530,7 @@ final class NoticeService
     }
 
     /**
-     * 数据库发布状态转前端状态�?
+     * 数据库发布状态转前端状态
      *
      * @param int $dbStatus
      *
@@ -538,13 +538,13 @@ final class NoticeService
      */
     private function fromDbPublishStatus(int $dbStatus): int
     {
-        // 数据库：0未发�?/ 1已发�?/ -1已撤�?
-        // 前端�?草稿 / 1已发�?/ 2已撤�?
+        // 数据库：0未发布 / 1已发布 / -1已撤回
+        // 前端：0草稿 / 1已发布 / 2已撤回
         return $dbStatus === -1 ? 2 : $dbStatus;
     }
 
     /**
-     * 前端发布状态转数据库状态�?
+     * 前端发布状态转数据库状态
      *
      * @param int $status
      *

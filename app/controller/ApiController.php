@@ -39,17 +39,4 @@ abstract class ApiController extends BaseController
             throw new BusinessException(ResultCode::ACCESS_TOKEN_INVALID);
         }
     }
-
-    /**
-     * 演示模式检查
-     */
-    protected function checkDemo(): void
-    {
-        if (env('IS_DEMO', false)) {
-            throw new BusinessException(
-                ResultCode::SYSTEM_ERROR,
-                '演示环境禁止操作'
-            );
-        }
-    }
 }

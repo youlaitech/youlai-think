@@ -54,7 +54,7 @@ final class UserController extends ApiController
         $data = $this->service(UserService::class)->getById($id);
 
         if (!$data) {
-            return $this->fail('A0400', '用户不存�?);
+            return $this->fail('A0400', '用户不存在');
         }
 
         return $this->success($data);
@@ -65,8 +65,6 @@ final class UserController extends ApiController
      */
     public function create(): \think\response\Json
     {
-        $this->checkDemo();
-
         $data = $this->validate($this->getAllParams(), UserValidate::class, 'create');
 
         $id = $this->service(UserService::class)->create($data);
@@ -79,8 +77,6 @@ final class UserController extends ApiController
      */
     public function update(): \think\response\Json
     {
-        $this->checkDemo();
-
         $id = $this->getIdParam();
         $data = $this->validate($this->getAllParams(), UserValidate::class, 'update');
 
@@ -94,8 +90,6 @@ final class UserController extends ApiController
      */
     public function delete(): \think\response\Json
     {
-        $this->checkDemo();
-
         $ids = $this->getIdsParam();
 
         if (empty($ids)) {
@@ -104,7 +98,7 @@ final class UserController extends ApiController
 
         $count = $this->service(UserService::class)->deleteByIds($ids);
 
-        return $this->success(['count' => $count], "成功删除 {$count} 个用�?);
+        return $this->success(['count' => $count], "成功删除 {$count} 个用户");
     }
 
     /**
@@ -112,8 +106,6 @@ final class UserController extends ApiController
      */
     public function resetPassword(): \think\response\Json
     {
-        $this->checkDemo();
-
         $id = $this->getIdParam();
         $password = $this->getParam('password', '123456');
 
@@ -125,12 +117,10 @@ final class UserController extends ApiController
     }
 
     /**
-     * 修改状�?
+     * 修改状态
      */
     public function changeStatus(): \think\response\Json
     {
-        $this->checkDemo();
-
         $id = $this->getIdParam();
         $status = (int) $this->getParam('status', 1);
 
@@ -138,7 +128,7 @@ final class UserController extends ApiController
             'status' => $status,
         ]);
 
-        return $this->success(null, '状态修改成�?);
+        return $this->success(null, '状态修改成功');
     }
 
     /**
@@ -156,11 +146,9 @@ final class UserController extends ApiController
      */
     public function import(): \think\response\Json
     {
-        $this->checkDemo();
-
         $file = $this->request->file('file');
         if (!$file) {
-            return $this->fail('A0400', '请上传文�?);
+            return $this->fail('A0400', '请上传文件');
         }
 
         // 保存上传文件
@@ -171,6 +159,6 @@ final class UserController extends ApiController
         // 删除临时文件
         @unlink($saveName);
 
-        return $this->success($result, "导入完成，成功{$result['validCount']}条，失败{$result['invalidCount']}�?);
+        return $this->success($result, "导入完成，成功{$result['validCount']}条，失败{$result['invalidCount']}条");
     }
 }

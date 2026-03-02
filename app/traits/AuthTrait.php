@@ -3,8 +3,8 @@
 namespace app\traits;
 
 /**
- * 认证用户Trait�?
- * 提供获取当前认证用户的便捷方法�?
+ * 认证用户 Trait
+ * 提供获取当前认证用户的便捷方法
  */
 trait AuthTrait
 {
@@ -30,7 +30,7 @@ trait AuthTrait
     }
 
     /**
-     * 获取当前用户�?
+     * 获取当前用户名
      */
     protected function getAuthUsername(): string
     {
@@ -46,7 +46,7 @@ trait AuthTrait
     }
 
     /**
-     * 判断是否超级管理�?
+     * 判断是否超级管理员
      */
     protected function isSuperAdmin(): bool
     {
@@ -54,7 +54,7 @@ trait AuthTrait
     }
 
     /**
-     * 判断是否管理�?
+     * 判断是否管理员
      */
     protected function isAdmin(): bool
     {

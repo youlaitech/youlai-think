@@ -31,7 +31,7 @@ final class JwtTokenManager implements TokenManager
         $redis = RedisClient::get();
         $keys = $cfg['redis']['keys'] ?? [];
 
-        // Token 版本号用于强制失效历�?token
+        // Token 版本号用于强制失效历史 token
         $tokenVersionKey = RedisKey::format((string) ($keys['user_token_version'] ?? 'auth:user:token_version:{}'), $userId);
         $tokenVersion = (int) ($redis->get($tokenVersionKey) ?: 0);
         $redis->set($tokenVersionKey, (string) $tokenVersion);
@@ -47,7 +47,8 @@ final class JwtTokenManager implements TokenManager
             $authorities = $this->buildAuthorities($userId);
         }
 
-        // 序列�?dataScopes �?JSON 字符�?        $dataScopesJson = is_array($dataScopes) ? json_encode($dataScopes, JSON_UNESCAPED_UNICODE) : $dataScopes;
+        // 序列化 dataScopes 为 JSON 字符串
+        $dataScopesJson = is_array($dataScopes) ? json_encode($dataScopes, JSON_UNESCAPED_UNICODE) : $dataScopes;
 
         // access token 载荷
         $accessPayload = [
@@ -82,11 +83,11 @@ final class JwtTokenManager implements TokenManager
         $oldAccess = $redis->get($userAccessKey);
         $oldRefresh = $redis->get($userRefreshKey);
 
-        // 记录当前用户最�?token
+        // 记录当前用户 token
         $redis->setex($userAccessKey, $accessTtl, $accessToken);
         $redis->setex($userRefreshKey, $refreshTtl, $refreshToken);
 
-        // �?token 进入黑名单，防止并发登录复用
+        // 旧 token 进入黑名单，防止并发登录复用
         if (!empty($oldAccess)) {
             $this->blacklistToken((string) $oldAccess, $accessTtl);
         }
@@ -239,7 +240,7 @@ final class JwtTokenManager implements TokenManager
             }
         }
 
-        // 递增 Token 版本号，统一踢出�?token
+        // 递增 Token 版本号，统一踢出旧 token
         if ($userId !== null && $userId > 0) {
             $tokenVersionKey = RedisKey::format((string) ($keys['user_token_version'] ?? 'auth:user:token_version:{}'), $userId);
             $redis->incr($tokenVersionKey);

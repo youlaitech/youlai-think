@@ -35,7 +35,7 @@ final class MenuController extends ApiController
     }
 
     /**
-     * 获取所有菜单（平铺列表�?
+     * 获取所有菜单（平铺列表）
      */
     public function list(): \think\response\Json
     {
@@ -53,7 +53,7 @@ final class MenuController extends ApiController
         $data = $this->service(MenuService::class)->getById($id);
 
         if (!$data) {
-            return $this->fail('A0400', '菜单不存�?);
+            return $this->fail('A0400', '菜单不存在');
         }
 
         return $this->success($data);
@@ -64,8 +64,6 @@ final class MenuController extends ApiController
      */
     public function create(): \think\response\Json
     {
-        $this->checkDemo();
-
         $id = $this->service(MenuService::class)->create($this->getAllParams());
 
         return $this->success(['id' => (string) $id], '创建成功');
@@ -76,8 +74,6 @@ final class MenuController extends ApiController
      */
     public function update(): \think\response\Json
     {
-        $this->checkDemo();
-
         $id = $this->getIdParam();
         $this->service(MenuService::class)->update($id, $this->getAllParams());
 
@@ -89,8 +85,6 @@ final class MenuController extends ApiController
      */
     public function delete(): \think\response\Json
     {
-        $this->checkDemo();
-
         $id = $this->getIdParam();
         $this->service(MenuService::class)->delete($id);
 
