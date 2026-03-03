@@ -8,6 +8,10 @@ use app\System\Controller\MenuController;
 use app\System\Controller\DeptController;
 use app\System\Controller\NoticeController;
 use app\System\Controller\StatisticsController;
+use app\System\Controller\ConfigController;
+use app\System\Controller\DictController;
+use app\System\Controller\FileController;
+use app\System\Controller\LogController;
 use think\facade\Route;
 
 // ==================== 认证接口（无需登录） ====================
@@ -40,6 +44,10 @@ Route::group('api/v1', function () {
     // 角色管理
     Route::group('roles', function () {
         Route::get('options', [RoleController::class, 'options']);
+        Route::get(':id/menu-ids', [RoleController::class, 'menuIds'])->pattern(['id' => '\d+']);
+        Route::put(':id/menus', [RoleController::class, 'assignMenus'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:assign');
+        Route::get(':id/dept-ids', [RoleController::class, 'deptIds'])->pattern(['id' => '\d+']);
+        Route::put(':id/status', [RoleController::class, 'status'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:update');
         Route::get('', [RoleController::class, 'page'])->middleware('perm', 'sys:role:list');
         Route::get(':id', [RoleController::class, 'detail'])->pattern(['id' => '\d+']);
         Route::post('', [RoleController::class, 'create'])->middleware('perm', 'sys:role:create');
@@ -81,6 +89,43 @@ Route::group('api/v1', function () {
         Route::post('', [NoticeController::class, 'create'])->middleware('perm', 'sys:notice:create');
         Route::put(':id', [NoticeController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:notice:update');
         Route::delete(':ids', [NoticeController::class, 'delete']);
+    });
+
+    // 系统配置
+    Route::group('configs', function () {
+        Route::put('refresh', [ConfigController::class, 'refresh'])->middleware('perm', 'sys:config:refresh');
+        Route::get(':id/form', [ConfigController::class, 'form'])->pattern(['id' => '\d+']);
+        Route::get('', [ConfigController::class, 'page'])->middleware('perm', 'sys:config:list');
+        Route::post('', [ConfigController::class, 'create'])->middleware('perm', 'sys:config:create');
+        Route::put(':id', [ConfigController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:config:update');
+        Route::delete(':id', [ConfigController::class, 'delete'])->middleware('perm', 'sys:config:delete');
+    });
+
+    // 字典管理
+    Route::group('dicts', function () {
+        Route::get('options', [DictController::class, 'index']);
+        Route::get(':id/form', [DictController::class, 'form'])->pattern(['id' => '\d+']);
+        Route::get(':dictCode/items/options', [DictController::class, 'items'])->pattern(['dictCode' => '\w+']);
+        Route::get(':dictCode/items/:itemId/form', [DictController::class, 'itemForm'])->pattern(['dictCode' => '\w+', 'itemId' => '\d+']);
+        Route::get(':dictCode/items', [DictController::class, 'itemPage'])->pattern(['dictCode' => '\w+']);
+        Route::post(':dictCode/items', [DictController::class, 'createItem'])->pattern(['dictCode' => '\w+'])->middleware('perm', 'sys:dict-item:create');
+        Route::put(':dictCode/items/:itemId', [DictController::class, 'updateItem'])->pattern(['dictCode' => '\w+', 'itemId' => '\d+'])->middleware('perm', 'sys:dict-item:update');
+        Route::delete(':dictCode/items/:itemIds', [DictController::class, 'deleteItems'])->pattern(['dictCode' => '\w+'])->middleware('perm', 'sys:dict-item:delete');
+        Route::get('', [DictController::class, 'page']);
+        Route::post('', [DictController::class, 'create'])->middleware('perm', 'sys:dict:create');
+        Route::put(':id', [DictController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:dict:update');
+        Route::delete(':ids', [DictController::class, 'delete'])->middleware('perm', 'sys:dict:delete');
+    });
+
+    // 文件管理
+    Route::group('files', function () {
+        Route::post('', [FileController::class, 'upload']);
+        Route::delete('', [FileController::class, 'delete']);
+    });
+
+    // 日志管理
+    Route::group('logs', function () {
+        Route::get('', [LogController::class, 'page']);
     });
 
     // 统计分析

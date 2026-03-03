@@ -29,7 +29,7 @@ class Dict extends Model
      */
     public function items(): \think\model\relation\HasMany
     {
-        return $this->hasMany(DictItem::class, 'dict_code', 'code')
+        return $this->hasMany(DictItem::class, 'dict_code', 'dict_code')
             ->order('sort', 'asc');
     }
 

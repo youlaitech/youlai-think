@@ -233,6 +233,43 @@ final class RoleService
             ->column('perm');
     }
 
+    /**
+     * 修改角色状态
+     */
+    public function updateStatus(int $id, int $status): bool
+    {
+        $role = Role::find($id);
+        if (!$role) {
+            throw new BusinessException(ResultCode::USER_ERROR, '角色不存在');
+        }
+
+        // ROOT 角色不允许修改状态
+        if ($role->code === 'ROOT') {
+            throw new BusinessException(ResultCode::USER_ERROR, '超级管理员角色不允许修改状态');
+        }
+
+        $role->status = $status;
+        return $role->save();
+    }
+
+    /**
+     * 获取角色的菜单ID集合
+     */
+    public function getMenuIds(int $roleId): array
+    {
+        return RoleMenu::where('role_id', $roleId)->column('menu_id');
+    }
+
+    /**
+     * 获取角色的部门ID集合(自定义数据权限)
+     */
+    public function getDeptIds(int $roleId): array
+    {
+        return Db::name('sys_role_dept')
+            ->where('role_id', $roleId)
+            ->column('dept_id');
+    }
+
     // ==================== 私有方法 ====================
 
     private function applyFilters($query, array $params): void

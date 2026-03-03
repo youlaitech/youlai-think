@@ -91,4 +91,56 @@ final class RoleController extends ApiController
 
         return $this->success(['count' => $count], "成功删除 {$count} 个角色");
     }
+
+    /**
+     * 修改角色状态
+     */
+    public function status(): \think\response\Json
+    {
+        $id = $this->getIdParam();
+        $status = (int) $this->getParam('status', 1);
+
+        $this->service(RoleService::class)->updateStatus($id, $status);
+
+        return $this->success(null, '状态修改成功');
+    }
+
+    /**
+     * 获取角色的菜单ID集合
+     */
+    public function menuIds(): \think\response\Json
+    {
+        $id = $this->getIdParam();
+        $menuIds = $this->service(RoleService::class)->getMenuIds($id);
+
+        return $this->success($menuIds);
+    }
+
+    /**
+     * 角色分配菜单权限
+     */
+    public function assignMenus(): \think\response\Json
+    {
+        $id = $this->getIdParam();
+        $menuIds = $this->request->post('menuIds', []);
+
+        if (!is_array($menuIds)) {
+            $menuIds = [];
+        }
+
+        $this->service(RoleService::class)->assignMenus($id, $menuIds);
+
+        return $this->success(null, '分配成功');
+    }
+
+    /**
+     * 获取角色的部门ID集合(自定义数据权限)
+     */
+    public function deptIds(): \think\response\Json
+    {
+        $id = $this->getIdParam();
+        $deptIds = $this->service(RoleService::class)->getDeptIds($id);
+
+        return $this->success($deptIds);
+    }
 }

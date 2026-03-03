@@ -195,14 +195,24 @@ final class UserService
             throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
         }
 
+        // 获取角色编码
+        $roleCodes = array_column($user->roles->toArray() ?? [], 'code');
+
+        // 获取权限标识
+        $perms = [];
+        if (!empty($roleCodes)) {
+            $roleIds = array_column($user->roles->toArray() ?? [], 'id');
+            $roleService = new RoleService();
+            $perms = $roleService->getPermissionsByUserId($userId);
+        }
+
         return [
-            'id' => (string) $user->id,
+            'userId' => (string) $user->id,
             'username' => $user->username,
             'nickname' => $user->nickname,
             'avatar' => $user->avatar,
-            'deptId' => (string) $user->dept_id,
-            'deptName' => $user->dept?->name ?? '',
-            'roleCodes' => array_column($user->roles->toArray() ?? [], 'code'),
+            'roles' => $roleCodes,
+            'perms' => $perms,
         ];
     }
 

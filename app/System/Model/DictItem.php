@@ -31,7 +31,7 @@ class DictItem extends Model
      */
     public function dict(): \think\model\relation\BelongsTo
     {
-        return $this->belongsTo(Dict::class, 'dict_code', 'code');
+        return $this->belongsTo(Dict::class, 'dict_code', 'dict_code');
     }
 
     /**
