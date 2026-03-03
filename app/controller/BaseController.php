@@ -59,7 +59,7 @@ abstract class BaseController
     protected function success(mixed $data = null, string $message = ''): Json
     {
         $result = Result::success(
-            $this->stringifyIds($data),
+            $this->stringifyIds($this->camelizeKeys($data)),
             $message ?: ResultCode::SUCCESS->getMsg()
         );
 
@@ -72,7 +72,7 @@ abstract class BaseController
     protected function successPaginate(array $list, int $total, int $page = 1, int $pageSize = 10): Json
     {
         $result = Result::page(
-            $this->stringifyIds($list),
+            $this->stringifyIds($this->camelizeKeys($list)),
             $total
         );
 
@@ -101,6 +101,28 @@ abstract class BaseController
     protected function stringifyIds(mixed $data): mixed
     {
         return IdStringify::stringify($data);
+    }
+
+    protected function camelizeKeys(mixed $data): mixed
+    {
+        if (!is_array($data)) {
+            return $data;
+        }
+
+        if (array_is_list($data)) {
+            return array_map(fn ($v) => $this->camelizeKeys($v), $data);
+        }
+
+        $out = [];
+        foreach ($data as $key => $value) {
+            $newKey = $key;
+            if (is_string($key) && str_contains($key, '_')) {
+                $newKey = preg_replace_callback('/_([a-zA-Z])/', static fn ($m) => strtoupper($m[1]), $key);
+            }
+            $out[$newKey] = $this->camelizeKeys($value);
+        }
+
+        return $out;
     }
 
     /**

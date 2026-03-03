@@ -77,6 +77,16 @@ final class RoleService
         // 格式化
         foreach ($list as &$item) {
             $item['statusText'] = $item['status'] == 1 ? '启用' : '禁用';
+
+            $dataScope = (int) ($item['data_scope'] ?? 0);
+            $item['dataScopeLabel'] = match ($dataScope) {
+                1 => '全部数据',
+                2 => '部门及子部门数据',
+                3 => '本部门数据',
+                4 => '本人数据',
+                5 => '自定义部门数据',
+                default => '',
+            };
         }
 
         return [$list, $total];
@@ -87,11 +97,16 @@ final class RoleService
      */
     public function getAllEnabled(): array
     {
-        return Role::where('status', 1)
-            ->field(['id', 'code', 'name'])
+        $list = Role::where('status', 1)
+            ->field(['id', 'name'])
             ->order('sort', 'asc')
             ->select()
             ->toArray();
+
+        return array_map(static fn ($item) => [
+            'value' => (string) ($item['id'] ?? ''),
+            'label' => (string) ($item['name'] ?? ''),
+        ], $list);
     }
 
     /**
