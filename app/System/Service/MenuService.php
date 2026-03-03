@@ -13,6 +13,25 @@ use think\facade\Db;
 final class MenuService
 {
     /**
+     * 获取菜单下拉数据
+     */
+    public function getOptions(bool $onlyParent = false): array
+    {
+        $query = Menu::where('visible', 1)
+            ->order('sort', 'asc')
+            ->order('id', 'asc');
+
+        if ($onlyParent) {
+            // 只返回目录/菜单，不返回按钮
+            $query->whereIn('type', ['C', 'M']);
+        }
+
+        $list = $query->select()->toArray();
+
+        return $this->buildOptionTree($list);
+    }
+
+    /**
      * 获取菜单树
      */
     public function getTree(): array
@@ -167,6 +186,29 @@ final class MenuService
         return $tree;
     }
 
+    private function buildOptionTree(array $list, int $parentId = 0): array
+    {
+        $options = [];
+
+        foreach ($list as $item) {
+            if ((int) ($item['parent_id'] ?? 0) === $parentId) {
+                $node = [
+                    'value' => (int) $item['id'],
+                    'label' => (string) ($item['name'] ?? ''),
+                ];
+
+                $children = $this->buildOptionTree($list, (int) $item['id']);
+                if (!empty($children)) {
+                    $node['children'] = $children;
+                }
+
+                $options[] = $node;
+            }
+        }
+
+        return $options;
+    }
+
     /**
      * 构建路由结构（与 Java RouteVO 兼容）
      */
@@ -180,6 +222,15 @@ final class MenuService
                 $children = $this->buildRoutes((int) $menu['id'], $menuList);
                 if (!empty($children)) {
                     $route['children'] = $children;
+
+                    $redirect = $route['redirect'] ?? null;
+                    if ($redirect === '' || $redirect === null) {
+                        $parentPath = (string) ($route['path'] ?? '');
+                        $firstChildPath = (string) ($children[0]['path'] ?? '');
+                        if ($parentPath !== '' && $firstChildPath !== '') {
+                            $route['redirect'] = rtrim($parentPath, '/') . '/' . ltrim($firstChildPath, '/');
+                        }
+                    }
                 }
                 $routes[] = $route;
             }
@@ -196,12 +247,18 @@ final class MenuService
         $routePath = $menu['route_path'] ?? '';
         $isExternal = str_starts_with($routePath, 'http://') || str_starts_with($routePath, 'https://');
 
+        $menuType = (string) ($menu['type'] ?? 'M');
+
         // 路由名称
         $routeName = $menu['route_name'] ?? '';
         if (empty($routeName)) {
-            $routeName = $isExternal
-                ? 'ext-' . $menu['id']
-                : $this->toCamelCase($routePath);
+            if ($isExternal) {
+                $routeName = 'ext-' . $menu['id'];
+            } elseif ($menuType === 'C' && !empty($routePath)) {
+                $routeName = $routePath;
+            } else {
+                $routeName = $this->toCamelCase($routePath);
+            }
         }
 
         return [

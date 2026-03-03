@@ -9,6 +9,7 @@ use app\System\Model\Dept;
 use app\System\Model\Role;
 use app\System\Model\User;
 use app\System\Model\UserRole;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use think\facade\Db;
 
@@ -73,9 +74,27 @@ final class UserService
         $total = $query->count();
         $list = $query->page($page, $pageSize)->select()->toArray();
 
+        $userIds = array_values(array_filter(array_map(static fn ($item) => $item['id'] ?? null, $list)));
+        $roleNameMap = [];
+        if (!empty($userIds)) {
+            $rows = Db::name('sys_user_role')
+                ->alias('sur')
+                ->leftJoin('sys_role r', 'sur.role_id = r.id')
+                ->whereIn('sur.user_id', $userIds)
+                ->group('sur.user_id')
+                ->field('sur.user_id, GROUP_CONCAT(r.name) AS roleNames')
+                ->select()
+                ->toArray();
+
+            foreach ($rows as $row) {
+                $roleNameMap[(string) ($row['user_id'] ?? '')] = (string) ($row['roleNames'] ?? '');
+            }
+        }
+
         // 格式化输出
         foreach ($list as &$item) {
             $item['deptName'] = $item['dept']['name'] ?? '';
+            $item['roleNames'] = $roleNameMap[(string) ($item['id'] ?? '')] ?? '';
             $item['genderText'] = $item['gender'] == 1 ? '男' : ($item['gender'] == 2 ? '女' : '未知');
             $item['statusText'] = $item['status'] == 1 ? '启用' : '禁用';
             unset($item['dept']);
@@ -232,6 +251,25 @@ final class UserService
             });
         }
 
+        if (isset($params['createTime']) && $params['createTime'] !== '') {
+            $range = $params['createTime'];
+
+            if (is_string($range)) {
+                $range = array_values(array_filter(array_map('trim', preg_split('/\s*,\s*/', $range) ?: [])));
+            }
+
+            if (is_array($range) && count($range) >= 2) {
+                $start = (string) ($range[0] ?? '');
+                $end = (string) ($range[1] ?? '');
+
+                if ($start !== '' && $end !== '') {
+                    $startTime = date('Y-m-d 00:00:00', strtotime($start));
+                    $endTime = date('Y-m-d 23:59:59', strtotime($end));
+                    $query->whereBetweenTime('create_time', [$startTime, $endTime]);
+                }
+            }
+        }
+
         if (isset($params['status']) && $params['status'] !== '') {
             $query->where('status', (int) $params['status']);
         }
@@ -309,14 +347,80 @@ final class UserService
      */
     public function generateImportTemplate(): string
     {
-        // 使用静态模板文件
-        $templatePath = public_path() . 'static/templates/excel/用户导入模板.xlsx';
-        
+        $templatePath = public_path() . 'static/templates/用户导入模板.xlsx';
+
         if (!file_exists($templatePath)) {
             throw new BusinessException(ResultCode::SYSTEM_ERROR, '模板文件不存在');
         }
-        
+
         return $templatePath;
+    }
+
+    public function exportToExcel(array $params, array $authUser): string
+    {
+        $query = User::with(['dept'])
+            ->field(array_merge(self::LIST_FIELDS, ['dept_id']))
+            ->order('id', 'desc');
+
+        $this->applyFilters($query, $params);
+        $this->applyDataScope($query, $authUser);
+
+        $list = $query->select()->toArray();
+
+        $userIds = array_values(array_filter(array_map(static fn ($item) => $item['id'] ?? null, $list)));
+        $roleNameMap = [];
+        if (!empty($userIds)) {
+            $rows = Db::name('sys_user_role')
+                ->alias('sur')
+                ->leftJoin('sys_role r', 'sur.role_id = r.id')
+                ->whereIn('sur.user_id', $userIds)
+                ->group('sur.user_id')
+                ->field('sur.user_id, GROUP_CONCAT(r.name) AS roleNames')
+                ->select()
+                ->toArray();
+
+            foreach ($rows as $row) {
+                $roleNameMap[(string) ($row['user_id'] ?? '')] = (string) ($row['roleNames'] ?? '');
+            }
+        }
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('用户列表');
+
+        $headers = ['用户名', '昵称', '手机号', '邮箱', '性别', '部门', '角色', '创建时间'];
+        foreach ($headers as $i => $header) {
+            $cell = Coordinate::stringFromColumnIndex($i + 1) . '1';
+            $sheet->setCellValue($cell, $header);
+        }
+
+        $rowNum = 2;
+        foreach ($list as $item) {
+            $deptName = $item['dept']['name'] ?? '';
+            $roleNames = $roleNameMap[(string) ($item['id'] ?? '')] ?? '';
+            $genderText = ($item['gender'] ?? 0) == 1 ? '男' : (($item['gender'] ?? 0) == 2 ? '女' : '未知');
+
+            $sheet->setCellValue('A' . $rowNum, (string) ($item['username'] ?? ''));
+            $sheet->setCellValue('B' . $rowNum, (string) ($item['nickname'] ?? ''));
+            $sheet->setCellValue('C' . $rowNum, (string) ($item['mobile'] ?? ''));
+            $sheet->setCellValue('D' . $rowNum, (string) ($item['email'] ?? ''));
+            $sheet->setCellValue('E' . $rowNum, $genderText);
+            $sheet->setCellValue('F' . $rowNum, $deptName);
+            $sheet->setCellValue('G' . $rowNum, $roleNames);
+            $sheet->setCellValue('H' . $rowNum, (string) ($item['create_time'] ?? ''));
+            $rowNum++;
+        }
+
+        $tempDir = runtime_path() . 'temp' . DIRECTORY_SEPARATOR;
+        if (!is_dir($tempDir)) {
+            @mkdir($tempDir, 0777, true);
+        }
+
+        $filePath = $tempDir . 'users_export_' . date('YmdHis') . '.xlsx';
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer->save($filePath);
+
+        return $filePath;
     }
 
     /**

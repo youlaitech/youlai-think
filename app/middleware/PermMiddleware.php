@@ -30,11 +30,8 @@ final class PermMiddleware
             return $next($request);
         }
 
-        if (!($request instanceof \app\Request)) {
-            throw new BusinessException(ResultCode::SYSTEM_ERROR);
-        }
-
-        $authUser = $request->getAuthUser();
+        // 直接访问动态属性（AuthMiddleware 已设置）
+        $authUser = (array) ($request->__authUser ?? []);
         $userId = (int) ($authUser['userId'] ?? 0);
         if ($userId <= 0) {
             throw new BusinessException(ResultCode::ACCESS_TOKEN_INVALID);

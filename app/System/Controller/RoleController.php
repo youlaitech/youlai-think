@@ -37,6 +37,21 @@ final class RoleController extends ApiController
     }
 
     /**
+     * 获取角色表单数据
+     */
+    public function form(): \think\response\Json
+    {
+        $id = $this->getIdParam();
+        $data = $this->service(RoleService::class)->getById($id);
+
+        if (!$data) {
+            return $this->fail('A0400', '角色不存在');
+        }
+
+        return $this->success($data);
+    }
+
+    /**
      * 获取角色详情
      */
     public function detail(): \think\response\Json
@@ -128,7 +143,7 @@ final class RoleController extends ApiController
             $menuIds = [];
         }
 
-        $this->service(RoleService::class)->assignMenus($id, $menuIds);
+        $this->service(RoleService::class)->syncMenus($id, $menuIds);
 
         return $this->success(null, '分配成功');
     }

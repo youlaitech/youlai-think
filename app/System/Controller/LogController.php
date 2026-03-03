@@ -28,7 +28,7 @@ final class LogController extends ApiController
      */
     public function page(): \think\Response
     {
-        [$list, $total] = $this->service(LogService::class)->getLogPage($this->request->param());
+        [$list, $total] = $this->service(LogService::class)->getLogPage($this->getAllParams());
         return $this->okPage($list, $total);
     }
 }

@@ -138,7 +138,27 @@ final class UserController extends ApiController
     {
         $tempPath = $this->service(UserService::class)->generateImportTemplate();
 
-        return download($tempPath, 'user_import_template.xlsx');
+        $fileName = '用户导入模板.xlsx';
+        $encodedFileName = rawurlencode($fileName);
+        return download($tempPath, $fileName)->header([
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $encodedFileName . '"; filename*=UTF-8\'\'' . $encodedFileName,
+        ]);
+    }
+
+    public function export(): \think\response\File
+    {
+        $filePath = $this->service(UserService::class)->exportToExcel(
+            $this->getAllParams(),
+            $this->getAuthUser()
+        );
+
+        $fileName = '用户列表.xlsx';
+        $encodedFileName = rawurlencode($fileName);
+        return download($filePath, $fileName)->header([
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $encodedFileName . '"; filename*=UTF-8\'\'' . $encodedFileName,
+        ]);
     }
 
     /**

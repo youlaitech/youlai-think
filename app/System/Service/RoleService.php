@@ -33,6 +33,10 @@ final class RoleService
         }
 
         $data = $role->toArray();
+
+        if (array_key_exists('data_scope', $data) && !array_key_exists('dataScope', $data)) {
+            $data['dataScope'] = (int) $data['data_scope'];
+        }
         $data['menuIds'] = array_column($data['menus'] ?? [], 'id');
         unset($data['menus']);
 
@@ -270,6 +274,30 @@ final class RoleService
             ->column('dept_id');
     }
 
+    /**
+     * 同步角色菜单权限
+     */
+    public function syncMenus(int $roleId, array $menuIds): void
+    {
+        RoleMenu::where('role_id', $roleId)->delete();
+
+        if (!empty($menuIds)) {
+            $this->assignMenus($roleId, $menuIds);
+        }
+    }
+
+    /**
+     * 同步角色部门权限
+     */
+    public function syncDepts(int $roleId, array $deptIds): void
+    {
+        Db::name('sys_role_dept')->where('role_id', $roleId)->delete();
+
+        if (!empty($deptIds)) {
+            $this->assignDepts($roleId, $deptIds);
+        }
+    }
+
     // ==================== 私有方法 ====================
 
     private function applyFilters($query, array $params): void
@@ -299,15 +327,6 @@ final class RoleService
         RoleMenu::insertAll($data);
     }
 
-    private function syncMenus(int $roleId, array $menuIds): void
-    {
-        RoleMenu::where('role_id', $roleId)->delete();
-
-        if (!empty($menuIds)) {
-            $this->assignMenus($roleId, $menuIds);
-        }
-    }
-
     private function assignDepts(int $roleId, array $deptIds): void
     {
         $data = array_map(fn ($deptId) => [
@@ -316,14 +335,5 @@ final class RoleService
         ], $deptIds);
 
         Db::name('sys_role_dept')->insertAll($data);
-    }
-
-    private function syncDepts(int $roleId, array $deptIds): void
-    {
-        Db::name('sys_role_dept')->where('role_id', $roleId)->delete();
-
-        if (!empty($deptIds)) {
-            $this->assignDepts($roleId, $deptIds);
-        }
     }
 }

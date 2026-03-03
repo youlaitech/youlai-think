@@ -3,6 +3,7 @@
 namespace app\Auth\Controller;
 
 use app\common\exception\BusinessException;
+use app\common\redis\RedisClient;
 use app\common\web\ResultCode;
 use app\controller\BaseController;
 use app\Auth\Service\AuthService;
@@ -26,31 +27,43 @@ final class AuthController extends BaseController
      */
     public function captcha(): Json
     {
-        // 生成随机验证码短语
+        $length = (int) config('captcha.length', 4);
+        $length = $length > 0 ? $length : 4;
+
+        $chars = (string) config('captcha.codeSet', '23456789ABCDEFGHJKLMNPQRSTUVWXYZ');
+        if ($chars === '') {
+            $chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+        }
+
+        $imageW = (int) config('captcha.imageW', 100);
+        $imageH = (int) config('captcha.imageH', 32);
+        $imageW = $imageW > 0 ? $imageW : 100;
+        $imageH = $imageH > 0 ? $imageH : 32;
+
+        $bg = config('captcha.bg', [255, 255, 255]);
+
+        $expire = (int) config('captcha.expire', 300);
+        $expire = $expire > 0 ? $expire : 300;
+
         $phrase = '';
-        $chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'; // 排除易混淆字符
-        for ($i = 0; $i < 4; $i++) {
-            $phrase .= $chars[random_int(0, strlen($chars) - 1)];
+        $charsLen = strlen($chars);
+        for ($i = 0; $i < $length; $i++) {
+            $phrase .= $chars[random_int(0, $charsLen - 1)];
         }
 
         $builder = new CaptchaBuilder($phrase);
+        if (is_array($bg) && count($bg) === 3) {
+            $builder->setBackgroundColor((int) $bg[0], (int) $bg[1], (int) $bg[2]);
+        }
+        $builder->build($imageW, $imageH);
 
-        // 设置验证码样式
-        $builder->setBackgroundColor(255, 255, 255);
-        $builder->build(100, 32);
-
-        $uuid = uniqid('', true);
-
-        // 存储验证码到 Redis（5分钟过期）
-        \app\common\redis\RedisClient::get()->setex(
-            "captcha:{$uuid}",
-            300,
-            strtolower($phrase) // 存储小写，验证时不区分大小写
-        );
+        $captchaId = uniqid('', true);
+        RedisClient::get()->setex("captcha:{$captchaId}", $expire, strtolower($phrase));
+        $base64 = $builder->inline();
 
         return $this->success([
-            'captchaId' => $uuid,
-            'captchaBase64' => $builder->inline(),
+            'captchaId' => $captchaId,
+            'captchaBase64' => $base64,
         ]);
     }
 
@@ -108,15 +121,13 @@ final class AuthController extends BaseController
             throw new BusinessException(ResultCode::USER_REQUEST_PARAMETER_ERROR, '验证码不能为空');
         }
 
-        $redis = \app\common\redis\RedisClient::get();
+        $redis = RedisClient::get();
         $key = "captcha:{$captchaId}";
         $storedCode = $redis->get($key);
-
-        if (!$storedCode || strtolower($storedCode) !== strtolower($captchaCode)) {
+        if (!$storedCode || strtolower((string) $storedCode) !== strtolower($captchaCode)) {
             throw new BusinessException(ResultCode::USER_ERROR, '验证码错误');
         }
 
-        // 删除已使用的验证码
         $redis->del($key);
     }
 }

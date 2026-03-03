@@ -40,6 +40,20 @@ trait ParamsTrait
             $params = array_merge($json, $params);
         }
 
+        $queryString = (string) $this->request->server('QUERY_STRING', '');
+        if ($queryString !== '') {
+            $matches = [];
+            preg_match_all('/(?:^|&)createTime=([^&]*)/i', $queryString, $matches);
+            if (!empty($matches[1])) {
+                $values = array_values(array_filter(array_map('urldecode', $matches[1]), static fn ($v) => $v !== ''));
+                if (count($values) === 1) {
+                    $params['createTime'] ??= $values[0];
+                } elseif (count($values) > 1) {
+                    $params['createTime'] = $values;
+                }
+            }
+        }
+
         return array_filter($params, fn ($v) => $v !== null && $v !== '');
     }
 

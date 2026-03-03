@@ -31,6 +31,7 @@ Route::group('api/v1', function () {
     Route::group('users', function () {
         Route::get('me', [UserController::class, 'me']);
         Route::get('template', [UserController::class, 'template']);
+        Route::get('export', [UserController::class, 'export'])->middleware('perm', 'sys:user:export');
         Route::post('import', [UserController::class, 'import'])->middleware('perm', 'sys:user:import');
         Route::get('', [UserController::class, 'page'])->middleware('perm', 'sys:user:list');
         Route::get(':id', [UserController::class, 'detail'])->pattern(['id' => '\d+']);
@@ -49,6 +50,7 @@ Route::group('api/v1', function () {
         Route::get(':id/dept-ids', [RoleController::class, 'deptIds'])->pattern(['id' => '\d+']);
         Route::put(':id/status', [RoleController::class, 'status'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:update');
         Route::get('', [RoleController::class, 'page'])->middleware('perm', 'sys:role:list');
+        Route::get(':id/form', [RoleController::class, 'form'])->pattern(['id' => '\d+']);
         Route::get(':id', [RoleController::class, 'detail'])->pattern(['id' => '\d+']);
         Route::post('', [RoleController::class, 'create'])->middleware('perm', 'sys:role:create');
         Route::put(':id', [RoleController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:update');
@@ -57,9 +59,11 @@ Route::group('api/v1', function () {
 
     // 菜单管理
     Route::group('menus', function () {
+        Route::get('options', [MenuController::class, 'options']);
         Route::get('routes', [MenuController::class, 'routes']);
         Route::get('tree', [MenuController::class, 'tree'])->middleware('perm', 'sys:menu:list');
         Route::get('', [MenuController::class, 'list'])->middleware('perm', 'sys:menu:list');
+        Route::get(':id/form', [MenuController::class, 'form'])->pattern(['id' => '\d+']);
         Route::get(':id', [MenuController::class, 'detail'])->pattern(['id' => '\d+']);
         Route::post('', [MenuController::class, 'create'])->middleware('perm', 'sys:menu:create');
         Route::put(':id', [MenuController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:menu:update');
