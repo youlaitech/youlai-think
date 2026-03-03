@@ -47,13 +47,13 @@ final class MenuService
 
     /**
      * 获取用户的菜单树（路由用）
+     * 注意：visible=0 的隐藏菜单仍需返回路由，只是前端不显示菜单，但可以通过路由跳转访问
      */
     public function getUserMenuTree(int $userId, array $roleCodes): array
     {
         // 超级管理员获取所有菜单
         if (in_array('ROOT', $roleCodes, true)) {
-            $menus = Menu::where('visible', 1)
-                ->where('type', '<>', 'B') // 排除按钮
+            $menus = Menu::where('type', '<>', 'B') // 排除按钮
                 ->order('sort', 'asc')
                 ->select()
                 ->toArray();
@@ -68,7 +68,6 @@ final class MenuService
                 ->column('menu_id');
 
             $menus = Menu::whereIn('id', $menuIds)
-                ->where('visible', 1)
                 ->where('type', '<>', 'B')
                 ->order('sort', 'asc')
                 ->select()

@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace app\System\Service;
+namespace app\{{moduleNameStudly}}\Service;
 
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
+use app\{{moduleNameStudly}}\Model\{{entityName}};
 use think\facade\Db;
 
 /**

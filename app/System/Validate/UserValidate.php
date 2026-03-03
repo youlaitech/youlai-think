@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace app\System\Validate;
 
+use app\common\validate\BaseValidate;
+
 /**
  * 用户验证器。
  */

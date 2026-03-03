@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace app\controller;
+namespace app\{{moduleNameStudly}}\Controller;
 
 use app\controller\ApiController;
-use app\service\{{entityName}}Service;
+use app\{{moduleNameStudly}}\Service\{{entityName}}Service;
 
 /**
  * {{businessName}}接口

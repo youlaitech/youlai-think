@@ -423,6 +423,7 @@ ORDER BY ORDINAL_POSITION ASC
         $moduleName = (string) ($config['moduleName'] ?? self::DEFAULT_MODULE_NAME);
         $businessName = (string) ($config['businessName'] ?? $tableName);
         $entityKebab = $this->toKebabCase($entityName);
+        $moduleNameStudly = $this->toPascalCase($moduleName);
 
         $fieldConfigs = $config['fieldConfigs'] ?? [];
         if (!is_array($fieldConfigs)) {
@@ -453,6 +454,7 @@ ORDER BY ORDINAL_POSITION ASC
             'entityKebab' => $entityKebab,
             'businessName' => $businessName,
             'moduleName' => $moduleName,
+            'moduleNameStudly' => $moduleNameStudly,
             'pageType' => $finalPageType,
             'fieldSql' => $fieldSql,
             'fieldsTs' => $fieldsTs,
@@ -476,21 +478,21 @@ ORDER BY ORDINAL_POSITION ASC
         ];
 
         $previews[] = $this->buildPreviewItem(
-            self::DEFAULT_BACKEND_APP_NAME . '/app/model',
+            self::DEFAULT_BACKEND_APP_NAME . '/app/' . $moduleNameStudly . '/Model',
             $entityName . '.php',
             $this->renderFromTemplate('backend/model.php.tpl', $vars),
             'backend'
         );
 
         $previews[] = $this->buildPreviewItem(
-            self::DEFAULT_BACKEND_APP_NAME . '/app/service',
+            self::DEFAULT_BACKEND_APP_NAME . '/app/' . $moduleNameStudly . '/Service',
             $entityName . 'Service.php',
             $this->renderFromTemplate('backend/service.php.tpl', $vars),
             'backend'
         );
 
         $previews[] = $this->buildPreviewItem(
-            self::DEFAULT_BACKEND_APP_NAME . '/app/controller',
+            self::DEFAULT_BACKEND_APP_NAME . '/app/' . $moduleNameStudly . '/Controller',
             $entityName . 'Controller.php',
             $this->renderFromTemplate('backend/controller.php.tpl', $vars),
             'backend'

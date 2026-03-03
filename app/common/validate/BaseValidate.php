@@ -43,6 +43,6 @@ abstract class BaseValidate extends Validate
             );
         }
 
-        return $this->validated;
+        return $data;
     }
 }

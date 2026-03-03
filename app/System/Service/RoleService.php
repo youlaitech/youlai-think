@@ -41,9 +41,9 @@ final class RoleService
         unset($data['menus']);
 
         // 获取角色关联的部门ID（自定义数据权限用）
-        $data['deptIds'] = Db::name('sys_role_dept')
+        $data['deptIds'] = array_map('strval', Db::name('sys_role_dept')
             ->where('role_id', $id)
-            ->column('dept_id');
+            ->column('dept_id'));
 
         return $data;
     }
@@ -147,7 +147,7 @@ final class RoleService
             throw new BusinessException(ResultCode::USER_ERROR, '超级管理员角色不允许修改');
         }
 
-        return Db::transaction(function () use ($role, $data) {
+        return Db::transaction(function () use ($id, $role, $data) {
             $role->name = $data['name'] ?? $role->name;
             $role->status = $data['status'] ?? $role->status;
             $role->sort = $data['sort'] ?? $role->sort;
@@ -269,9 +269,9 @@ final class RoleService
      */
     public function getDeptIds(int $roleId): array
     {
-        return Db::name('sys_role_dept')
+        return array_map('strval', Db::name('sys_role_dept')
             ->where('role_id', $roleId)
-            ->column('dept_id');
+            ->column('dept_id'));
     }
 
     /**
@@ -317,11 +317,9 @@ final class RoleService
 
     private function assignMenus(int $roleId, array $menuIds): void
     {
-        $now = date('Y-m-d H:i:s');
         $data = array_map(fn ($menuId) => [
             'role_id' => $roleId,
             'menu_id' => $menuId,
-            'create_time' => $now,
         ], $menuIds);
 
         RoleMenu::insertAll($data);

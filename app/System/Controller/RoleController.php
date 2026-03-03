@@ -137,11 +137,26 @@ final class RoleController extends ApiController
     public function assignMenus(): \think\response\Json
     {
         $id = $this->getIdParam();
-        $menuIds = $this->request->post('menuIds', []);
+        $payload = $this->getJsonBody();
 
-        if (!is_array($menuIds)) {
-            $menuIds = [];
+        if (!is_array($payload)) {
+            return $this->fail('A0400', 'menuIds 参数格式错误');
         }
+
+        $isSequential = array_is_list($payload);
+        if (!$isSequential) {
+            $keys = array_keys($payload);
+            $isSequential = ($keys === []) || (
+                array_reduce($keys, static fn ($carry, $k) => $carry && (is_int($k) || (is_string($k) && ctype_digit($k))), true)
+                && array_map('intval', $keys) === range(0, count($keys) - 1)
+            );
+        }
+
+        if (!$isSequential) {
+            return $this->fail('A0400', 'menuIds 参数格式错误');
+        }
+
+        $menuIds = array_values(array_filter(array_map('intval', $payload), static fn ($v) => $v > 0));
 
         $this->service(RoleService::class)->syncMenus($id, $menuIds);
 
