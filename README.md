@@ -21,7 +21,7 @@
 
 ## 📢 项目简介
 
-**[youlai-think](https://gitee.com/youlaiorg/youlai-think)** 是 **[vue3-element-admin](https://gitee.com/youlaiorg/vue3-element-admin)** 的 ThinkPHP 8 后端实现，接口路径与返回结构完全对齐，可直接为前端提供后端服务。
+`youlai-think` 是 **[vue3-element-admin](https://gitee.com/youlaiorg/vue3-element-admin)** 配套的 PHP 后端实现，基于 ThinkPHP 8, PHP 8, JWT, Redis, MySQL 构建，是 youlai 全家桶的重要组成部分。
 
 - **🚀 技术栈**：ThinkPHP 8 + PHP 8，轻量高效、上手成本低
 - **🔐 安全认证**：JWT 无状态认证 + Redis 会话双模式，支持会话治理
@@ -44,17 +44,17 @@
 ```text
 youlai-think/
 ├─ app/                       # 应用核心目录
-│  ├─ controller/             # 控制器
-│  ├─ service/                # 业务服务
-│  ├─ model/                  # 数据模型
-│  ├─ job/                    # 队列任务
-│  ├─ validate/               # 验证器
-│  ├─ traits/                 # 复用特性
+│  ├─ Auth/                   # 认证与鉴权模块
+│  ├─ Codegen/                # 代码生成模块
+│  ├─ System/                 # 系统核心模块（用户/角色/菜单等）
+│  ├─ common/                 # 公共能力（常量/枚举/异常/工具类等）
+│  ├─ controller/             # 控制器（兼容保留）
 │  ├─ middleware/             # 中间件
-│  ├─ common/                 # 公共模块
-│  └─ database/               # 数据库迁移
-│     ├─ migrations/          # 迁移文件
-│     └─ seeds/               # 数据填充
+│  ├─ traits/                 # 复用特性
+│  ├─ websocket/              # WebSocket 相关
+│  ├─ AppService.php          # 应用服务
+│  ├─ ExceptionHandle.php     # 全局异常处理
+│  └─ common.php              # 公共函数
 ├─ config/                    # 配置文件
 ├─ public/                    # Web入口
 ├─ route/                     # 路由定义
