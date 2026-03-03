@@ -38,6 +38,20 @@ final class DeptService
     }
 
     /**
+     * 获取部门下拉选项
+     */
+    public function getOptions(): array
+    {
+        $list = Dept::where('status', 1)
+            ->field(['id', 'name', 'parent_id'])
+            ->order('sort', 'asc')
+            ->select()
+            ->toArray();
+
+        return $this->buildOptions($list, 0);
+    }
+
+    /**
      * 根据ID获取部门详情
      */
     public function getById(int $id): ?array
@@ -61,9 +75,6 @@ final class DeptService
             'code' => $data['code'] ?? '',
             'sort' => $data['sort'] ?? 0,
             'status' => $data['status'] ?? 1,
-            'leader' => $data['leader'] ?? '',
-            'phone' => $data['phone'] ?? '',
-            'email' => $data['email'] ?? '',
             'tree_path' => $treePath,
             'create_time' => $now,
             'update_time' => $now,
@@ -97,9 +108,6 @@ final class DeptService
         $dept->code = $data['code'] ?? $dept->code;
         $dept->sort = $data['sort'] ?? $dept->sort;
         $dept->status = $data['status'] ?? $dept->status;
-        $dept->leader = $data['leader'] ?? $dept->leader;
-        $dept->phone = $data['phone'] ?? $dept->phone;
-        $dept->email = $data['email'] ?? $dept->email;
 
         return $dept->save();
     }
@@ -139,6 +147,27 @@ final class DeptService
 
     // ==================== 私有方法 ====================
 
+    private function buildOptions(array $list, int $parentId): array
+    {
+        $options = [];
+
+        foreach ($list as $item) {
+            if ((int) $item['parent_id'] === $parentId) {
+                $option = [
+                    'value' => (string) $item['id'],
+                    'label' => $item['name'],
+                ];
+                $children = $this->buildOptions($list, (int) $item['id']);
+                if ($children) {
+                    $option['children'] = $children;
+                }
+                $options[] = $option;
+            }
+        }
+
+        return $options;
+    }
+
     private function buildTree(array $list, int $parentId = 0): array
     {
         $tree = [];
@@ -159,12 +188,12 @@ final class DeptService
     private function buildTreePath(int $parentId): string
     {
         if ($parentId <= 0) {
-            return '';
+            return '0';
         }
 
         $parent = Dept::find($parentId);
         if (!$parent) {
-            return '';
+            return '0';
         }
 
         return $parent->tree_path ? $parent->tree_path . ',' . $parentId : (string) $parentId;

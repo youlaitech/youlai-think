@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace app\Http\Middleware;
+namespace app\middleware;
 
 use app\common\exception\BusinessException;
-use app\support\security\TokenManagerResolver;
+use app\common\security\TokenManagerResolver;
 use app\common\web\ResultCode;
 
 final class AuthMiddleware
@@ -48,9 +48,8 @@ final class AuthMiddleware
         // 解析 token 并写入上下文
         $user = (new TokenManagerResolver())->get()->parseAccessToken($token);
 
-        if ($request instanceof \app\Request) {
-            $request->setAuthUser($user);
-        }
+        // 使用动态属性存储用户信息
+        $request->__authUser = $user;
 
         return $next($request);
     }

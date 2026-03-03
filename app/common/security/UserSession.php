@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace app\support\security;
+namespace app\common\security;
 
 /**
  * 角色数据权限信息

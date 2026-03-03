@@ -255,8 +255,8 @@ final class UserService
         // 合并部门权限
         $deptIds = [];
         foreach ($dataScopes as $scope) {
-            if (!empty($scope['deptIds'])) {
-                $deptIds = array_merge($deptIds, $scope['deptIds']);
+            if (!empty($scope['customDeptIds'])) {
+                $deptIds = array_merge($deptIds, $scope['customDeptIds']);
             }
         }
 

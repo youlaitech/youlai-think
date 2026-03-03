@@ -18,7 +18,7 @@ final class RoleService
      * 角色字段列表
      */
     private const LIST_FIELDS = [
-        'id', 'code', 'name', 'status', 'sort', 'remark', 'create_time',
+        'id', 'code', 'name', 'status', 'sort', 'data_scope', 'create_time',
     ];
 
     /**
@@ -35,6 +35,11 @@ final class RoleService
         $data = $role->toArray();
         $data['menuIds'] = array_column($data['menus'] ?? [], 'id');
         unset($data['menus']);
+
+        // 获取角色关联的部门ID（自定义数据权限用）
+        $data['deptIds'] = Db::name('sys_role_dept')
+            ->where('role_id', $id)
+            ->column('dept_id');
 
         return $data;
     }
@@ -103,14 +108,20 @@ final class RoleService
                 'name' => $data['name'],
                 'status' => $data['status'] ?? 1,
                 'sort' => $data['sort'] ?? 0,
+                'data_scope' => $data['dataScope'] ?? 1,
                 'remark' => $data['remark'] ?? '',
                 'create_time' => $now,
                 'update_time' => $now,
             ]);
 
             // 分配菜单
-            if (!empty($data['menu_ids'])) {
-                $this->assignMenus($roleId, $data['menu_ids']);
+            if (!empty($data['menuIds'])) {
+                $this->assignMenus($roleId, $data['menuIds']);
+            }
+
+            // 分配部门（自定义数据权限）
+            if (!empty($data['deptIds'])) {
+                $this->assignDepts($roleId, $data['deptIds']);
             }
 
             return (int) $roleId;
@@ -136,12 +147,18 @@ final class RoleService
             $role->name = $data['name'] ?? $role->name;
             $role->status = $data['status'] ?? $role->status;
             $role->sort = $data['sort'] ?? $role->sort;
+            $role->data_scope = $data['dataScope'] ?? $role->data_scope;
             $role->remark = $data['remark'] ?? $role->remark;
             $role->save();
 
             // 更新菜单
-            if (isset($data['menu_ids'])) {
-                $this->syncMenus($id, $data['menu_ids']);
+            if (isset($data['menuIds'])) {
+                $this->syncMenus($id, $data['menuIds']);
+            }
+
+            // 更新部门
+            if (isset($data['deptIds'])) {
+                $this->syncDepts($id, $data['deptIds']);
             }
 
             return true;
@@ -211,8 +228,8 @@ final class RoleService
 
         // 获取权限标识
         return Menu::whereIn('id', $menuIds)
-            ->where('type', 'button')
-            ->where('status', 1)
+            ->where('type', 'B')
+            ->where('visible', 1)
             ->column('perm');
     }
 
@@ -251,6 +268,25 @@ final class RoleService
 
         if (!empty($menuIds)) {
             $this->assignMenus($roleId, $menuIds);
+        }
+    }
+
+    private function assignDepts(int $roleId, array $deptIds): void
+    {
+        $data = array_map(fn ($deptId) => [
+            'role_id' => $roleId,
+            'dept_id' => $deptId,
+        ], $deptIds);
+
+        Db::name('sys_role_dept')->insertAll($data);
+    }
+
+    private function syncDepts(int $roleId, array $deptIds): void
+    {
+        Db::name('sys_role_dept')->where('role_id', $roleId)->delete();
+
+        if (!empty($deptIds)) {
+            $this->assignDepts($roleId, $deptIds);
         }
     }
 }

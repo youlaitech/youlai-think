@@ -63,7 +63,7 @@ abstract class BaseController
             $message ?: ResultCode::SUCCESS->getMsg()
         );
 
-        return json($result->toArray());
+        return json($result->toArray(), 200, [], ['json_encode_param' => JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES]);
     }
 
     /**
@@ -76,7 +76,7 @@ abstract class BaseController
             $total
         );
 
-        return json($result->toArray());
+        return json($result->toArray(), 200, [], ['json_encode_param' => JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES]);
     }
 
     /**
@@ -90,7 +90,7 @@ abstract class BaseController
             $message ?: $resultCode->getMsg()
         );
 
-        return json($result->toArray());
+        return json($result->toArray(), 200, [], ['json_encode_param' => JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES]);
     }
 
     // ==================== 辅助方法 ====================

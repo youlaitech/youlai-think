@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace app\support\websocket;
+namespace app\common\websocket;
 
 /**
  * 在线用户信息DTO

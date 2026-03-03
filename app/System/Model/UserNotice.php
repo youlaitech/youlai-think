@@ -2,7 +2,7 @@
 
 namespace app\System\Model;
 
-use think\Model;
+use app\common\model\Model;
 
 /**
  * 用户公告状态模型 sys_user_notice

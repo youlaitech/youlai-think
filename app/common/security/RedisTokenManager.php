@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace app\support\security;
+namespace app\common\security;
 
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
-use app\support\redis\RedisClient;
-use app\support\redis\RedisKey;
+use app\common\redis\RedisClient;
+use app\common\redis\RedisKey;
 
 final class RedisTokenManager implements TokenManager
 {
@@ -123,7 +123,7 @@ final class RedisTokenManager implements TokenManager
             }
         }
 
-        // 娓呯悊鐢ㄦ埛缁村害 token
+        // 清理用户维度 token
         if ($userId !== null && $userId > 0) {
             $redis->del([
                 RedisKey::format((string) ($keys['user_access_token'] ?? 'auth:user:access:{}'), $userId),

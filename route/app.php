@@ -6,6 +6,8 @@ use app\System\Controller\UserController;
 use app\System\Controller\RoleController;
 use app\System\Controller\MenuController;
 use app\System\Controller\DeptController;
+use app\System\Controller\NoticeController;
+use app\System\Controller\StatisticsController;
 use think\facade\Route;
 
 // ==================== 认证接口（无需登录） ====================
@@ -13,8 +15,8 @@ use think\facade\Route;
 Route::group('api/v1/auth', function () {
     Route::get('captcha', [AuthController::class, 'captcha']);
     Route::post('login', [AuthController::class, 'login']);
-    Route::post('refresh', [AuthController::class, 'refresh']);
-    Route::post('logout', [AuthController::class, 'logout']);
+    Route::post('refresh-token', [AuthController::class, 'refresh']);
+    Route::delete('logout', [AuthController::class, 'logout']);
 });
 
 // ==================== 业务接口（需要登录） ====================
@@ -58,12 +60,33 @@ Route::group('api/v1', function () {
 
     // 部门管理
     Route::group('depts', function () {
+        Route::get('options', [DeptController::class, 'options']);
         Route::get('tree', [DeptController::class, 'tree']);
         Route::get('', [DeptController::class, 'list'])->middleware('perm', 'sys:dept:list');
         Route::get(':id', [DeptController::class, 'detail'])->pattern(['id' => '\d+']);
         Route::post('', [DeptController::class, 'create'])->middleware('perm', 'sys:dept:create');
         Route::put(':id', [DeptController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:dept:update');
         Route::delete(':id', [DeptController::class, 'delete'])->middleware('perm', 'sys:dept:delete');
+    });
+
+    // 通知公告
+    Route::group('notices', function () {
+        Route::get('my', [NoticeController::class, 'my']);
+        Route::put('read-all', [NoticeController::class, 'readAll']);
+        Route::get(':id/form', [NoticeController::class, 'form'])->pattern(['id' => '\d+']);
+        Route::get(':id/detail', [NoticeController::class, 'detail'])->pattern(['id' => '\d+']);
+        Route::put(':id/publish', [NoticeController::class, 'publish'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:notice:publish');
+        Route::put(':id/revoke', [NoticeController::class, 'revoke'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:notice:revoke');
+        Route::get('', [NoticeController::class, 'page'])->middleware('perm', 'sys:notice:list');
+        Route::post('', [NoticeController::class, 'create'])->middleware('perm', 'sys:notice:create');
+        Route::put(':id', [NoticeController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:notice:update');
+        Route::delete(':ids', [NoticeController::class, 'delete']);
+    });
+
+    // 统计分析
+    Route::group('statistics', function () {
+        Route::get('visits/trend', [StatisticsController::class, 'visitsTrend']);
+        Route::get('visits/overview', [StatisticsController::class, 'visitsOverview']);
     });
 
     // 代码生成

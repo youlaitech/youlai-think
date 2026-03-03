@@ -2,15 +2,14 @@
 
 namespace app\System\Model;
 
+use app\common\model\Model;
+
 /**
  * 用户模型。
  */
 class User extends Model
 {
     protected $name = 'sys_user';
-
-    // JSON 字段
-    protected $json = ['data_scope'];
 
     // 类型转换
     protected $type = [

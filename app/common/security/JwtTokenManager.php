@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace app\support\security;
+namespace app\common\security;
 
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
-use app\support\redis\RedisClient;
-use app\support\redis\RedisKey;
+use app\common\redis\RedisClient;
+use app\common\redis\RedisKey;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use think\facade\Db;

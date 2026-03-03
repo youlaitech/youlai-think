@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace app\Http\Middleware;
+namespace app\middleware;
 
 use Closure;
 use think\Request;

@@ -17,7 +17,7 @@ final class MenuService
      */
     public function getTree(): array
     {
-        $list = Menu::where('status', 1)
+        $list = Menu::where('visible', 1)
             ->order('sort', 'asc')
             ->order('id', 'asc')
             ->select()
@@ -33,8 +33,8 @@ final class MenuService
     {
         // 超级管理员获取所有菜单
         if (in_array('ROOT', $roleCodes, true)) {
-            $menus = Menu::where('status', 1)
-                ->whereIn('type', ['catalog', 'menu'])
+            $menus = Menu::where('visible', 1)
+                ->where('type', '<>', 'B') // 排除按钮
                 ->order('sort', 'asc')
                 ->select()
                 ->toArray();
@@ -49,14 +49,14 @@ final class MenuService
                 ->column('menu_id');
 
             $menus = Menu::whereIn('id', $menuIds)
-                ->where('status', 1)
-                ->whereIn('type', ['catalog', 'menu'])
+                ->where('visible', 1)
+                ->where('type', '<>', 'B')
                 ->order('sort', 'asc')
                 ->select()
                 ->toArray();
         }
 
-        return $this->buildTree($menus);
+        return $this->buildRoutes(0, $menus);
     }
 
     /**
@@ -87,16 +87,14 @@ final class MenuService
 
         return (int) Menu::insertGetId([
             'parent_id' => $data['parent_id'] ?? 0,
-            'type' => $data['type'] ?? 'menu',
+            'type' => $data['type'] ?? 'M',
             'name' => $data['name'],
-            'path' => $data['path'] ?? '',
+            'route_path' => $data['route_path'] ?? '',
             'component' => $data['component'] ?? '',
             'perm' => $data['perm'] ?? '',
             'icon' => $data['icon'] ?? '',
             'sort' => $data['sort'] ?? 0,
-            'status' => $data['status'] ?? 1,
             'visible' => $data['visible'] ?? 1,
-            'redirect' => $data['redirect'] ?? '',
             'create_time' => $now,
             'update_time' => $now,
         ]);
@@ -120,14 +118,12 @@ final class MenuService
         $menu->parent_id = $data['parent_id'] ?? $menu->parent_id;
         $menu->type = $data['type'] ?? $menu->type;
         $menu->name = $data['name'] ?? $menu->name;
-        $menu->path = $data['path'] ?? $menu->path;
+        $menu->route_path = $data['route_path'] ?? $menu->route_path;
         $menu->component = $data['component'] ?? $menu->component;
         $menu->perm = $data['perm'] ?? $menu->perm;
         $menu->icon = $data['icon'] ?? $menu->icon;
         $menu->sort = $data['sort'] ?? $menu->sort;
-        $menu->status = $data['status'] ?? $menu->status;
         $menu->visible = $data['visible'] ?? $menu->visible;
-        $menu->redirect = $data['redirect'] ?? $menu->redirect;
 
         return $menu->save();
     }
@@ -169,5 +165,71 @@ final class MenuService
         }
 
         return $tree;
+    }
+
+    /**
+     * 构建路由结构（与 Java RouteVO 兼容）
+     */
+    private function buildRoutes(int $parentId, array $menuList): array
+    {
+        $routes = [];
+
+        foreach ($menuList as $menu) {
+            if ((int) $menu['parent_id'] === $parentId) {
+                $route = $this->toRouteVo($menu);
+                $children = $this->buildRoutes((int) $menu['id'], $menuList);
+                if (!empty($children)) {
+                    $route['children'] = $children;
+                }
+                $routes[] = $route;
+            }
+        }
+
+        return $routes;
+    }
+
+    /**
+     * 将菜单转换为路由对象
+     */
+    private function toRouteVo(array $menu): array
+    {
+        $routePath = $menu['route_path'] ?? '';
+        $isExternal = str_starts_with($routePath, 'http://') || str_starts_with($routePath, 'https://');
+
+        // 路由名称
+        $routeName = $menu['route_name'] ?? '';
+        if (empty($routeName)) {
+            $routeName = $isExternal
+                ? 'ext-' . $menu['id']
+                : $this->toCamelCase($routePath);
+        }
+
+        return [
+            'path' => $routePath,
+            'component' => $isExternal ? null : ($menu['component'] ?? null),
+            'redirect' => $menu['redirect'] ?? null,
+            'name' => $routeName,
+            'meta' => [
+                'title' => $menu['name'] ?? '',
+                'icon' => $menu['icon'] ?? null,
+                'hidden' => ($menu['visible'] ?? 1) === 0,
+                'keepAlive' => ($menu['keep_alive'] ?? 0) === 1,
+                'alwaysShow' => ($menu['always_show'] ?? 0) === 1,
+            ],
+        ];
+    }
+
+    /**
+     * 路径转驼峰命名
+     */
+    private function toCamelCase(string $path): string
+    {
+        $path = ltrim($path, '/');
+        $parts = explode('-', str_replace('/', '-', $path));
+        $result = '';
+        foreach ($parts as $i => $part) {
+            $result .= $i === 0 ? $part : ucfirst($part);
+        }
+        return ucfirst($result) ?: 'Route';
     }
 }

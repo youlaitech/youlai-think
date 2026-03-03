@@ -2,16 +2,14 @@
 
 namespace app\System\Model;
 
+use think\model\Pivot;
+
 /**
- * 用户角色关联表
+ * 用户角色关联表（中间表模型必须继承 Pivot）
  */
-class UserRole extends Model
+class UserRole extends Pivot
 {
     protected $name = 'sys_user_role';
 
-    // 不自动写入时间戳
     protected $autoWriteTimestamp = false;
-
-    // 无软删除
-    protected $deleteTime = false;
 }

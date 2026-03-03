@@ -3,7 +3,7 @@
 namespace app\System\Service;
 
 use app\common\exception\BusinessException;
-use app\support\redis\RedisClient;
+use app\common\redis\RedisClient;
 use app\common\web\ResultCode;
 use app\System\Model\Config;
 use think\facade\Db;

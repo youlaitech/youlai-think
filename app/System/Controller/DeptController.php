@@ -12,6 +12,16 @@ use OpenApi\Annotations as OA;
 final class DeptController extends ApiController
 {
     /**
+     * 获取部门下拉选项
+     */
+    public function options(): \think\response\Json
+    {
+        $list = $this->service(DeptService::class)->getOptions();
+
+        return $this->success($list);
+    }
+
+    /**
      * 获取部门树
      */
     public function tree(): \think\response\Json

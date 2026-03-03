@@ -4,7 +4,7 @@
 // | 服务提供配置
 // +----------------------------------------------------------------------
 
-use app\support\http\HttpClient;
+use app\common\http\HttpClient;
 
 return [
     HttpClient::class => HttpClient::class,

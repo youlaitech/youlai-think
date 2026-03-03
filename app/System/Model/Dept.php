@@ -2,6 +2,8 @@
 
 namespace app\System\Model;
 
+use app\common\model\Model;
+
 /**
  * 部门模型
  *

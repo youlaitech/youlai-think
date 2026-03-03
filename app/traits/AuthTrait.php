@@ -13,7 +13,7 @@ trait AuthTrait
      */
     protected function getAuthUser(): array
     {
-        return $this->request->getAuthUser() ?? [];
+        return (array) ($this->request->__authUser ?? []);
     }
 
     /**
@@ -42,7 +42,7 @@ trait AuthTrait
      */
     protected function getAuthRoleCodes(): array
     {
-        return $this->getAuthUser()['roleCodes'] ?? [];
+        return (array) ($this->getAuthUser()['roleCodes'] ?? []);
     }
 
     /**

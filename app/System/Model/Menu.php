@@ -2,19 +2,20 @@
 
 namespace app\System\Model;
 
+use app\common\model\Model;
+
 /**
  * 菜单模型
  *
  * @property int    $id          菜单ID
  * @property int    $parentId    父菜单ID
- * @property string $type        类型 menu/button
+ * @property string $type        类型 C-目录 M-菜单 B-按钮
  * @property string $name        菜单名称
- * @property string $path        路由路径
+ * @property string $routePath   路由路径
  * @property string $component   组件路径
  * @property string $perm        权限标识
  * @property string $icon        图标
  * @property int    $sort        排序
- * @property int    $status      状态
  * @property int    $visible     是否可见
  * @property string $createTime  创建时间
  *
@@ -29,8 +30,9 @@ class Menu extends Model
         'id' => 'integer',
         'parent_id' => 'integer',
         'sort' => 'integer',
-        'status' => 'integer',
         'visible' => 'integer',
+        'keep_alive' => 'integer',
+        'always_show' => 'integer',
     ];
 
     // ==================== 关联关系 ====================
@@ -78,11 +80,11 @@ class Menu extends Model
     // ==================== 查询作用域 ====================
 
     /**
-     * 目录/菜单类型
+     * 目录/菜单类型（不含按钮）
      */
     public function scopeMenu($query)
     {
-        return $query->whereIn('type', ['catalog', 'menu']);
+        return $query->whereIn('type', ['C', 'M']);
     }
 
     /**
@@ -90,15 +92,7 @@ class Menu extends Model
      */
     public function scopeButton($query)
     {
-        return $query->where('type', 'button');
-    }
-
-    /**
-     * 启用状态
-     */
-    public function scopeEnabled($query)
-    {
-        return $query->where('status', 1);
+        return $query->where('type', 'B');
     }
 
     /**
