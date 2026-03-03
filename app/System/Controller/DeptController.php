@@ -57,6 +57,21 @@ final class DeptController extends ApiController
     }
 
     /**
+     * 获取部门表单数据
+     */
+    public function form(): \think\response\Json
+    {
+        $id = $this->getIdParam();
+        $data = $this->service(DeptService::class)->getById($id);
+
+        if (!$data) {
+            return $this->fail('A0400', '部门不存在');
+        }
+
+        return $this->success($data);
+    }
+
+    /**
      * 创建部门
      */
     public function create(): \think\response\Json

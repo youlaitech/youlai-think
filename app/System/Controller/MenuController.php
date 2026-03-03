@@ -116,4 +116,17 @@ final class MenuController extends ApiController
 
         return $this->success(null, '删除成功');
     }
+
+    /**
+     * 修改菜单显示状态
+     */
+    public function visible(): \think\response\Json
+    {
+        $id = $this->getIdParam();
+        $visible = (int) $this->getParam('visible', 1);
+
+        $this->service(MenuService::class)->updateVisible($id, $visible);
+
+        return $this->success(null, '修改成功');
+    }
 }

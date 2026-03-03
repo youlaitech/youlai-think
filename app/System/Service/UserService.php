@@ -235,6 +235,283 @@ final class UserService
         ];
     }
 
+    /**
+     * 获取用户下拉选项
+     */
+    public function getOptions(): array
+    {
+        $list = User::where('status', 1)
+            ->where('is_deleted', 0)
+            ->field(['id', 'username', 'nickname'])
+            ->order('id', 'asc')
+            ->select()
+            ->toArray();
+
+        return array_map(fn($item) => [
+            'value' => (string) $item['id'],
+            'label' => $item['nickname'] ?: $item['username'],
+        ], $list);
+    }
+
+    /**
+     * 获取个人中心用户信息
+     */
+    public function getProfile(int $userId): array
+    {
+        $user = User::with(['dept', 'roles'])->find($userId);
+
+        if (!$user) {
+            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+        }
+
+        $data = $user->toArray();
+        $data['roleNames'] = implode(', ', array_column($data['roles'] ?? [], 'name'));
+        $data['deptName'] = $data['dept']['name'] ?? '';
+        $data['genderLabel'] = $data['gender'] == 1 ? '男' : ($data['gender'] == 2 ? '女' : '未知');
+
+        return $data;
+    }
+
+    /**
+     * 更新个人中心用户信息
+     */
+    public function updateProfile(int $userId, array $data): bool
+    {
+        $user = User::find($userId);
+        if (!$user) {
+            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+        }
+
+        $user->nickname = $data['nickname'] ?? $user->nickname;
+        $user->avatar = $data['avatar'] ?? $user->avatar;
+        $user->gender = $data['gender'] ?? $user->gender;
+        $user->email = $data['email'] ?? $user->email;
+        $user->mobile = $data['mobile'] ?? $user->mobile;
+
+        return $user->save();
+    }
+
+    /**
+     * 修改用户密码
+     */
+    public function changePassword(int $userId, string $oldPassword, string $newPassword): bool
+    {
+        $user = User::find($userId);
+        if (!$user) {
+            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+        }
+
+        // 验证原密码
+        if (!password_verify($oldPassword, $user->password)) {
+            throw new BusinessException(ResultCode::USER_ERROR, '原密码错误');
+        }
+
+        $user->password = password_hash($newPassword, PASSWORD_DEFAULT);
+        return $user->save();
+    }
+
+    /**
+     * 获取用户表单数据
+     */
+    public function getFormById(int $id): ?array
+    {
+        $user = User::with(['roles'])->find($id);
+
+        if (!$user) {
+            return null;
+        }
+
+        $data = $user->toArray();
+        $data['roleIds'] = array_column($data['roles'] ?? [], 'id');
+        unset($data['roles'], $data['password']);
+
+        return $data;
+    }
+
+    /**
+     * 发送短信验证码（绑定或更换手机号）
+     */
+    public function sendMobileCode(int $userId, string $mobile): void
+    {
+        // 检查手机号是否已被其他用户绑定
+        $exists = User::where('mobile', $mobile)
+            ->where('id', '<>', $userId)
+            ->where('is_deleted', 0)
+            ->find();
+
+        if ($exists) {
+            throw new BusinessException(ResultCode::USER_ERROR, '手机号已被其他账号绑定');
+        }
+
+        // 生成验证码（测试环境固定为1234）
+        $code = '1234';
+
+        // TODO: 实际发送短信验证码
+        // $this->smsService->sendSms($mobile, 'CHANGE_MOBILE', ['code' => $code]);
+
+        // 缓存验证码，5分钟有效
+        $redis = \app\common\redis\RedisClient::get();
+        $key = "sms:mobile:{$mobile}";
+        $redis->setex($key, 300, $code);
+    }
+
+    /**
+     * 绑定或更换手机号
+     */
+    public function bindOrChangeMobile(int $userId, string $mobile, string $code, string $password): bool
+    {
+        $user = User::find($userId);
+        if (!$user) {
+            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+        }
+
+        // 验证密码
+        if (!password_verify($password, $user->password)) {
+            throw new BusinessException(ResultCode::USER_ERROR, '密码错误');
+        }
+
+        // 验证验证码
+        $redis = \app\common\redis\RedisClient::get();
+        $key = "sms:mobile:{$mobile}";
+        $cachedCode = $redis->get($key);
+
+        if (!$cachedCode || $cachedCode !== $code) {
+            throw new BusinessException(ResultCode::USER_ERROR, '验证码错误或已过期');
+        }
+
+        // 检查手机号是否已被其他用户绑定
+        $exists = User::where('mobile', $mobile)
+            ->where('id', '<>', $userId)
+            ->where('is_deleted', 0)
+            ->find();
+
+        if ($exists) {
+            throw new BusinessException(ResultCode::USER_ERROR, '手机号已被其他账号绑定');
+        }
+
+        // 删除验证码
+        $redis->del($key);
+
+        // 更新手机号
+        $user->mobile = $mobile;
+        return $user->save();
+    }
+
+    /**
+     * 解绑手机号
+     */
+    public function unbindMobile(int $userId, string $password): bool
+    {
+        $user = User::find($userId);
+        if (!$user) {
+            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+        }
+
+        if (empty($user->mobile)) {
+            throw new BusinessException(ResultCode::USER_ERROR, '当前账号未绑定手机号');
+        }
+
+        // 验证密码
+        if (!password_verify($password, $user->password)) {
+            throw new BusinessException(ResultCode::USER_ERROR, '密码错误');
+        }
+
+        $user->mobile = null;
+        return $user->save();
+    }
+
+    /**
+     * 发送邮箱验证码（绑定或更换邮箱）
+     */
+    public function sendEmailCode(int $userId, string $email): void
+    {
+        // 检查邮箱是否已被其他用户绑定
+        $exists = User::where('email', $email)
+            ->where('id', '<>', $userId)
+            ->where('is_deleted', 0)
+            ->find();
+
+        if ($exists) {
+            throw new BusinessException(ResultCode::USER_ERROR, '邮箱已被其他账号绑定');
+        }
+
+        // 生成验证码（测试环境固定为1234）
+        $code = '1234';
+
+        // TODO: 实际发送邮件验证码
+        // $this->mailService->sendMail($email, '邮箱验证码', "您的验证码为：{$code}，请在5分钟内使用");
+
+        // 缓存验证码，5分钟有效
+        $redis = \app\common\redis\RedisClient::get();
+        $key = "sms:email:{$email}";
+        $redis->setex($key, 300, $code);
+    }
+
+    /**
+     * 绑定或更换邮箱
+     */
+    public function bindOrChangeEmail(int $userId, string $email, string $code, string $password): bool
+    {
+        $user = User::find($userId);
+        if (!$user) {
+            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+        }
+
+        // 验证密码
+        if (!password_verify($password, $user->password)) {
+            throw new BusinessException(ResultCode::USER_ERROR, '密码错误');
+        }
+
+        // 验证验证码
+        $redis = \app\common\redis\RedisClient::get();
+        $key = "sms:email:{$email}";
+        $cachedCode = $redis->get($key);
+
+        if (!$cachedCode || $cachedCode !== $code) {
+            throw new BusinessException(ResultCode::USER_ERROR, '验证码错误或已过期');
+        }
+
+        // 检查邮箱是否已被其他用户绑定
+        $exists = User::where('email', $email)
+            ->where('id', '<>', $userId)
+            ->where('is_deleted', 0)
+            ->find();
+
+        if ($exists) {
+            throw new BusinessException(ResultCode::USER_ERROR, '邮箱已被其他账号绑定');
+        }
+
+        // 删除验证码
+        $redis->del($key);
+
+        // 更新邮箱
+        $user->email = $email;
+        return $user->save();
+    }
+
+    /**
+     * 解绑邮箱
+     */
+    public function unbindEmail(int $userId, string $password): bool
+    {
+        $user = User::find($userId);
+        if (!$user) {
+            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+        }
+
+        if (empty($user->email)) {
+            throw new BusinessException(ResultCode::USER_ERROR, '当前账号未绑定邮箱');
+        }
+
+        // 验证密码
+        if (!password_verify($password, $user->password)) {
+            throw new BusinessException(ResultCode::USER_ERROR, '密码错误');
+        }
+
+        $user->email = null;
+        return $user->save();
+    }
+
     // ==================== 私有方法 ====================
 
     /**

@@ -19,6 +19,8 @@ use think\facade\Route;
 Route::group('api/v1/auth', function () {
     Route::get('captcha', [AuthController::class, 'captcha']);
     Route::post('login', [AuthController::class, 'login']);
+    Route::post('login/sms', [AuthController::class, 'loginBySms']);
+    Route::post('sms/code', [AuthController::class, 'sendLoginVerifyCode']);
     Route::post('refresh-token', [AuthController::class, 'refresh']);
     Route::delete('logout', [AuthController::class, 'logout']);
 });
@@ -30,10 +32,21 @@ Route::group('api/v1', function () {
     // 用户管理
     Route::group('users', function () {
         Route::get('me', [UserController::class, 'me']);
+        Route::get('options', [UserController::class, 'options']);
+        Route::get('profile', [UserController::class, 'profile']);
+        Route::put('profile', [UserController::class, 'updateProfile']);
+        Route::put('password', [UserController::class, 'changePassword']);
+        Route::post('mobile/code', [UserController::class, 'sendMobileCode']);
+        Route::put('mobile', [UserController::class, 'bindOrChangeMobile']);
+        Route::delete('mobile', [UserController::class, 'unbindMobile']);
+        Route::post('email/code', [UserController::class, 'sendEmailCode']);
+        Route::put('email', [UserController::class, 'bindOrChangeEmail']);
+        Route::delete('email', [UserController::class, 'unbindEmail']);
         Route::get('template', [UserController::class, 'template']);
         Route::get('export', [UserController::class, 'export'])->middleware('perm', 'sys:user:export');
         Route::post('import', [UserController::class, 'import'])->middleware('perm', 'sys:user:import');
         Route::get('', [UserController::class, 'page'])->middleware('perm', 'sys:user:list');
+        Route::get(':id/form', [UserController::class, 'form'])->pattern(['id' => '\d+']);
         Route::get(':id', [UserController::class, 'detail'])->pattern(['id' => '\d+']);
         Route::post('', [UserController::class, 'create'])->middleware('perm', 'sys:user:create');
         Route::put(':id', [UserController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:user:update');
@@ -62,6 +75,7 @@ Route::group('api/v1', function () {
         Route::get('options', [MenuController::class, 'options']);
         Route::get('routes', [MenuController::class, 'routes']);
         Route::get('tree', [MenuController::class, 'tree'])->middleware('perm', 'sys:menu:list');
+        Route::put(':id/visible', [MenuController::class, 'visible'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:menu:update');
         Route::get('', [MenuController::class, 'list'])->middleware('perm', 'sys:menu:list');
         Route::get(':id/form', [MenuController::class, 'form'])->pattern(['id' => '\d+']);
         Route::get(':id', [MenuController::class, 'detail'])->pattern(['id' => '\d+']);
@@ -75,6 +89,7 @@ Route::group('api/v1', function () {
         Route::get('options', [DeptController::class, 'options']);
         Route::get('tree', [DeptController::class, 'tree']);
         Route::get('', [DeptController::class, 'list'])->middleware('perm', 'sys:dept:list');
+        Route::get(':id/form', [DeptController::class, 'form'])->pattern(['id' => '\d+']);
         Route::get(':id', [DeptController::class, 'detail'])->pattern(['id' => '\d+']);
         Route::post('', [DeptController::class, 'create'])->middleware('perm', 'sys:dept:create');
         Route::put(':id', [DeptController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:dept:update');

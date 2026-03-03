@@ -110,6 +110,39 @@ final class AuthController extends BaseController
         return $this->success($result);
     }
 
+    /**
+     * 发送登录短信验证码
+     */
+    public function sendLoginVerifyCode(): Json
+    {
+        $mobile = $this->getParam('mobile', '');
+
+        if (empty($mobile)) {
+            return $this->fail('A0400', '手机号不能为空');
+        }
+
+        $this->service(AuthService::class)->sendSmsLoginCode($mobile);
+
+        return $this->success(null, '验证码发送成功');
+    }
+
+    /**
+     * 短信验证码登录
+     */
+    public function loginBySms(): Json
+    {
+        $mobile = $this->getParam('mobile', '');
+        $code = $this->getParam('code', '');
+
+        if (empty($mobile) || empty($code)) {
+            return $this->fail('A0400', '手机号和验证码不能为空');
+        }
+
+        $result = $this->service(AuthService::class)->loginBySms($mobile, $code);
+
+        return $this->success($result, '登录成功');
+    }
+
     // ==================== 私有方法 ====================
 
     /**

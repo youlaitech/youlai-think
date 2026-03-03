@@ -23,14 +23,14 @@
     "topthink/think-filesystem": "^2.0|^3.0",
     "topthink/think-queue": "^3.0",
     "topthink/think-migration": "^3.0",
-    "topthink/think-captcha": "^3.0",
     "firebase/php-jwt": "^6.11.1",
     "predis/predis": "^2.3",
     "doctrine/annotations": "^2.0",
     "phpoffice/phpspreadsheet": "^3.10",
     "zircote/swagger-php": "^4.10",
     "guzzlehttp/guzzle": "^7.8",
-    "topthink/think-worker": "^5.0"
+    "topthink/think-worker": "^5.0",
+    "gregwar/captcha": "^1.3"
   },
   "require-dev": {
     "topthink/think-dumper": "^1.0",

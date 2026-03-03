@@ -164,6 +164,20 @@ final class MenuService
         return Menu::destroy($id) > 0;
     }
 
+    /**
+     * 修改菜单显示状态
+     */
+    public function updateVisible(int $id, int $visible): bool
+    {
+        $menu = Menu::find($id);
+        if (!$menu) {
+            throw new BusinessException(ResultCode::USER_ERROR, '菜单不存在');
+        }
+
+        $menu->visible = $visible;
+        return $menu->save();
+    }
+
     // ==================== 私有方法 ====================
 
     /**

@@ -82,7 +82,25 @@ class ExceptionHandle extends Handle
         $traceId = $request->header('X-Request-Id') ?: $this->generateTraceId();
         $result->withTraceId($traceId);
 
-        return json($result->toArray());
+        // 根据业务错误码映射 HTTP 状态码
+        $httpStatus = $this->mapHttpStatus($resultCode);
+
+        return json($result->toArray())->code($httpStatus);
+    }
+
+    /**
+     * 根据业务结果码映射 HTTP 状态码
+     */
+    private function mapHttpStatus(ResultCode $resultCode): int
+    {
+        return match ($resultCode) {
+            ResultCode::ACCESS_UNAUTHORIZED,
+            ResultCode::ACCESS_TOKEN_INVALID,
+            ResultCode::REFRESH_TOKEN_INVALID => 401,
+            ResultCode::ACCESS_PERMISSION_EXCEPTION => 403,
+            ResultCode::INTERFACE_NOT_EXIST => 404,
+            default => 400,
+        };
     }
 
     /**
