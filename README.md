@@ -111,9 +111,20 @@ composer install
 php think run
 ```
 
-启动成功后，访问 `http://localhost:8000`，如看到 ThinkPHP 欢迎页面即表示成功。
+启动成功后，访问 `http://localhost:8000/`，如返回 `ok` 即表示服务已正常运行。
 
-### 6. 接口文档（Swagger）
+### 6. WebSocket
+
+项目基于 `topthink/think-worker` 提供 WebSocket 服务，默认路径为 `/ws`。
+
+```bash
+# 启动 worker（HTTP 与 WebSocket 共用端口）
+php think worker
+```
+
+> Windows 下 `think-worker` 存在限制，建议在 Linux/macOS 环境或 Docker 中启动
+
+### 6. 接口文档
 
 - Swagger UI：`http://localhost:8000/swagger`
 - OpenAPI JSON：`http://localhost:8000/swagger/openapi.json`
@@ -159,6 +170,14 @@ docker run -d -p 8000:8000 --name youlai-think youlai-think:latest
 
 ## 💖 技术交流
 
-- **问题反馈**：[Gitee Issues](https://gitee.com/youlaiorg/youlai-think/issues)
-- **技术交流群**：[QQ 群：950387562](https://qm.qq.com/cgi-bin/qm/qr?k=U57IDw7ufwuzMA4qQ7BomwZ44hpHGkLg)
-- **博客教程**：[https://www.youlai.tech](https://www.youlai.tech)
+① 关注「有来技术」公众号，点击菜单 **交流群** 获取加群二维码（此举防止广告进群，感谢理解和支持）。
+
+② 直接添加微信 **`haoxianrui`** 备注「前端/后端/全栈」。
+
+![有来技术公众号](https://foruda.gitee.com/images/1737108820762592766/3390ed0d_716974.png)
+
+**博客**：[CSDN](https://youlai.blog.csdn.net/) | [稀土掘金](https://juejin.cn/user/4187394044331261) | [博客园](https://www.cnblogs.com/haoxianrui) | [51CTO](https://blog.51cto.com/youlai) | [阿里云](https://developer.aliyun.com/profile/r6wxjk6qzasuy) | [腾讯云社区](https://cloud.tencent.com/developer/user/10500752) | [知乎](https://www.zhihu.com/people/haoxr)
+
+**官网**：https://www.youlai.tech/
+
+**代码仓库**：[Gitee](https://gitee.com/youlaiorg) | [AtomGit](https://atomgit.com/youlai) | [GitHub](https://github.com/youlaitech)
