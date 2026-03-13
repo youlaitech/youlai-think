@@ -18,6 +18,7 @@ use app\common\model\Model;
  * @property int    $sort        排序
  * @property int    $visible     是否可见
  * @property string $createTime  创建时间
+ * @property array  $params      路由参数
  *
  * @property Menu   $parent      父菜单
  * @property Menu[] $children    子菜单
@@ -33,6 +34,7 @@ class Menu extends Model
         'visible' => 'integer',
         'keep_alive' => 'integer',
         'always_show' => 'integer',
+        'params' => 'json',
     ];
 
     // ==================== 关联关系 ====================

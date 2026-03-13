@@ -7,7 +7,7 @@ use app\System\Service\MenuService;
 use OpenApi\Annotations as OA;
 
 /**
- * @OA\Tag(name="04.菜单管理")
+ * @OA\Tag(name="04.菜单接口")
  */
 final class MenuController extends ApiController
 {
@@ -61,7 +61,7 @@ final class MenuController extends ApiController
     public function form(): \think\response\Json
     {
         $id = $this->getIdParam();
-        $data = $this->service(MenuService::class)->getById($id);
+        $data = $this->service(MenuService::class)->getFormById($id);
 
         if (!$data) {
             return $this->fail('A0400', '菜单不存在');

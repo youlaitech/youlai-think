@@ -86,6 +86,29 @@ final class MenuService
     }
 
     /**
+     * 获取菜单表单数据
+     */
+    public function getFormById(int $id): ?array
+    {
+        $menu = Menu::find($id);
+        if (!$menu) {
+            return null;
+        }
+        $data = $menu->toArray();
+        // params: {k: v} -> [{key: k, value: v}]
+        if (!empty($data['params']) && is_array($data['params'])) {
+            $data['params'] = array_map(
+                fn($k, $v) => ['key' => $k, 'value' => $v],
+                array_keys($data['params']),
+                array_values($data['params'])
+            );
+        } else {
+            $data['params'] = null;
+        }
+        return $data;
+    }
+
+    /**
      * 获取所有菜单（平铺）
      */
     public function getAll(): array
@@ -113,6 +136,7 @@ final class MenuService
             'icon' => $data['icon'] ?? '',
             'sort' => $data['sort'] ?? 0,
             'visible' => $data['visible'] ?? 1,
+            'params' => $this->transformParams($data['params'] ?? null),
             'create_time' => $now,
             'update_time' => $now,
         ]);
@@ -133,17 +157,28 @@ final class MenuService
             throw new BusinessException(ResultCode::USER_ERROR, '父级菜单不能是自己');
         }
 
+        $oldPerm = $menu->perm;
+        $newPerm = $data['perm'] ?? $menu->perm;
+
         $menu->parent_id = $data['parent_id'] ?? $menu->parent_id;
         $menu->type = $data['type'] ?? $menu->type;
         $menu->name = $data['name'] ?? $menu->name;
         $menu->route_path = $data['route_path'] ?? $menu->route_path;
         $menu->component = $data['component'] ?? $menu->component;
-        $menu->perm = $data['perm'] ?? $menu->perm;
+        $menu->perm = $newPerm;
         $menu->icon = $data['icon'] ?? $menu->icon;
         $menu->sort = $data['sort'] ?? $menu->sort;
         $menu->visible = $data['visible'] ?? $menu->visible;
+        $menu->params = $this->transformParams($data['params'] ?? null);
 
-        return $menu->save();
+        $result = $menu->save();
+
+        // perm 变更时刷新相关角色的权限缓存
+        if ($result && $oldPerm !== $newPerm) {
+            $this->refreshAffectedRolePermsCache($id);
+        }
+
+        return $result;
     }
 
     /**
@@ -285,6 +320,7 @@ final class MenuService
                 'hidden' => ($menu['visible'] ?? 1) === 0,
                 'keepAlive' => ($menu['keep_alive'] ?? 0) === 1,
                 'alwaysShow' => ($menu['always_show'] ?? 0) === 1,
+                'params' => $menu['params'] ?? null,
             ],
         ];
     }
@@ -301,5 +337,40 @@ final class MenuService
             $result .= $i === 0 ? $part : ucfirst($part);
         }
         return ucfirst($result) ?: 'Route';
+    }
+
+    /**
+     * 刷新受影响角色的权限缓存
+     */
+    private function refreshAffectedRolePermsCache(int $menuId): void
+    {
+        $roleCodes = Db::name('sys_role_menu')
+            ->alias('rm')
+            ->join('sys_role r', 'rm.role_id = r.id')
+            ->where('rm.menu_id', $menuId)
+            ->where('r.is_deleted', 0)
+            ->column('r.code');
+
+        if (!empty($roleCodes)) {
+            (new RolePermService())->refreshRolePermsCacheBatch($roleCodes);
+        }
+    }
+
+    /**
+     * 转换params格式
+     * 前端: [{key: "k", value: "v"}] -> 存储: {k: v}
+     */
+    private function transformParams(?array $params): ?array
+    {
+        if (empty($params)) {
+            return null;
+        }
+        $result = [];
+        foreach ($params as $item) {
+            if (isset($item['key'])) {
+                $result[$item['key']] = $item['value'] ?? '';
+            }
+        }
+        return $result ?: null;
     }
 }

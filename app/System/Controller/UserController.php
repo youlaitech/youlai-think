@@ -8,7 +8,7 @@ use app\System\Validate\UserValidate;
 use OpenApi\Annotations as OA;
 
 /**
- * @OA\Tag(name="02.用户管理")
+ * @OA\Tag(name="02.用户接口")
  */
 final class UserController extends ApiController
 {

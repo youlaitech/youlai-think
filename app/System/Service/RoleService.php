@@ -299,6 +299,12 @@ final class RoleService
         if (!empty($menuIds)) {
             $this->assignMenus($roleId, $menuIds);
         }
+
+        // 刷新角色权限缓存
+        $role = Role::find($roleId);
+        if ($role && $role->code) {
+            (new RolePermService())->refreshRolePermsCache($role->code);
+        }
     }
 
     /**

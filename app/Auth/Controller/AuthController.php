@@ -12,7 +12,7 @@ use OpenApi\Annotations as OA;
 use think\response\Json;
 
 /**
- * @OA\Tag(name="01.认证接口")
+ * @OA\Tag(name="01.认证中心")
  */
 final class AuthController extends BaseController
 {

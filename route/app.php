@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 
 use app\Auth\Controller\AuthController;
+use app\Auth\Controller\WechatMiniappAuthController;
 use app\Codegen\Controller\CodegenController;
 use app\System\Controller\UserController;
 use app\System\Controller\RoleController;
@@ -23,6 +24,14 @@ Route::group('api/v1/auth', function () {
     Route::post('sms/code', [AuthController::class, 'sendLoginVerifyCode']);
     Route::post('refresh-token', [AuthController::class, 'refresh']);
     Route::delete('logout', [AuthController::class, 'logout']);
+});
+
+// ==================== 微信小程序认证接口（无需登录） ====================
+
+Route::group('api/v1/wechat/miniapp/auth', function () {
+    Route::post('silent-login', [WechatMiniappAuthController::class, 'silentLogin']);
+    Route::post('phone-login', [WechatMiniappAuthController::class, 'phoneLogin']);
+    Route::post('bind-mobile', [WechatMiniappAuthController::class, 'bindMobile']);
 });
 
 // ==================== 业务接口（需要登录） ====================

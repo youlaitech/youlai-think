@@ -8,7 +8,7 @@ use app\System\Validate\RoleValidate;
 use OpenApi\Annotations as OA;
 
 /**
- * @OA\Tag(name="03.角色管理")
+ * @OA\Tag(name="03.角色接口")
  */
 final class RoleController extends ApiController
 {
