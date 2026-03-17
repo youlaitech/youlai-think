@@ -3,5 +3,5 @@
 // 全局中间件配置
 return [
     // 跨域处理
-    \app\middleware\Cors::class,
+    \app\common\middleware\Cors::class,
 ];

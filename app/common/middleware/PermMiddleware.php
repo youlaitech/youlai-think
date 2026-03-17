@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace app\middleware;
+namespace app\common\middleware;
 
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
-use app\System\Service\RolePermService;
+use app\system\Service\RolePermService;
 
 /**
  * 权限校验中间件

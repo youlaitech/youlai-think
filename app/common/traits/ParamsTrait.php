@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace app\traits;
+namespace app\common\traits;
 
 /**
  * 请求参数 Trait。

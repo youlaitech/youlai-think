@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace app\websocket;
+namespace app\common\websocket;
 
 use app\common\security\TokenManagerResolver;
-use app\websocket\stomp\Frame;
-use app\websocket\stomp\Topics;
+use app\common\websocket\stomp\Frame;
+use app\common\websocket\stomp\Topics;
 use think\facade\Log;
 use think\Request;
 use think\worker\contract\websocket\HandlerInterface;

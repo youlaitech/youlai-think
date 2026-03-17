@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace app\websocket\stomp;
+namespace app\common\websocket\stomp;
 
 /**
  * STOMP 主题常量

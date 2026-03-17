@@ -1,6 +1,6 @@
 <?php
 
-use app\websocket\StompHandler;
+use app\common\websocket\StompHandler;
 
 return [
     // HTTP 服务（与 WebSocket 共用端口）

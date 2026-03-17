@@ -5,8 +5,8 @@
 // +----------------------------------------------------------------------
 
 use app\common\http\HttpClient;
-use app\websocket\StompHandler;
-use app\websocket\UserSessionRegistry;
+use app\common\websocket\StompHandler;
+use app\common\websocket\UserSessionRegistry;
 
 return [
     HttpClient::class => HttpClient::class,

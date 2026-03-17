@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace app\{{moduleNameStudly}}\Controller;
 
-use app\controller\ApiController;
+use app\common\controller\ApiController;
 use app\{{moduleNameStudly}}\Service\{{entityName}}Service;
 
 /**

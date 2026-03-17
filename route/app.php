@@ -1,18 +1,19 @@
 <?php declare(strict_types=1);
 
-use app\Auth\Controller\AuthController;
-use app\Auth\Controller\WechatMiniappAuthController;
-use app\Codegen\Controller\CodegenController;
-use app\System\Controller\UserController;
-use app\System\Controller\RoleController;
-use app\System\Controller\MenuController;
-use app\System\Controller\DeptController;
-use app\System\Controller\NoticeController;
-use app\System\Controller\StatisticsController;
-use app\System\Controller\ConfigController;
-use app\System\Controller\DictController;
-use app\System\Controller\FileController;
-use app\System\Controller\LogController;
+use app\auth\controller\AuthController;
+use app\auth\controller\WechatMiniappAuthController;
+use app\codegen\controller\CodegenController;
+use app\system\controller\UserController;
+use app\system\controller\RoleController;
+use app\system\controller\MenuController;
+use app\system\controller\DeptController;
+use app\system\controller\NoticeController;
+use app\system\controller\StatisticsController;
+use app\system\controller\ConfigController;
+use app\system\controller\DictController;
+use app\file\controller\FileController;
+use app\system\controller\LogController;
+use app\swagger\SwaggerController;
 use think\facade\Route;
 
 // ==================== 认证接口（无需登录） ====================
@@ -175,3 +176,11 @@ Route::group('api/v1', function () {
 })->middleware([
     'auth',
 ]);
+
+// ==================== Swagger 文档接口（无需登录） ====================
+
+Route::group('api/v1/swagger', function () {
+    Route::get('doc', [SwaggerController::class, 'doc']);
+    Route::get('json', [SwaggerController::class, 'json']);
+    Route::get('assets/*', [SwaggerController::class, 'assets']);
+});

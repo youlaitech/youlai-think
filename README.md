@@ -36,34 +36,62 @@
 | vue3 前端 | [vue3-element-admin](https://gitee.com/youlaiorg/vue3-element-admin) | [vue3-element-admin](https://github.com/youlaitech/vue3-element-admin) | [vue3-element-admin](https://gitcode.com/youlai/vue3-element-admin) |
 | uni-app 移动端 | [vue-uniapp-template](https://gitee.com/youlaiorg/vue-uniapp-template) | [vue-uniapp-template](https://github.com/youlaitech/vue-uniapp-template) | [vue-uniapp-template](https://gitcode.com/youlai/vue-uniapp-template) |
 
-## 📁 项目目录
+## 📁 目录结构
 
-<details>
-<summary> 目录结构 </summary>
+> 参考：[ThinkPHP 8.0 官方目录结构](https://doc.thinkphp.cn/v8_0/directory_structure.html)
 
 ```text
 youlai-think/
-├─ app/                       # 应用核心目录
-│  ├─ Auth/                   # 认证与鉴权模块
-│  ├─ Codegen/                # 代码生成模块
-│  ├─ System/                 # 系统核心模块（用户/角色/菜单等）
-│  ├─ common/                 # 公共能力（常量/枚举/异常/工具类等）
-│  ├─ controller/             # 控制器（兼容保留）
-│  ├─ middleware/             # 中间件
-│  ├─ traits/                 # 复用特性
-│  ├─ websocket/              # WebSocket 相关
-│  ├─ AppService.php          # 应用服务
-│  ├─ ExceptionHandle.php     # 全局异常处理
-│  └─ common.php              # 公共函数
-├─ config/                    # 配置文件
-├─ public/                    # Web入口
+├─ app/                       # 应用目录
+│  ├─ BaseController.php      # 基础控制器
+│  ├─ ExceptionHandle.php     # 异常处理
+│  ├─ common.php              # 全局函数
+│  ├─ middleware.php          # 全局中间件定义
+│  ├─ provider.php            # 服务提供
+│  ├─ event.php               # 事件定义
+│  │
+│  ├─ auth/                   # 认证模块
+│  │  ├─ controller/
+│  │  └─ service/
+│  │
+│  ├─ system/                 # 系统模块
+│  │  ├─ controller/
+│  │  ├─ service/
+│  │  ├─ model/
+│  │  └─ validate/
+│  │
+│  ├─ file/                   # 文件模块
+│  │  ├─ controller/
+│  │  └─ service/
+│  │
+│  ├─ codegen/                # 代码生成模块
+│  │  ├─ controller/
+│  │  ├─ service/
+│  │  └─ templates/
+│  │
+│  ├─ swagger/                # Swagger 文档
+│  │
+│  └─ common/                 # 公共代码
+│     ├─ constants/           # 常量
+│     ├─ enums/               # 枚举
+│     ├─ exception/           # 异常
+│     ├─ middleware/          # 中间件
+│     ├─ model/               # 公共模型
+│     ├─ redis/               # Redis
+│     ├─ security/            # 认证/权限
+│     ├─ traits/              # 复用特性
+│     ├─ util/                # 工具类
+│     ├─ web/                 # Web 相关
+│     └─ websocket/           # WebSocket
+│
+├─ config/                    # 配置目录
+├─ public/                    # 入口目录
 ├─ route/                     # 路由定义
-├─ runtime/                   # 运行时缓存
+├─ runtime/                   # 运行时
+├─ vendor/                    # Composer 类库
 ├─ .env                       # 环境变量
 └─ composer.json              # 依赖管理
 ```
-
-</details>
 
 ## 🚀 快速启动
 

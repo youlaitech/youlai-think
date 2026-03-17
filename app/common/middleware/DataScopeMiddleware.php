@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace app\middleware;
+namespace app\common\middleware;
 
 /**
  * 数据范围中间件

@@ -13,6 +13,7 @@ use think\exception\HttpException;
 use think\exception\HttpResponseException;
 use think\exception\ValidateException;
 use think\Response;
+use think\facade\Log;
 use Throwable;
 
 /**
@@ -37,7 +38,26 @@ class ExceptionHandle extends Handle
      */
     public function report(Throwable $exception): void
     {
-        parent::report($exception);
+        // 业务异常不需要记录详细日志
+        if ($exception instanceof BusinessException) {
+            return;
+        }
+
+        // 记录详细异常日志
+        $request = request();
+        $context = [
+            'exception' => get_class($exception),
+            'message' => $exception->getMessage(),
+            'file' => $exception->getFile() . ':' . $exception->getLine(),
+            'url' => $request ? $request->url() : 'unknown',
+            'method' => $request ? $request->method() : 'unknown',
+            'params' => $request ? $request->param() : [],
+            'ip' => $request ? $request->ip() : 'unknown',
+            'user_id' => $request ? $request->user_id ?? null : null,
+            'trace' => array_slice($exception->getTrace(), 0, 5),
+        ];
+
+        Log::error('系统异常', $context);
     }
 
     /**
