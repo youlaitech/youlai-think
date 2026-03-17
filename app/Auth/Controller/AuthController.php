@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace app\Auth\Controller;
+namespace app\auth\controller;
 
 use app\common\exception\BusinessException;
 use app\common\redis\RedisClient;
 use app\common\web\ResultCode;
-use app\controller\BaseController;
-use app\Auth\Service\AuthService;
+use app\BaseController;
+use app\auth\service\AuthService;
 use Gregwar\Captcha\CaptchaBuilder;
 use OpenApi\Annotations as OA;
 use think\response\Json;

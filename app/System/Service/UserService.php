@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace app\System\Service;
+namespace app\system\service;
 
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
-use app\System\Model\Dept;
-use app\System\Model\Role;
-use app\System\Model\User;
-use app\System\Model\UserRole;
+use app\system\model\Dept;
+use app\system\model\Role;
+use app\system\model\User;
+use app\system\model\UserRole;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use think\facade\Db;

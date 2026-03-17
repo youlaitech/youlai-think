@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace app\System\Service;
+namespace app\system\service;
 
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
-use app\System\Model\Menu;
-use app\System\Model\Role;
-use app\System\Model\RoleMenu;
+use app\system\model\Menu;
+use app\system\model\Role;
+use app\system\model\RoleMenu;
 use think\facade\Db;
 
 /**

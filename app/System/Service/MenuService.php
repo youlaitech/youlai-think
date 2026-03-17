@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace app\System\Service;
+namespace app\system\service;
 
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
-use app\System\Model\Menu;
+use app\system\model\Menu;
 use think\facade\Db;
 
 /**

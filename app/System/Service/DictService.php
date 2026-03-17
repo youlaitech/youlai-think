@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace app\System\Service;
+namespace app\system\service;
 
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
-use app\System\Model\Dict;
-use app\System\Model\DictItem;
+use app\system\model\Dict;
+use app\system\model\DictItem;
 use think\facade\Db;
 
 final class DictService

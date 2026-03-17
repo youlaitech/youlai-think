@@ -1,16 +1,16 @@
 <?php declare(strict_types=1);
 
-namespace app\System\Controller;
+namespace app\system\controller;
 
-use app\controller\ApiController;
-use app\System\Service\RoleService;
-use app\System\Validate\RoleValidate;
+use app\BaseController;
+use app\system\service\RoleService;
+use app\system\validate\RoleValidate;
 use OpenApi\Annotations as OA;
 
 /**
  * @OA\Tag(name="03.角色接口")
  */
-final class RoleController extends ApiController
+final class RoleController extends BaseController
 {
     /**
      * 分页查询角色列表

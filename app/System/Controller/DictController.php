@@ -1,15 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace app\System\Controller;
+namespace app\system\controller;
 
-use app\controller\ApiController;
-use app\System\Service\DictService;
+use app\BaseController;
+use app\system\service\DictService;
 use OpenApi\Annotations as OA;
 
 /**
  * @OA\Tag(name="06.字典接口")
  */
-final class DictController extends ApiController
+final class DictController extends BaseController
 {
     //---------------------------------------------------
     // Dict

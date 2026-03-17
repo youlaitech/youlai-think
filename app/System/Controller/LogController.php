@@ -1,15 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace app\System\Controller;
+namespace app\system\controller;
 
-use app\controller\ApiController;
-use app\System\Service\LogService;
+use app\BaseController;
+use app\system\service\LogService;
 use OpenApi\Annotations as OA;
 
 /**
  * @OA\Tag(name="09.日志接口")
  */
-final class LogController extends ApiController
+final class LogController extends BaseController
 {
     /**
      * 日志分页列表

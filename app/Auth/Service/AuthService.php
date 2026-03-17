@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace app\Auth\Service;
+namespace app\auth\service;
 
 use app\common\exception\BusinessException;
 use app\common\redis\RedisClient;
 use app\common\security\JwtTokenManager;
 use app\common\web\ResultCode;
-use app\System\Model\User;
+use app\system\model\User;
 use think\facade\Db;
 
 /**

@@ -1,16 +1,16 @@
 <?php declare(strict_types=1);
 
-namespace app\System\Controller;
+namespace app\system\controller;
 
-use app\controller\ApiController;
-use app\System\Service\UserService;
-use app\System\Validate\UserValidate;
+use app\BaseController;
+use app\system\service\UserService;
+use app\system\validate\UserValidate;
 use OpenApi\Annotations as OA;
 
 /**
  * @OA\Tag(name="02.用户接口")
  */
-final class UserController extends ApiController
+final class UserController extends BaseController
 {
     /**
      * 获取当前用户信息

@@ -1,15 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace app\System\Controller;
+namespace app\system\controller;
 
-use app\controller\ApiController;
-use app\System\Service\NoticeService;
+use app\BaseController;
+use app\system\service\NoticeService;
 use OpenApi\Annotations as OA;
 
 /**
  * @OA\Tag(name="08.通知公告")
  */
-final class NoticeController extends ApiController
+final class NoticeController extends BaseController
 {
     /**
      * 通知公告分页列表

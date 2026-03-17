@@ -1,15 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace app\System\Controller;
+namespace app\system\controller;
 
-use app\controller\ApiController;
-use app\System\Service\DeptService;
+use app\BaseController;
+use app\system\service\DeptService;
 use OpenApi\Annotations as OA;
 
 /**
  * @OA\Tag(name="05.部门管理")
  */
-final class DeptController extends ApiController
+final class DeptController extends BaseController
 {
     /**
      * 获取部门下拉选项

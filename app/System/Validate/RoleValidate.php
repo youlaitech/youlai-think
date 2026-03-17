@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace app\System\Validate;
+namespace app\system\validate;
 
 use app\common\validate\BaseValidate;
 

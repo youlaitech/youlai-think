@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace app\Auth\Controller;
+namespace app\auth\controller;
 
-use app\controller\BaseController;
-use app\Auth\Service\WechatMiniappAuthService;
+use app\BaseController;
+use app\auth\service\WechatMiniappAuthService;
 use OpenApi\Annotations as OA;
 use think\response\Json;
 

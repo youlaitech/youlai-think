@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace app\System\Service;
+namespace app\system\service;
 
 use app\common\exception\BusinessException;
 use app\common\redis\RedisClient;
 use app\common\web\ResultCode;
-use app\System\Model\Config;
+use app\system\model\Config;
 use think\facade\Db;
 
 /**

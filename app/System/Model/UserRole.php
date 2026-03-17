@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace app\System\Model;
+namespace app\system\model;
 
 use think\model\Pivot;
 

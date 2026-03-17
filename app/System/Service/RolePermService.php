@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace app\System\Service;
+namespace app\system\service;
 
 use app\common\redis\RedisClient;
 use think\facade\Db;

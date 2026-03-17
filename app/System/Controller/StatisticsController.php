@@ -1,15 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace app\System\Controller;
+namespace app\system\controller;
 
-use app\controller\ApiController;
-use app\System\Service\LogService;
+use app\BaseController;
+use app\system\service\LogService;
 use OpenApi\Annotations as OA;
 
 /**
  * @OA\Tag(name="12.统计分析")
  */
-final class StatisticsController extends ApiController
+final class StatisticsController extends BaseController
 {
     /**
      * 访问趋势统计

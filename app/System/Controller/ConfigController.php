@@ -1,15 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace app\System\Controller;
+namespace app\system\controller;
 
-use app\controller\ApiController;
-use app\System\Service\ConfigService;
+use app\BaseController;
+use app\system\service\ConfigService;
 use OpenApi\Annotations as OA;
 
 /**
  * @OA\Tag(name="07.系统配置")
  */
-final class ConfigController extends ApiController
+final class ConfigController extends BaseController
 {
     /**
      * 系统配置分页列表

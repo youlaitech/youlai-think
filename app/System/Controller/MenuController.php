@@ -1,15 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace app\System\Controller;
+namespace app\system\controller;
 
-use app\controller\ApiController;
-use app\System\Service\MenuService;
+use app\BaseController;
+use app\system\service\MenuService;
 use OpenApi\Annotations as OA;
 
 /**
  * @OA\Tag(name="04.菜单接口")
  */
-final class MenuController extends ApiController
+final class MenuController extends BaseController
 {
     /**
      * 获取菜单下拉数据
