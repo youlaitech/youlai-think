@@ -14,6 +14,13 @@ final class RoleController extends BaseController
 {
     /**
      * 分页查询角色列表
+     *
+     * @OA\Get(
+     *     path="/api/v1/roles",
+     *     summary="角色列表",
+     *     tags={"03.角色接口"},
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function page(): \think\response\Json
     {
@@ -28,6 +35,13 @@ final class RoleController extends BaseController
 
     /**
      * 获取所有启用的角色（下拉框用）
+     *
+     * @OA\Get(
+     *     path="/api/v1/roles/options",
+     *     summary="角色下拉列表",
+     *     tags={"03.角色接口"},
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function options(): \think\response\Json
     {
@@ -38,6 +52,14 @@ final class RoleController extends BaseController
 
     /**
      * 获取角色表单数据
+     *
+     * @OA\Get(
+     *     path="/api/v1/roles/{id}/form",
+     *     summary="获取角色表单数据",
+     *     tags={"03.角色接口"},
+     *     @OA\Parameter(name="id", in="path", description="角色ID", required=true),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function form(): \think\response\Json
     {
@@ -53,6 +75,14 @@ final class RoleController extends BaseController
 
     /**
      * 获取角色详情
+     *
+     * @OA\Get(
+     *     path="/api/v1/roles/{id}",
+     *     summary="获取角色详情",
+     *     tags={"03.角色接口"},
+     *     @OA\Parameter(name="id", in="path", description="角色ID", required=true),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function detail(): \think\response\Json
     {
@@ -68,6 +98,14 @@ final class RoleController extends BaseController
 
     /**
      * 创建角色
+     *
+     * @OA\Post(
+     *     path="/api/v1/roles",
+     *     summary="新增角色",
+     *     tags={"03.角色接口"},
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function create(): \think\response\Json
     {
@@ -80,6 +118,15 @@ final class RoleController extends BaseController
 
     /**
      * 更新角色
+     *
+     * @OA\Put(
+     *     path="/api/v1/roles/{id}",
+     *     summary="修改角色",
+     *     tags={"03.角色接口"},
+     *     @OA\Parameter(name="id", in="path", description="角色ID", required=true),
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function update(): \think\response\Json
     {
@@ -93,6 +140,14 @@ final class RoleController extends BaseController
 
     /**
      * 批量删除角色
+     *
+     * @OA\Delete(
+     *     path="/api/v1/roles/{ids}",
+     *     summary="删除角色",
+     *     tags={"03.角色接口"},
+     *     @OA\Parameter(name="ids", in="path", description="角色ID，多个以英文逗号分割", required=true),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function delete(): \think\response\Json
     {
@@ -109,6 +164,14 @@ final class RoleController extends BaseController
 
     /**
      * 修改角色状态
+     *
+     * @OA\Patch(
+     *     path="/api/v1/roles/{id}/status",
+     *     summary="修改角色状态",
+     *     tags={"03.角色接口"},
+     *     @OA\Parameter(name="id", in="path", description="角色ID", required=true),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function status(): \think\response\Json
     {
@@ -122,6 +185,14 @@ final class RoleController extends BaseController
 
     /**
      * 获取角色的菜单ID集合
+     *
+     * @OA\Get(
+     *     path="/api/v1/roles/{id}/menus",
+     *     summary="获取角色菜单ID集合",
+     *     tags={"03.角色接口"},
+     *     @OA\Parameter(name="id", in="path", description="角色ID", required=true),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function menuIds(): \think\response\Json
     {
@@ -133,6 +204,15 @@ final class RoleController extends BaseController
 
     /**
      * 角色分配菜单权限
+     *
+     * @OA\Put(
+     *     path="/api/v1/roles/{id}/menus",
+     *     summary="分配角色菜单权限",
+     *     tags={"03.角色接口"},
+     *     @OA\Parameter(name="id", in="path", description="角色ID", required=true),
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function assignMenus(): \think\response\Json
     {
@@ -165,6 +245,14 @@ final class RoleController extends BaseController
 
     /**
      * 获取角色的部门ID集合(自定义数据权限)
+     *
+     * @OA\Get(
+     *     path="/api/v1/roles/{id}/depts",
+     *     summary="获取角色部门ID集合",
+     *     tags={"03.角色接口"},
+     *     @OA\Parameter(name="id", in="path", description="角色ID", required=true),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function deptIds(): \think\response\Json
     {

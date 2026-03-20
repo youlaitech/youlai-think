@@ -34,7 +34,7 @@
 | --- | --- | --- | --- |
 | ✅ PHP 后端 | [youlai-think](https://gitee.com/youlaiorg/youlai-think) | [youlai-think](https://github.com/youlaitech/youlai-think) | [youlai-think](https://gitcode.com/youlai/youlai-think) |
 | vue3 前端 | [vue3-element-admin](https://gitee.com/youlaiorg/vue3-element-admin) | [vue3-element-admin](https://github.com/youlaitech/vue3-element-admin) | [vue3-element-admin](https://gitcode.com/youlai/vue3-element-admin) |
-| uni-app 移动端 | [vue-uniapp-template](https://gitee.com/youlaiorg/vue-uniapp-template) | [vue-uniapp-template](https://github.com/youlaitech/vue-uniapp-template) | [vue-uniapp-template](https://gitcode.com/youlai/vue-uniapp-template) |
+| uni-app 移动端 | [youlai-app](https://gitee.com/youlaiorg/youlai-app) | [youlai-app](https://github.com/youlaitech/youlai-app) | [youlai-app](https://gitcode.com/youlai/youlai-app) |
 
 ## 📁 目录结构
 
@@ -141,43 +141,12 @@ php think run
 
 启动成功后，访问 `http://localhost:8000/`，如返回 `ok` 即表示服务已正常运行。
 
-### 6. WebSocket
-
-项目基于 `topthink/think-worker` 提供 WebSocket 服务，默认路径为 `/ws`。
-
-```bash
-# 启动 worker（HTTP 与 WebSocket 共用端口）
-php think worker
-```
-
-> Windows 下 `think-worker` 存在限制，建议在 Linux/macOS 环境或 Docker 中启动
-
 ### 6. 接口文档
 
-- Swagger UI：`http://localhost:8000/swagger`
-- OpenAPI JSON：`http://localhost:8000/swagger/openapi.json`
+- Swagger UI：`http://localhost:8000/swagger-ui/`
+- OpenAPI JSON：`http://localhost:8000/swagger.json`
 
-## 🤝 前端整合
-
-`youlai-think` 与 `vue3-element-admin` 前后端协议完全兼容，可无缝对接。
-
-```bash
-# 1. 获取前端项目
-git clone https://gitee.com/youlaiorg/vue3-element-admin.git
-cd vue3-element-admin
-
-# 2. 安装依赖
-pnpm install
-
-# 3. 配置后端地址 (编辑 .env.development)
-VITE_APP_API_URL=http://localhost:8000
-
-# 4. 启动前端
-pnpm run dev
-```
-
-- **访问地址**: [http://localhost:3000](http://localhost:3000)
-- **登录账号**: `admin` / `123456`
+> 接口变更后需重新生成文档：`composer swagger`
 
 ## 🐳 项目部署
 

@@ -7,19 +7,21 @@ use app\common\model\Model;
 /**
  * 操作日志模型
  *
- * @property int    $id          日志ID
- * @property string $module      模块
- * @property string $action      操作
- * @property string $method      请求方法
- * @property string $url         请求地址
- * @property string $ip          IP地址
- * @property string $userAgent   UA
- * @property string $params      请求参数
- * @property string $result      执行结果
- * @property int    $userId      操作用户ID
- * @property string $username    操作用户名
- * @property int    $executeTime 执行耗时(ms)
- * @property string $createTime  创建时间
+ * @property int    $id            日志ID
+ * @property string $actionType    行为类型
+ * @property string $requestUri    请求地址
+ * @property string $requestMethod 请求方式
+ * @property string $ip            IP地址
+ * @property string $province      省份
+ * @property string $city          城市
+ * @property string $device        设备
+ * @property string $os            操作系统
+ * @property string $browser       浏览器
+ * @property int    $status        状态：0失败 1成功
+ * @property string $errorMsg      错误信息
+ * @property int    $executionTime 执行耗时(ms)
+ * @property int    $createBy      操作用户ID
+ * @property string $createTime    创建时间
  */
 class Log extends Model
 {
@@ -27,17 +29,14 @@ class Log extends Model
 
     protected $type = [
         'id' => 'integer',
-        'user_id' => 'integer',
-        'execute_time' => 'integer',
+        'create_by' => 'integer',
+        'status' => 'integer',
+        'execution_time' => 'integer',
     ];
 
-    // 无软删除
     protected $deleteTime = false;
 
-    /**
-     * 用户ID访问器
-     */
-    public function getUserIdAttr(mixed $value): string
+    public function getCreateByAttr(mixed $value): string
     {
         return (string) $value;
     }

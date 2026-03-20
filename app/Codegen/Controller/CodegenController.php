@@ -1,15 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace app\Codegen\Controller;
+namespace app\codegen\controller;
 
-use app\controller\ApiController;
-use app\Codegen\Service\CodegenService;
+use app\BaseController;
+use app\codegen\service\CodegenService;
 use OpenApi\Annotations as OA;
 
 /**
  * @OA\Tag(name="11.代码生成")
  */
-final class CodegenController extends ApiController
+final class CodegenController extends BaseController
 {
     /**
      * 数据表分页

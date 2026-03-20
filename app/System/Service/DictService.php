@@ -6,6 +6,7 @@ use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
 use app\system\model\Dict;
 use app\system\model\DictItem;
+use app\common\sse\SseService;
 use think\facade\Db;
 
 final class DictService
@@ -122,6 +123,10 @@ final class DictService
             'is_deleted' => 0,
         ]);
 
+        // SSE通知字典变更
+        $sseService = SseService::getInstance();
+        $sseService->sendDictChange($dictCode);
+
         return true;
     }
 
@@ -167,6 +172,10 @@ final class DictService
             }
         });
 
+        // SSE通知字典变更
+        $sseService = SseService::getInstance();
+        $sseService->sendDictChange($dictCode);
+
         return true;
     }
 
@@ -203,6 +212,12 @@ final class DictService
                 Db::name('sys_dict_item')->whereIn('dict_code', $dictCodes)->delete();
             }
         });
+
+        // SSE通知字典变更
+        $sseService = SseService::getInstance();
+        foreach ($dictCodes as $dictCode) {
+            $sseService->sendDictChange($dictCode);
+        }
 
         return true;
     }
@@ -312,6 +327,10 @@ final class DictService
             'update_time' => $now,
         ]);
 
+        // SSE通知字典变更
+        $sseService = SseService::getInstance();
+        $sseService->sendDictChange($dictCode);
+
         return true;
     }
 
@@ -340,6 +359,10 @@ final class DictService
             'update_time' => date('Y-m-d H:i:s'),
         ]);
 
+        // SSE通知字典变更
+        $sseService = SseService::getInstance();
+        $sseService->sendDictChange($dictCode);
+
         return true;
     }
 
@@ -360,6 +383,11 @@ final class DictService
         }
 
         DictItem::where('dict_code', $dictCode)->whereIn('id', $idList)->delete();
+
+        // SSE通知字典变更
+        $sseService = SseService::getInstance();
+        $sseService->sendDictChange($dictCode);
+
         return true;
     }
 }

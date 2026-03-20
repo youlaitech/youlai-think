@@ -22,6 +22,7 @@ final class AuthController extends BaseController
      * @OA\Get(
      *     path="/api/v1/auth/captcha",
      *     summary="获取验证码",
+     *     tags={"01.认证中心"},
      *     @OA\Response(response="200", description="成功")
      * )
      */
@@ -69,6 +70,14 @@ final class AuthController extends BaseController
 
     /**
      * 登录
+     *
+     * @OA\Post(
+     *     path="/api/v1/auth/login",
+     *     summary="账号密码登录",
+     *     tags={"01.认证中心"},
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function login(): Json
     {
@@ -88,6 +97,13 @@ final class AuthController extends BaseController
 
     /**
      * 登出
+     *
+     * @OA\Delete(
+     *     path="/api/v1/auth/logout",
+     *     summary="登出",
+     *     tags={"01.认证中心"},
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function logout(): Json
     {
@@ -100,6 +116,13 @@ final class AuthController extends BaseController
 
     /**
      * 刷新 Token
+     *
+     * @OA\Post(
+     *     path="/api/v1/auth/refresh-token",
+     *     summary="刷新令牌",
+     *     tags={"01.认证中心"},
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function refresh(): Json
     {
@@ -112,6 +135,14 @@ final class AuthController extends BaseController
 
     /**
      * 发送登录短信验证码
+     *
+     * @OA\Post(
+     *     path="/api/v1/auth/sms/code",
+     *     summary="发送登录短信验证码",
+     *     tags={"01.认证中心"},
+     *     @OA\Parameter(name="mobile", in="query", description="手机号", required=true),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function sendLoginVerifyCode(): Json
     {
@@ -128,6 +159,15 @@ final class AuthController extends BaseController
 
     /**
      * 短信验证码登录
+     *
+     * @OA\Post(
+     *     path="/api/v1/auth/login/sms",
+     *     summary="短信验证码登录",
+     *     tags={"01.认证中心"},
+     *     @OA\Parameter(name="mobile", in="query", description="手机号", required=true),
+     *     @OA\Parameter(name="code", in="query", description="验证码", required=true),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function loginBySms(): Json
     {

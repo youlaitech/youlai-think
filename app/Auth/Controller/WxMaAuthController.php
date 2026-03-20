@@ -3,21 +3,22 @@
 namespace app\auth\controller;
 
 use app\BaseController;
-use app\auth\service\WechatMiniappAuthService;
+use app\auth\service\WxMaAuthService;
 use OpenApi\Annotations as OA;
 use think\response\Json;
 
 /**
  * @OA\Tag(name="13.微信小程序认证")
  */
-final class WechatMiniappAuthController extends BaseController
+final class WxMaAuthController extends BaseController
 {
     /**
      * 静默登录
      *
      * @OA\Post(
-     *     path="/api/v1/wechat/miniapp/auth/silent-login",
+     *     path="/api/v1/wxma/auth/silent-login",
      *     summary="静默登录",
+     *     tags={"13.微信小程序认证"},
      *     @OA\Parameter(name="code", in="query", required=true, @OA\Schema(type="string")),
      *     @OA\Response(response="200", description="成功")
      * )
@@ -30,7 +31,7 @@ final class WechatMiniappAuthController extends BaseController
             return $this->fail('A0400', 'code不能为空');
         }
 
-        $result = $this->service(WechatMiniappAuthService::class)->silentLogin($code);
+        $result = $this->service(WxMaAuthService::class)->silentLogin($code);
 
         return $this->success($result);
     }
@@ -39,8 +40,9 @@ final class WechatMiniappAuthController extends BaseController
      * 手机号快捷登录
      *
      * @OA\Post(
-     *     path="/api/v1/wechat/miniapp/auth/phone-login",
+     *     path="/api/v1/wxma/auth/phone-login",
      *     summary="手机号快捷登录",
+     *     tags={"13.微信小程序认证"},
      *     @OA\Parameter(name="loginCode", in="query", required=true, @OA\Schema(type="string")),
      *     @OA\Parameter(name="phoneCode", in="query", required=true, @OA\Schema(type="string")),
      *     @OA\Response(response="200", description="成功")
@@ -55,7 +57,7 @@ final class WechatMiniappAuthController extends BaseController
             return $this->fail('A0400', 'loginCode和phoneCode不能为空');
         }
 
-        $result = $this->service(WechatMiniappAuthService::class)->phoneLogin($loginCode, $phoneCode);
+        $result = $this->service(WxMaAuthService::class)->phoneLogin($loginCode, $phoneCode);
 
         return $this->success($result, '登录成功');
     }
@@ -64,8 +66,9 @@ final class WechatMiniappAuthController extends BaseController
      * 绑定手机号
      *
      * @OA\Post(
-     *     path="/api/v1/wechat/miniapp/auth/bind-mobile",
+     *     path="/api/v1/wxma/auth/bind-mobile",
      *     summary="绑定手机号",
+     *     tags={"13.微信小程序认证"},
      *     @OA\Parameter(name="openId", in="query", required=true, @OA\Schema(type="string")),
      *     @OA\Parameter(name="mobile", in="query", required=true, @OA\Schema(type="string")),
      *     @OA\Parameter(name="smsCode", in="query", required=true, @OA\Schema(type="string")),
@@ -82,7 +85,7 @@ final class WechatMiniappAuthController extends BaseController
             return $this->fail('A0400', 'openId、mobile和smsCode不能为空');
         }
 
-        $result = $this->service(WechatMiniappAuthService::class)->bindMobile($openId, $mobile, $smsCode);
+        $result = $this->service(WxMaAuthService::class)->bindMobile($openId, $mobile, $smsCode);
 
         return $this->success($result, '绑定成功');
     }

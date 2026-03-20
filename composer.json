@@ -1,6 +1,6 @@
 {
   "name": "youlai/think",
-  "version": "4.2.0",
+  "version": "0.0.2",
   "description": "the new thinkphp framework",
   "type": "project",
   "keywords": [
@@ -53,6 +53,7 @@
       "@php think service:discover",
       "@php think vendor:publish"
     ],
-    "test": "vendor/bin/phpunit"
+    "test": "vendor/bin/phpunit",
+    "swagger": "php -d error_reporting=0 -d display_errors=0 vendor/bin/openapi app/docs/swagger.php app/auth/controller app/system/controller app/file/controller app/codegen/controller -o public/swagger.json --format json 2>nul"
   }
 }

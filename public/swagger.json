@@ -1,0 +1,2170 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "有来管理后台 API",
+        "description": "基于 ThinkPHP 8 的 RBAC 权限管理系统后端 API",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "开发环境"
+        }
+    ],
+    "paths": {
+        "/api/v1/auth/captcha": {
+            "get": {
+                "tags": [
+                    "01.认证中心"
+                ],
+                "summary": "获取验证码",
+                "description": "获取验证码",
+                "operationId": "ccd77217ffd40b5f3e30807263b7de80",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/login": {
+            "post": {
+                "tags": [
+                    "01.认证中心"
+                ],
+                "summary": "账号密码登录",
+                "description": "登录",
+                "operationId": "629e79825894b774f085d1b915dc1db9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/logout": {
+            "delete": {
+                "tags": [
+                    "01.认证中心"
+                ],
+                "summary": "登出",
+                "description": "登出",
+                "operationId": "6e83fa7ea66e6fa290c19442b1db727a",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/refresh-token": {
+            "post": {
+                "tags": [
+                    "01.认证中心"
+                ],
+                "summary": "刷新令牌",
+                "description": "刷新 Token",
+                "operationId": "3d9f135f12d0943baafb19640c77718d",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/sms/code": {
+            "post": {
+                "tags": [
+                    "01.认证中心"
+                ],
+                "summary": "发送登录短信验证码",
+                "description": "发送登录短信验证码",
+                "operationId": "136c205b814e2d46bdb75aee7bec0554",
+                "parameters": [
+                    {
+                        "name": "mobile",
+                        "in": "query",
+                        "description": "手机号",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/login/sms": {
+            "post": {
+                "tags": [
+                    "01.认证中心"
+                ],
+                "summary": "短信验证码登录",
+                "description": "短信验证码登录",
+                "operationId": "c9acfe519c7dab6b94e0e747c5f836f5",
+                "parameters": [
+                    {
+                        "name": "mobile",
+                        "in": "query",
+                        "description": "手机号",
+                        "required": true
+                    },
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "description": "验证码",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/wechat/miniapp/auth/silent-login": {
+            "post": {
+                "tags": [
+                    "12.微信小程序认证"
+                ],
+                "summary": "静默登录",
+                "description": "静默登录",
+                "operationId": "82bfa241f6326adc1854dad6c5a93d6a",
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/wechat/miniapp/auth/phone-login": {
+            "post": {
+                "tags": [
+                    "12.微信小程序认证"
+                ],
+                "summary": "手机号快捷登录",
+                "description": "手机号快捷登录",
+                "operationId": "7fae3a851b8918d9f86eed133dccb7f6",
+                "parameters": [
+                    {
+                        "name": "loginCode",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "phoneCode",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/wechat/miniapp/auth/bind-mobile": {
+            "post": {
+                "tags": [
+                    "12.微信小程序认证"
+                ],
+                "summary": "绑定手机号",
+                "description": "绑定手机号",
+                "operationId": "262b76c3bc8f8f88a4bf0a3f5333c804",
+                "parameters": [
+                    {
+                        "name": "openId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "mobile",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "smsCode",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/codegen/table": {
+            "get": {
+                "tags": [
+                    "11.代码生成"
+                ],
+                "summary": "获取数据表分页列表",
+                "description": "数据表分页",
+                "operationId": "6863b7062848d2e086e9b9ad71f57123",
+                "parameters": [
+                    {
+                        "name": "pageNum",
+                        "in": "query",
+                        "description": "页码",
+                        "required": false
+                    },
+                    {
+                        "name": "pageSize",
+                        "in": "query",
+                        "description": "每页数量",
+                        "required": false
+                    },
+                    {
+                        "name": "keywords",
+                        "in": "query",
+                        "description": "关键字",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/codegen/{tableName}/config": {
+            "get": {
+                "tags": [
+                    "11.代码生成"
+                ],
+                "summary": "获取代码生成配置",
+                "description": "获取生成配置",
+                "operationId": "7cd8fb107947a3cc611f6f3d587f52e0",
+                "parameters": [
+                    {
+                        "name": "tableName",
+                        "in": "path",
+                        "description": "表名",
+                        "required": true,
+                        "example": "sys_user"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "11.代码生成"
+                ],
+                "summary": "保存代码生成配置",
+                "description": "保存生成配置",
+                "operationId": "b493c1ac8c2d3ecb41303bf74c3c7d64",
+                "parameters": [
+                    {
+                        "name": "tableName",
+                        "in": "path",
+                        "description": "表名",
+                        "required": true,
+                        "example": "sys_user"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "11.代码生成"
+                ],
+                "summary": "删除代码生成配置",
+                "description": "删除生成配置",
+                "operationId": "8830b47d604e8d8961d347068983dc89",
+                "parameters": [
+                    {
+                        "name": "tableName",
+                        "in": "path",
+                        "description": "表名",
+                        "required": true,
+                        "example": "sys_user"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/codegen/{tableName}/preview": {
+            "get": {
+                "tags": [
+                    "11.代码生成"
+                ],
+                "summary": "获取预览生成代码",
+                "description": "预览生成代码",
+                "operationId": "96ed8e328ef289bcd3c4c912a785fb3f",
+                "parameters": [
+                    {
+                        "name": "tableName",
+                        "in": "path",
+                        "description": "表名",
+                        "required": true,
+                        "example": "sys_user"
+                    },
+                    {
+                        "name": "pageType",
+                        "in": "query",
+                        "description": "页面类型",
+                        "required": false,
+                        "example": "classic"
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "代码类型",
+                        "required": false,
+                        "example": "ts"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/codegen/{tableName}/download": {
+            "get": {
+                "tags": [
+                    "11.代码生成"
+                ],
+                "summary": "下载代码",
+                "description": "下载 zip",
+                "operationId": "376f9dd75606cc3840c44151e62c30c9",
+                "parameters": [
+                    {
+                        "name": "tableName",
+                        "in": "path",
+                        "description": "表名(多个逗号分隔)",
+                        "required": true,
+                        "example": "sys_user"
+                    },
+                    {
+                        "name": "pageType",
+                        "in": "query",
+                        "description": "页面类型",
+                        "required": false,
+                        "example": "classic"
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "代码类型",
+                        "required": false,
+                        "example": "ts"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/files": {
+            "post": {
+                "tags": [
+                    "10.文件接口"
+                ],
+                "summary": "文件上传",
+                "operationId": "ddff9aa00b9dca74562809b5a0c257d8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "10.文件接口"
+                ],
+                "summary": "文件删除",
+                "operationId": "5cf6a400ffecdbf58782e7c4eead866f",
+                "parameters": [
+                    {
+                        "name": "filePath",
+                        "in": "query",
+                        "description": "文件路径",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/configs": {
+            "get": {
+                "tags": [
+                    "07.系统配置"
+                ],
+                "summary": "系统配置分页列表",
+                "description": "系统配置分页列表",
+                "operationId": "32036db9c910222498d92b1614e6f9b9",
+                "parameters": [
+                    {
+                        "name": "pageNum",
+                        "in": "query",
+                        "description": "页码",
+                        "required": false
+                    },
+                    {
+                        "name": "pageSize",
+                        "in": "query",
+                        "description": "每页数量",
+                        "required": false
+                    },
+                    {
+                        "name": "keywords",
+                        "in": "query",
+                        "description": "关键字",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "07.系统配置"
+                ],
+                "summary": "新增系统配置",
+                "description": "新增系统配置",
+                "operationId": "ac0e8132ff093492f7cd0777bd5b1fcb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/configs/{id}/form": {
+            "get": {
+                "tags": [
+                    "07.系统配置"
+                ],
+                "summary": "获取系统配置表单数据",
+                "description": "获取系统配置表单数据",
+                "operationId": "b98354070eafb45bcf3ffc2d582b7b50",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "系统配置ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/configs/{id}": {
+            "put": {
+                "tags": [
+                    "07.系统配置"
+                ],
+                "summary": "修改系统配置",
+                "description": "修改系统配置",
+                "operationId": "4a3aecb16b40901585238d56a7e03539",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "系统配置ID",
+                        "required": true
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "07.系统配置"
+                ],
+                "summary": "删除系统配置",
+                "description": "删除系统配置",
+                "operationId": "7994aab46e481b68f7a4399c6235df83",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "系统配置ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/configs/refresh": {
+            "put": {
+                "tags": [
+                    "07.系统配置"
+                ],
+                "summary": "刷新系统配置缓存",
+                "description": "刷新系统配置缓存",
+                "operationId": "448536c96101d193130f1e3b51ee2d3a",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/depts/options": {
+            "get": {
+                "tags": [
+                    "05.部门管理"
+                ],
+                "summary": "部门下拉列表",
+                "description": "获取部门下拉选项",
+                "operationId": "ce5a735a9f45042b294ccae1fd20e404",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/depts/tree": {
+            "get": {
+                "tags": [
+                    "05.部门管理"
+                ],
+                "summary": "部门树",
+                "description": "获取部门树",
+                "operationId": "ff40430b23f12cc9aa32964beeedc4ad",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/depts": {
+            "get": {
+                "tags": [
+                    "05.部门管理"
+                ],
+                "summary": "部门列表",
+                "description": "获取所有部门（平铺列表）",
+                "operationId": "b013af93472ebed4e2304f0a15af602d",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "05.部门管理"
+                ],
+                "summary": "新增部门",
+                "description": "创建部门",
+                "operationId": "07190507d0767c33f7c261543f66b741",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/depts/{id}": {
+            "get": {
+                "tags": [
+                    "05.部门管理"
+                ],
+                "summary": "获取部门详情",
+                "description": "获取部门详情",
+                "operationId": "d0b40d3d5884357825ecd63e251cf8ca",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "部门ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "05.部门管理"
+                ],
+                "summary": "修改部门",
+                "description": "更新部门",
+                "operationId": "6566bac85ad31ab5a2cd0ec3f6328db6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "部门ID",
+                        "required": true
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "05.部门管理"
+                ],
+                "summary": "删除部门",
+                "description": "删除部门",
+                "operationId": "bdf6bdb335fba2c77e56231e5ef5a048",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "部门ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/depts/{id}/form": {
+            "get": {
+                "tags": [
+                    "05.部门管理"
+                ],
+                "summary": "获取部门表单数据",
+                "description": "获取部门表单数据",
+                "operationId": "9db1dbfc575487ace9308f125c4e4e72",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "部门ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/dicts": {
+            "get": {
+                "tags": [
+                    "06.字典接口"
+                ],
+                "summary": "字典分页列表",
+                "operationId": "67c4c525d9febd79b889fd4abc917f1c",
+                "parameters": [
+                    {
+                        "name": "pageNum",
+                        "in": "query",
+                        "description": "页码",
+                        "required": false
+                    },
+                    {
+                        "name": "pageSize",
+                        "in": "query",
+                        "description": "每页数量",
+                        "required": false
+                    },
+                    {
+                        "name": "keywords",
+                        "in": "query",
+                        "description": "关键字",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "06.字典接口"
+                ],
+                "summary": "新增字典",
+                "operationId": "3f7d09890034852bcb7f5d42d3a4ff3e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/dicts/options": {
+            "get": {
+                "tags": [
+                    "06.字典接口"
+                ],
+                "summary": "字典列表",
+                "operationId": "e1879cb3da6c2d24c7135c1b47a241d0",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/dicts/{id}/form": {
+            "get": {
+                "tags": [
+                    "06.字典接口"
+                ],
+                "summary": "获取字典表单数据",
+                "operationId": "1b9c1f2c6e0b19d75d73be7f54797c73",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "字典ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/dicts/{id}": {
+            "put": {
+                "tags": [
+                    "06.字典接口"
+                ],
+                "summary": "修改字典",
+                "operationId": "e09918907f6d9c64759d58316bcafcbb",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "字典ID",
+                        "required": true
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/dicts/{ids}": {
+            "delete": {
+                "tags": [
+                    "06.字典接口"
+                ],
+                "summary": "删除字典",
+                "operationId": "36816093cebce35e27c891eb222e1232",
+                "parameters": [
+                    {
+                        "name": "ids",
+                        "in": "path",
+                        "description": "字典ID，多个以英文逗号(,)分割",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/dicts/{dictCode}/items": {
+            "get": {
+                "tags": [
+                    "06.字典接口"
+                ],
+                "summary": "字典项分页列表",
+                "operationId": "3312135bca44300a169a2ab71a86a43f",
+                "parameters": [
+                    {
+                        "name": "dictCode",
+                        "in": "path",
+                        "description": "字典编码",
+                        "required": true
+                    },
+                    {
+                        "name": "pageNum",
+                        "in": "query",
+                        "description": "页码",
+                        "required": false
+                    },
+                    {
+                        "name": "pageSize",
+                        "in": "query",
+                        "description": "每页数量",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "06.字典接口"
+                ],
+                "summary": "新增字典项",
+                "operationId": "3434467c93a16ac24087e337e596ccc2",
+                "parameters": [
+                    {
+                        "name": "dictCode",
+                        "in": "path",
+                        "description": "字典编码",
+                        "required": true
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/dicts/{dictCode}/items/options": {
+            "get": {
+                "tags": [
+                    "06.字典接口"
+                ],
+                "summary": "字典项下拉列表",
+                "operationId": "3fd2f8eb70086058bd4ba19e5fcefc44",
+                "parameters": [
+                    {
+                        "name": "dictCode",
+                        "in": "path",
+                        "description": "字典编码",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/dicts/{dictCode}/items/{itemId}/form": {
+            "get": {
+                "tags": [
+                    "06.字典接口"
+                ],
+                "summary": "获取字典项表单数据",
+                "operationId": "38347a6cbe86557eed452bc3d177513f",
+                "parameters": [
+                    {
+                        "name": "dictCode",
+                        "in": "path",
+                        "description": "字典编码",
+                        "required": true
+                    },
+                    {
+                        "name": "itemId",
+                        "in": "path",
+                        "description": "字典项ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/dicts/{dictCode}/items/{itemId}": {
+            "put": {
+                "tags": [
+                    "06.字典接口"
+                ],
+                "summary": "修改字典项",
+                "operationId": "433d1c82473583ac70d5981c7b489c62",
+                "parameters": [
+                    {
+                        "name": "dictCode",
+                        "in": "path",
+                        "description": "字典编码",
+                        "required": true
+                    },
+                    {
+                        "name": "itemId",
+                        "in": "path",
+                        "description": "字典项ID",
+                        "required": true
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/dicts/{dictCode}/items/{itemIds}": {
+            "delete": {
+                "tags": [
+                    "06.字典接口"
+                ],
+                "summary": "删除字典项",
+                "operationId": "e7afbb670fbf1cf5aad95ebca22b5800",
+                "parameters": [
+                    {
+                        "name": "dictCode",
+                        "in": "path",
+                        "description": "字典编码",
+                        "required": true
+                    },
+                    {
+                        "name": "itemIds",
+                        "in": "path",
+                        "description": "字典项ID，多个以英文逗号(,)分割",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/logs": {
+            "get": {
+                "tags": [
+                    "09.日志接口"
+                ],
+                "summary": "日志分页列表",
+                "description": "日志分页列表",
+                "operationId": "f5e003643eef2bbd195e44a39437ae4b",
+                "parameters": [
+                    {
+                        "name": "pageNum",
+                        "in": "query",
+                        "description": "页码",
+                        "required": false
+                    },
+                    {
+                        "name": "pageSize",
+                        "in": "query",
+                        "description": "每页数量",
+                        "required": false
+                    },
+                    {
+                        "name": "keywords",
+                        "in": "query",
+                        "description": "关键字",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/menus/options": {
+            "get": {
+                "tags": [
+                    "04.菜单接口"
+                ],
+                "summary": "菜单下拉列表",
+                "description": "获取菜单下拉数据",
+                "operationId": "4675195592eddb7a3208b703ce82d60d",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/menus/routes": {
+            "get": {
+                "tags": [
+                    "04.菜单接口"
+                ],
+                "summary": "获取当前用户路由菜单",
+                "description": "获取当前用户路由菜单",
+                "operationId": "62c3c068184e396983ce297c29123e84",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/menus/tree": {
+            "get": {
+                "tags": [
+                    "04.菜单接口"
+                ],
+                "summary": "菜单树",
+                "description": "获取菜单树（管理用）",
+                "operationId": "fce245d03bfd93d2dff12a7f75235237",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/menus": {
+            "get": {
+                "tags": [
+                    "04.菜单接口"
+                ],
+                "summary": "菜单列表",
+                "description": "获取所有菜单（平铺列表）",
+                "operationId": "83cf28669504ab14593cb2d04a7dc985",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "04.菜单接口"
+                ],
+                "summary": "新增菜单",
+                "description": "创建菜单",
+                "operationId": "a9b10f14a081484ea1df720f926f6cfb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/menus/{id}/form": {
+            "get": {
+                "tags": [
+                    "04.菜单接口"
+                ],
+                "summary": "获取菜单表单数据",
+                "description": "获取菜单表单数据",
+                "operationId": "86f414b07e6632d9837f487377b12be8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "菜单ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/menus/{id}": {
+            "get": {
+                "tags": [
+                    "04.菜单接口"
+                ],
+                "summary": "获取菜单详情",
+                "description": "获取菜单详情",
+                "operationId": "01015789380351375bf45f30f3684809",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "菜单ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "04.菜单接口"
+                ],
+                "summary": "修改菜单",
+                "description": "更新菜单",
+                "operationId": "6ea530ab3cb28bd4ff0a4caa47f953d5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "菜单ID",
+                        "required": true
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "04.菜单接口"
+                ],
+                "summary": "删除菜单",
+                "description": "删除菜单",
+                "operationId": "f740a1621e39a4a3547c3cad1928074f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "菜单ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/menus/{id}/visible": {
+            "patch": {
+                "tags": [
+                    "04.菜单接口"
+                ],
+                "summary": "修改菜单显示状态",
+                "description": "修改菜单显示状态",
+                "operationId": "69d0cdb2317e6ba533fab73c2810c2c9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "菜单ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/notices": {
+            "get": {
+                "tags": [
+                    "08.通知公告"
+                ],
+                "summary": "通知公告分页列表",
+                "description": "通知公告分页列表",
+                "operationId": "a48c00cb39024cfd9c485f724b888480",
+                "parameters": [
+                    {
+                        "name": "pageNum",
+                        "in": "query",
+                        "description": "页码",
+                        "required": false
+                    },
+                    {
+                        "name": "pageSize",
+                        "in": "query",
+                        "description": "每页数量",
+                        "required": false
+                    },
+                    {
+                        "name": "keywords",
+                        "in": "query",
+                        "description": "关键字",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "08.通知公告"
+                ],
+                "summary": "新增通知公告",
+                "description": "新增通知公告",
+                "operationId": "e7d0e1842fa4a31a6ba047e07cba8aa9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/notices/{id}/form": {
+            "get": {
+                "tags": [
+                    "08.通知公告"
+                ],
+                "summary": "获取通知公告表单数据",
+                "description": "获取通知公告表单数据",
+                "operationId": "17c2bba0e379e121d33e91e4b767eb2c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "通知公告ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/notices/{id}/detail": {
+            "get": {
+                "tags": [
+                    "08.通知公告"
+                ],
+                "summary": "阅读获取通知公告详情",
+                "description": "阅读并获取通知公告详情",
+                "operationId": "4d34ed0c4aafe8250c7c035dbff8ed91",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "通知公告ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/notices/{id}": {
+            "put": {
+                "tags": [
+                    "08.通知公告"
+                ],
+                "summary": "修改通知公告",
+                "description": "修改通知公告",
+                "operationId": "4ab230ef84575190f333636f966b51c0",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "通知公告ID",
+                        "required": true
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/notices/{id}/publish": {
+            "put": {
+                "tags": [
+                    "08.通知公告"
+                ],
+                "summary": "发布通知公告",
+                "description": "发布通知公告",
+                "operationId": "a4789b1bf443eda1f0d12a0f39f485fb",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "通知公告ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/notices/{id}/revoke": {
+            "put": {
+                "tags": [
+                    "08.通知公告"
+                ],
+                "summary": "撤回通知公告",
+                "description": "撤回通知公告",
+                "operationId": "7b523dc4683cc8fa8942d8aab64a4ec4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "通知公告ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/notices/{ids}": {
+            "delete": {
+                "tags": [
+                    "08.通知公告"
+                ],
+                "summary": "删除通知公告",
+                "description": "删除通知公告（批量）",
+                "operationId": "3faa514c20c66cac632c6bc3a1495323",
+                "parameters": [
+                    {
+                        "name": "ids",
+                        "in": "path",
+                        "description": "通知公告ID，多个以英文逗号(,)分割",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/notices/read-all": {
+            "put": {
+                "tags": [
+                    "08.通知公告"
+                ],
+                "summary": "全部已读",
+                "description": "全部标记为已读",
+                "operationId": "52145996420c7550e6f90321bbeb2d47",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/notices/my": {
+            "get": {
+                "tags": [
+                    "08.通知公告"
+                ],
+                "summary": "获取我的通知公告分页列表",
+                "description": "我的通知分页列表",
+                "operationId": "7096d39ff91ea9902a54c6793448c2e8",
+                "parameters": [
+                    {
+                        "name": "pageNum",
+                        "in": "query",
+                        "description": "页码",
+                        "required": false
+                    },
+                    {
+                        "name": "pageSize",
+                        "in": "query",
+                        "description": "每页数量",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/roles": {
+            "get": {
+                "tags": [
+                    "03.角色接口"
+                ],
+                "summary": "角色列表",
+                "description": "分页查询角色列表",
+                "operationId": "b43135a47dbed904b5e9fb29f38ae459",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "03.角色接口"
+                ],
+                "summary": "新增角色",
+                "description": "创建角色",
+                "operationId": "0ca20b2e6aab72bd05c041a70af70407",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/options": {
+            "get": {
+                "tags": [
+                    "03.角色接口"
+                ],
+                "summary": "角色下拉列表",
+                "description": "获取所有启用的角色（下拉框用）",
+                "operationId": "f52f664101dc9a2113bc10af849dfa26",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/{id}/form": {
+            "get": {
+                "tags": [
+                    "03.角色接口"
+                ],
+                "summary": "获取角色表单数据",
+                "description": "获取角色表单数据",
+                "operationId": "9b787a68df96bb49f2b3091d7b430c93",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "角色ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/{id}": {
+            "get": {
+                "tags": [
+                    "03.角色接口"
+                ],
+                "summary": "获取角色详情",
+                "description": "获取角色详情",
+                "operationId": "50bbe89ef69e37118d2efe976e3bea3d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "角色ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "03.角色接口"
+                ],
+                "summary": "修改角色",
+                "description": "更新角色",
+                "operationId": "33ac8e8b65d8fc6b67e845dbe5255eae",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "角色ID",
+                        "required": true
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/{ids}": {
+            "delete": {
+                "tags": [
+                    "03.角色接口"
+                ],
+                "summary": "删除角色",
+                "description": "批量删除角色",
+                "operationId": "303731aeaca8f2feca249df9019e42f2",
+                "parameters": [
+                    {
+                        "name": "ids",
+                        "in": "path",
+                        "description": "角色ID，多个以英文逗号分割",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/{id}/status": {
+            "patch": {
+                "tags": [
+                    "03.角色接口"
+                ],
+                "summary": "修改角色状态",
+                "description": "修改角色状态",
+                "operationId": "8690d916e101efce47d4290c412b0298",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "角色ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/{id}/menus": {
+            "get": {
+                "tags": [
+                    "03.角色接口"
+                ],
+                "summary": "获取角色菜单ID集合",
+                "description": "获取角色的菜单ID集合",
+                "operationId": "59b1963901d79deeddbce56744be0ad1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "角色ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "03.角色接口"
+                ],
+                "summary": "分配角色菜单权限",
+                "description": "角色分配菜单权限",
+                "operationId": "6f6a2a0aa06e165f4024327679a61753",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "角色ID",
+                        "required": true
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/{id}/depts": {
+            "get": {
+                "tags": [
+                    "03.角色接口"
+                ],
+                "summary": "获取角色部门ID集合",
+                "description": "获取角色的部门ID集合(自定义数据权限)",
+                "operationId": "fca1b2ec85418bda011e838adb4fa26f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "角色ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/users/me": {
+            "get": {
+                "tags": [
+                    "02.用户接口"
+                ],
+                "summary": "获取当前用户信息",
+                "description": "获取当前用户信息",
+                "operationId": "dbd17f64f4ff6003b95e7edd99939d18",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/users": {
+            "get": {
+                "tags": [
+                    "02.用户接口"
+                ],
+                "summary": "用户列表",
+                "description": "分页查询用户列表",
+                "operationId": "25bc25e670f79d21155e9bc5fd389851",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "02.用户接口"
+                ],
+                "summary": "新增用户",
+                "description": "创建用户",
+                "operationId": "f7d7609d84d12f39d1289a0340c86217",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/users/{id}": {
+            "get": {
+                "tags": [
+                    "02.用户接口"
+                ],
+                "summary": "获取用户详情",
+                "description": "获取用户详情",
+                "operationId": "bcd40e0c3ec14813f3fa0234a6389dab",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "用户ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "02.用户接口"
+                ],
+                "summary": "修改用户",
+                "description": "更新用户",
+                "operationId": "60342e26908dee117c0c76436bd9b052",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "用户ID",
+                        "required": true
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/users/{ids}": {
+            "delete": {
+                "tags": [
+                    "02.用户接口"
+                ],
+                "summary": "删除用户",
+                "description": "批量删除用户",
+                "operationId": "bb86a474e198750cd3fdf272974ae7b7",
+                "parameters": [
+                    {
+                        "name": "ids",
+                        "in": "path",
+                        "description": "用户ID，多个以英文逗号分割",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/users/{id}/password/reset": {
+            "patch": {
+                "tags": [
+                    "02.用户接口"
+                ],
+                "summary": "重置密码",
+                "description": "重置密码",
+                "operationId": "d69a22101b3fc208fb4c9487ed9d30cc",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "用户ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/users/{id}/status": {
+            "patch": {
+                "tags": [
+                    "02.用户接口"
+                ],
+                "summary": "修改用户状态",
+                "description": "修改状态",
+                "operationId": "689683f5ca9dbebedd37ace8aa8919c6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "用户ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/users/template": {
+            "get": {
+                "tags": [
+                    "02.用户接口"
+                ],
+                "summary": "下载用户导入模板",
+                "description": "下载导入模板",
+                "operationId": "70a141552f484fed44a779e5c6f3ff3c",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/users/export": {
+            "get": {
+                "tags": [
+                    "02.用户接口"
+                ],
+                "summary": "导出用户",
+                "description": "导出用户",
+                "operationId": "b8dae677c1138291e60ed02fbd0fdf83",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/users/import": {
+            "post": {
+                "tags": [
+                    "02.用户接口"
+                ],
+                "summary": "导入用户",
+                "description": "导入用户",
+                "operationId": "843fe07aada045ca5536aea2dd905bb8",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/users/options": {
+            "get": {
+                "tags": [
+                    "02.用户接口"
+                ],
+                "summary": "用户下拉列表",
+                "description": "获取用户下拉选项",
+                "operationId": "e23093bb3f974e4b7b2456956f058a7c",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/users/profile": {
+            "get": {
+                "tags": [
+                    "02.用户接口"
+                ],
+                "summary": "获取个人中心用户信息",
+                "description": "获取个人中心用户信息",
+                "operationId": "e3065ccfe962cdec93df4d9aa9f5624e",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "02.用户接口"
+                ],
+                "summary": "修改个人中心用户信息",
+                "description": "个人中心修改用户信息",
+                "operationId": "33b0daef4ef9640c503a21c07473f2de",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": []
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/users/password": {
+            "patch": {
+                "tags": [
+                    "02.用户接口"
+                ],
+                "summary": "修改密码",
+                "description": "当前用户修改密码",
+                "operationId": "88a81854c8748b420664842fa7d30e37",
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        },
+        "/api/v1/users/{id}/form": {
+            "get": {
+                "tags": [
+                    "02.用户接口"
+                ],
+                "summary": "获取用户表单数据",
+                "description": "获取用户表单数据",
+                "operationId": "eaf8eea8a1f7b30144f1f3ed0e84564c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "用户ID",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "01.认证中心"
+        },
+        {
+            "name": "02.用户接口"
+        },
+        {
+            "name": "03.角色接口"
+        },
+        {
+            "name": "04.菜单接口"
+        },
+        {
+            "name": "05.部门管理"
+        },
+        {
+            "name": "06.字典接口"
+        },
+        {
+            "name": "07.系统配置"
+        },
+        {
+            "name": "08.通知公告"
+        },
+        {
+            "name": "09.日志接口"
+        },
+        {
+            "name": "10.文件接口"
+        },
+        {
+            "name": "11.代码生成"
+        },
+        {
+            "name": "12.微信小程序认证"
+        }
+    ]
+}

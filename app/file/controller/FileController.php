@@ -1,18 +1,18 @@
 <?php declare(strict_types=1);
 
-namespace app\\file\\controller;
+namespace app\file\controller;
 
-use app\\BaseController;
+use app\BaseController;
 use app\common\exception\BusinessException;
 use app\common\web\Result;
 use app\common\web\ResultCode;
-use app\\file\\service\\FileService;
+use app\file\service\FileService;
 use OpenApi\Annotations as OA;
 
 /**
  * @OA\Tag(name="10.文件接口")
  */
-final class FileController extends ApiController
+final class FileController extends BaseController
 {
     /**
      * @OA\Post(
@@ -33,7 +33,6 @@ final class FileController extends ApiController
      */
     public function upload(): \think\Response
     {
-        // 读取上传文件字段
         $file = $this->request->file('file');
         if ($file === null) {
             throw new BusinessException(ResultCode::UPLOAD_FILE_EXCEPTION);
@@ -59,7 +58,6 @@ final class FileController extends ApiController
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
-        // 删除 storage 内文�?
         $result = $this->service(FileService::class)->deleteFile($filePath);
         return json(Result::judge($result)->toArray());
     }

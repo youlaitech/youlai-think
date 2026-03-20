@@ -31,4 +31,43 @@ final class LogController extends BaseController
         [$list, $total] = $this->service(LogService::class)->getLogPage($this->getAllParams());
         return $this->okPage($list, $total);
     }
+
+    /**
+     * 访问趋势统计
+     *
+     * @OA\Get(
+     *     path="/api/v1/logs/views/trend",
+     *     summary="访问趋势统计",
+     *     tags={"09.日志接口"},
+     *     @OA\Parameter(name="startDate", in="query", description="开始日期", required=true),
+     *     @OA\Parameter(name="endDate", in="query", description="结束日期", required=true),
+     *     @OA\Response(response=200, description="OK")
+     * )
+     */
+    public function viewsTrend(): \think\response\Json
+    {
+        $startDate = $this->getParam('startDate', '');
+        $endDate = $this->getParam('endDate', '');
+
+        $data = $this->service(LogService::class)->getVisitTrend($startDate, $endDate);
+
+        return $this->success($data);
+    }
+
+    /**
+     * 访问统计概览
+     *
+     * @OA\Get(
+     *     path="/api/v1/logs/views",
+     *     summary="访问统计概览",
+     *     tags={"09.日志接口"},
+     *     @OA\Response(response=200, description="OK")
+     * )
+     */
+    public function views(): \think\response\Json
+    {
+        $data = $this->service(LogService::class)->getVisitStats();
+
+        return $this->success($data);
+    }
 }

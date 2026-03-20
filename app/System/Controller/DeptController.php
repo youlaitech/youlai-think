@@ -13,6 +13,13 @@ final class DeptController extends BaseController
 {
     /**
      * 获取部门下拉选项
+     *
+     * @OA\Get(
+     *     path="/api/v1/depts/options",
+     *     summary="部门下拉列表",
+     *     tags={"05.部门管理"},
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function options(): \think\response\Json
     {
@@ -23,6 +30,13 @@ final class DeptController extends BaseController
 
     /**
      * 获取部门树
+     *
+     * @OA\Get(
+     *     path="/api/v1/depts/tree",
+     *     summary="部门树",
+     *     tags={"05.部门管理"},
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function tree(): \think\response\Json
     {
@@ -33,6 +47,13 @@ final class DeptController extends BaseController
 
     /**
      * 获取所有部门（平铺列表）
+     *
+     * @OA\Get(
+     *     path="/api/v1/depts",
+     *     summary="部门列表",
+     *     tags={"05.部门管理"},
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function list(): \think\response\Json
     {
@@ -43,6 +64,14 @@ final class DeptController extends BaseController
 
     /**
      * 获取部门详情
+     *
+     * @OA\Get(
+     *     path="/api/v1/depts/{id}",
+     *     summary="获取部门详情",
+     *     tags={"05.部门管理"},
+     *     @OA\Parameter(name="id", in="path", description="部门ID", required=true),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function detail(): \think\response\Json
     {
@@ -58,6 +87,14 @@ final class DeptController extends BaseController
 
     /**
      * 获取部门表单数据
+     *
+     * @OA\Get(
+     *     path="/api/v1/depts/{id}/form",
+     *     summary="获取部门表单数据",
+     *     tags={"05.部门管理"},
+     *     @OA\Parameter(name="id", in="path", description="部门ID", required=true),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function form(): \think\response\Json
     {
@@ -73,6 +110,14 @@ final class DeptController extends BaseController
 
     /**
      * 创建部门
+     *
+     * @OA\Post(
+     *     path="/api/v1/depts",
+     *     summary="新增部门",
+     *     tags={"05.部门管理"},
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function create(): \think\response\Json
     {
@@ -83,6 +128,15 @@ final class DeptController extends BaseController
 
     /**
      * 更新部门
+     *
+     * @OA\Put(
+     *     path="/api/v1/depts/{id}",
+     *     summary="修改部门",
+     *     tags={"05.部门管理"},
+     *     @OA\Parameter(name="id", in="path", description="部门ID", required=true),
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function update(): \think\response\Json
     {
@@ -94,6 +148,14 @@ final class DeptController extends BaseController
 
     /**
      * 删除部门
+     *
+     * @OA\Delete(
+     *     path="/api/v1/depts/{id}",
+     *     summary="删除部门",
+     *     tags={"05.部门管理"},
+     *     @OA\Parameter(name="id", in="path", description="部门ID", required=true),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function delete(): \think\response\Json
     {

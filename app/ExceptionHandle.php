@@ -24,7 +24,7 @@ class ExceptionHandle extends Handle
     /**
      * 不需要记录信息（日志）的异常类列表
      */
-    protected array $ignoreReport = [
+    protected $ignoreReport = [
         HttpException::class,
         HttpResponseException::class,
         ModelNotFoundException::class,

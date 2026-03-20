@@ -5,6 +5,7 @@ namespace app\system\service;
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
 use app\system\model\Notice;
+use app\common\sse\SseService;
 use think\facade\Db;
 
 /**
@@ -290,6 +291,9 @@ final class NoticeService
             }
         });
 
+        // SSE通知在线用户
+        $this->broadcastNoticePublished((int) $notice['id'], $notice);
+
         return true;
     }
 
@@ -324,6 +328,13 @@ final class NoticeService
 
             Db::name('sys_user_notice')->where('notice_id', $id)->update(['is_deleted' => 1, 'update_time' => $now]);
         });
+
+        // SSE通知前端移除该通知
+        $sseService = SseService::getInstance();
+        $onlineUsers = $sseService->getOnlineUsers();
+        foreach ($onlineUsers as $u) {
+            $sseService->sendToUser($u->username, 'notice-revoke', ['id' => $id]);
+        }
 
         return true;
     }
@@ -553,5 +564,26 @@ final class NoticeService
     private function toDbPublishStatus(int $status): int
     {
         return $status === 2 ? -1 : $status;
+    }
+
+    /**
+     * SSE广播通知发布
+     */
+    private function broadcastNoticePublished(int $noticeId, array $notice): void
+    {
+        $sseService = SseService::getInstance();
+        $noticeData = [
+            'id' => (string) $noticeId,
+            'title' => $notice['title'] ?? null,
+            'type' => $notice['type'] ?? null,
+            'level' => $notice['level'] ?? null,
+            'publishStatus' => 1,
+            'publishTime' => $notice['publish_time'] ?? null,
+        ];
+
+        $onlineUsers = $sseService->getOnlineUsers();
+        foreach ($onlineUsers as $u) {
+            $sseService->sendToUser($u->username, 'notice', $noticeData);
+        }
     }
 }

@@ -8,14 +8,9 @@ use think\facade\Db;
 
 /**
  * 日志与统计业务
- *
- * 日志分页 趋势统计 概览统计
  */
 final class LogService
 {
-    /**
-     * 日志分页列表
-     */
     public function getLogPage(array $queryParams): array
     {
         $pageNum = (int) ($queryParams['pageNum'] ?? 1);
@@ -23,23 +18,14 @@ final class LogService
         $pageNum = $pageNum > 0 ? $pageNum : 1;
         $pageSize = $pageSize > 0 ? $pageSize : 10;
 
-        $keywords = trim((string) ($queryParams['keywords'] ?? ''));
         $createTime = $queryParams['createTime'] ?? null;
 
         $q = Db::name('sys_log')->alias('l');
 
-        // sys_log 无 is_deleted 字段，按 create_time 过滤即可
-        if ($keywords !== '') {
-            $kw = '%' . $keywords . '%';
-            $q = $q->whereLike('l.content|l.request_uri|l.request_method|l.province|l.city|l.browser|l.os', $kw);
-        }
-
-        // 仅支持时间范围查询
         if (is_array($createTime) && count($createTime) === 2) {
             $start = trim((string) ($createTime[0] ?? ''));
             $end = trim((string) ($createTime[1] ?? ''));
             if ($start !== '' && $end !== '') {
-                // 前端传 YYYY-MM-DD，后端补全时分秒
                 $q = $q->whereBetweenTime('l.create_time', $start . ' 00:00:00', $end . ' 23:59:59');
             }
         }
@@ -48,7 +34,7 @@ final class LogService
 
         $rows = $q
             ->leftJoin('sys_user u', 'l.create_by = u.id')
-            ->field('l.id,l.module,l.content,l.request_uri,l.request_method,l.ip,l.province,l.city,l.browser,l.os,l.execution_time,l.create_time,u.nickname as operator')
+            ->field('l.id,l.action_type,l.status,l.request_uri,l.request_method,l.ip,l.province,l.city,l.device,l.browser,l.os,l.execution_time,l.error_msg,l.create_by,l.create_time,u.nickname as operator')
             ->order('l.create_time', 'desc')
             ->page($pageNum, $pageSize)
             ->select()
@@ -56,26 +42,22 @@ final class LogService
 
         $list = [];
         foreach ($rows as $r) {
-            $region = '';
-            $province = trim((string) ($r['province'] ?? ''));
-            $city = trim((string) ($r['city'] ?? ''));
-            if ($province !== '' && $city !== '') {
-                $region = $province . '/' . $city;
-            } else {
-                $region = $province !== '' ? $province : $city;
-            }
+            $region = trim(($r['province'] ?? '') . ' ' . ($r['city'] ?? ''));
 
             $list[] = [
                 'id' => (string) ($r['id'] ?? ''),
-                'module' => (string) ($r['module'] ?? ''),
-                'content' => (string) ($r['content'] ?? ''),
+                'actionType' => (string) ($r['action_type'] ?? ''),
+                'status' => (int) ($r['status'] ?? 0),
                 'requestUri' => (string) ($r['request_uri'] ?? ''),
-                'method' => (string) ($r['request_method'] ?? ''),
+                'requestMethod' => (string) ($r['request_method'] ?? ''),
                 'ip' => (string) ($r['ip'] ?? ''),
-                'region' => $region,
+                'region' => $region ?: null,
+                'device' => (string) ($r['device'] ?? ''),
                 'browser' => (string) ($r['browser'] ?? ''),
                 'os' => (string) ($r['os'] ?? ''),
-                'executionTime' => isset($r['execution_time']) ? (int) $r['execution_time'] : 0,
+                'executionTime' => isset($r['execution_time']) ? (int) $r['execution_time'] : null,
+                'errorMsg' => (string) ($r['error_msg'] ?? ''),
+                'createBy' => (string) ($r['create_by'] ?? ''),
                 'operator' => (string) ($r['operator'] ?? ''),
                 'createTime' => $r['create_time'] ?? null,
             ];
@@ -84,9 +66,6 @@ final class LogService
         return [$list, $total];
     }
 
-    /**
-     * 获取访问趋势
-     */
     public function getVisitTrend(string $startDate, string $endDate): array
     {
         $startDate = trim($startDate);
@@ -95,7 +74,6 @@ final class LogService
             throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
         }
 
-        // 归一化日期范围
         $startTs = strtotime($startDate);
         $endTs = strtotime($endDate);
         if ($startTs === false || $endTs === false) {
@@ -106,7 +84,6 @@ final class LogService
             [$startTs, $endTs] = [$endTs, $startTs];
         }
 
-        // 生成连续日期坐标
         $dates = [];
         for ($ts = $startTs; $ts <= $endTs; $ts += 86400) {
             $dates[] = date('Y-m-d', $ts);
@@ -115,7 +92,6 @@ final class LogService
         $start = $dates[0] . ' 00:00:00';
         $end = $dates[count($dates) - 1] . ' 23:59:59';
 
-        // PV 统计
         $pvRows = Db::name('sys_log')
             ->whereBetweenTime('create_time', $start, $end)
             ->fieldRaw("COUNT(1) AS count, DATE_FORMAT(create_time,'%Y-%m-%d') AS date")
@@ -123,7 +99,6 @@ final class LogService
             ->select()
             ->toArray();
 
-        // IP 去重统计
         $ipRows = Db::name('sys_log')
             ->whereBetweenTime('create_time', $start, $end)
             ->fieldRaw("COUNT(DISTINCT ip) AS count, DATE_FORMAT(create_time,'%Y-%m-%d') AS date")
@@ -141,7 +116,6 @@ final class LogService
             $ipMap[(string) ($r['date'] ?? '')] = (int) ($r['count'] ?? 0);
         }
 
-        // 补齐没有日志的日期
         $pvList = [];
         $ipList = [];
         foreach ($dates as $d) {
@@ -157,15 +131,11 @@ final class LogService
         ];
     }
 
-    /**
-     * 获取访问概览
-     */
     public function getVisitStats(): array
     {
         $today = date('Y-m-d');
         $nowTime = date('H:i:s');
 
-        // 访问量与访客数概览
         $pvTotal = (int) Db::name('sys_log')->count('id');
         $pvToday = (int) Db::name('sys_log')->whereBetweenTime('create_time', $today . ' 00:00:00', $today . ' 23:59:59')->count('id');
 
@@ -199,5 +169,132 @@ final class LogService
             'totalPvCount' => $pvTotal,
             'pvGrowthRate' => $pvGrowth,
         ];
+    }
+
+    public function getUserEventPage(int $userId, array $queryParams): array
+    {
+        $pageNum = (int) ($queryParams['pageNum'] ?? 1);
+        $pageSize = (int) ($queryParams['pageSize'] ?? 10);
+        $pageNum = $pageNum > 0 ? $pageNum : 1;
+        $pageSize = $pageSize > 0 ? $pageSize : 10;
+
+        $actionType = trim((string) ($queryParams['actionType'] ?? ''));
+        $startDate = trim((string) ($queryParams['startDate'] ?? ''));
+        $endDate = trim((string) ($queryParams['endDate'] ?? ''));
+
+        $q = Db::name('sys_log')->where('create_by', $userId);
+
+        if ($actionType !== '') {
+            $q = $q->where('action_type', $actionType);
+        }
+        if ($startDate !== '') {
+            $q = $q->where('create_time', '>=', $startDate . ' 00:00:00');
+        }
+        if ($endDate !== '') {
+            $q = $q->where('create_time', '<=', $endDate . ' 23:59:59');
+        }
+
+        $total = (int) (clone $q)->count('id');
+
+        $rows = $q
+            ->field('id,action_type,status,device,os,browser,ip,province,city,create_time')
+            ->order('create_time', 'desc')
+            ->page($pageNum, $pageSize)
+            ->select()
+            ->toArray();
+
+        $list = [];
+        foreach ($rows as $r) {
+            $region = trim(($r['province'] ?? '') . ' ' . ($r['city'] ?? ''));
+            $list[] = [
+                'id' => (string) ($r['id'] ?? ''),
+                'actionType' => (string) ($r['action_type'] ?? ''),
+                'status' => (int) ($r['status'] ?? 0),
+                'device' => (string) ($r['device'] ?? ''),
+                'os' => (string) ($r['os'] ?? ''),
+                'browser' => (string) ($r['browser'] ?? ''),
+                'ip' => (string) ($r['ip'] ?? ''),
+                'region' => $region ?: null,
+                'createTime' => $r['create_time'] ?? null,
+            ];
+        }
+
+        return [$list, $total];
+    }
+
+    public function getUserEventList(int $userId, array $queryParams, int $limit): array
+    {
+        $actionType = trim((string) ($queryParams['actionType'] ?? ''));
+        $startDate = trim((string) ($queryParams['startDate'] ?? ''));
+        $endDate = trim((string) ($queryParams['endDate'] ?? ''));
+
+        $q = Db::name('sys_log')->where('create_by', $userId);
+
+        if ($actionType !== '') {
+            $q = $q->where('action_type', $actionType);
+        }
+        if ($startDate !== '') {
+            $q = $q->where('create_time', '>=', $startDate . ' 00:00:00');
+        }
+        if ($endDate !== '') {
+            $q = $q->where('create_time', '<=', $endDate . ' 23:59:59');
+        }
+
+        $rows = $q
+            ->field('id,action_type,status,device,os,browser,ip,province,city,create_time')
+            ->order('create_time', 'desc')
+            ->limit($limit)
+            ->select()
+            ->toArray();
+
+        $list = [];
+        foreach ($rows as $r) {
+            $region = trim(($r['province'] ?? '') . ' ' . ($r['city'] ?? ''));
+            $list[] = [
+                'id' => (string) ($r['id'] ?? ''),
+                'actionType' => (string) ($r['action_type'] ?? ''),
+                'status' => (int) ($r['status'] ?? 0),
+                'device' => (string) ($r['device'] ?? ''),
+                'os' => (string) ($r['os'] ?? ''),
+                'browser' => (string) ($r['browser'] ?? ''),
+                'ip' => (string) ($r['ip'] ?? ''),
+                'region' => $region ?: null,
+                'createTime' => $r['create_time'] ?? null,
+            ];
+        }
+
+        return $list;
+    }
+
+    public function getLoginDevices(int $userId, int $days, int $limit): array
+    {
+        $startTime = date('Y-m-d H:i:s', strtotime("-{$days} days"));
+
+        $rows = Db::name('sys_log')
+            ->where('create_by', $userId)
+            ->where('action_type', 'LOGIN')
+            ->where('create_time', '>=', $startTime)
+            ->field('device,os,browser,ip,province,city,COUNT(*) as login_count,MAX(create_time) as last_login_time')
+            ->group('device,os,browser,ip')
+            ->order('last_login_time', 'desc')
+            ->limit($limit)
+            ->select()
+            ->toArray();
+
+        $list = [];
+        foreach ($rows as $r) {
+            $region = trim(($r['province'] ?? '') . ' ' . ($r['city'] ?? ''));
+            $list[] = [
+                'device' => (string) ($r['device'] ?? ''),
+                'os' => (string) ($r['os'] ?? ''),
+                'browser' => (string) ($r['browser'] ?? ''),
+                'ip' => (string) ($r['ip'] ?? ''),
+                'region' => $region ?: null,
+                'loginCount' => (int) ($r['login_count'] ?? 0),
+                'lastLoginTime' => $r['last_login_time'] ?? null,
+            ];
+        }
+
+        return $list;
     }
 }

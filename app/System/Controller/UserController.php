@@ -18,6 +18,7 @@ final class UserController extends BaseController
      * @OA\Get(
      *     path="/api/v1/users/me",
      *     summary="获取当前用户信息",
+     *     tags={"02.用户接口"},
      *     @OA\Response(response="200", description="成功")
      * )
      */
@@ -32,6 +33,13 @@ final class UserController extends BaseController
 
     /**
      * 分页查询用户列表
+     *
+     * @OA\Get(
+     *     path="/api/v1/users",
+     *     summary="用户列表",
+     *     tags={"02.用户接口"},
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function page(): \think\response\Json
     {
@@ -47,6 +55,14 @@ final class UserController extends BaseController
 
     /**
      * 获取用户详情
+     *
+     * @OA\Get(
+     *     path="/api/v1/users/{id}",
+     *     summary="获取用户详情",
+     *     tags={"02.用户接口"},
+     *     @OA\Parameter(name="id", in="path", description="用户ID", required=true),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function detail(): \think\response\Json
     {
@@ -62,6 +78,14 @@ final class UserController extends BaseController
 
     /**
      * 创建用户
+     *
+     * @OA\Post(
+     *     path="/api/v1/users",
+     *     summary="新增用户",
+     *     tags={"02.用户接口"},
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function create(): \think\response\Json
     {
@@ -74,6 +98,15 @@ final class UserController extends BaseController
 
     /**
      * 更新用户
+     *
+     * @OA\Put(
+     *     path="/api/v1/users/{id}",
+     *     summary="修改用户",
+     *     tags={"02.用户接口"},
+     *     @OA\Parameter(name="id", in="path", description="用户ID", required=true),
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function update(): \think\response\Json
     {
@@ -87,6 +120,14 @@ final class UserController extends BaseController
 
     /**
      * 批量删除用户
+     *
+     * @OA\Delete(
+     *     path="/api/v1/users/{ids}",
+     *     summary="删除用户",
+     *     tags={"02.用户接口"},
+     *     @OA\Parameter(name="ids", in="path", description="用户ID，多个以英文逗号分割", required=true),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function delete(): \think\response\Json
     {
@@ -103,6 +144,14 @@ final class UserController extends BaseController
 
     /**
      * 重置密码
+     *
+     * @OA\Patch(
+     *     path="/api/v1/users/{id}/password/reset",
+     *     summary="重置密码",
+     *     tags={"02.用户接口"},
+     *     @OA\Parameter(name="id", in="path", description="用户ID", required=true),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function resetPassword(): \think\response\Json
     {
@@ -118,6 +167,14 @@ final class UserController extends BaseController
 
     /**
      * 修改状态
+     *
+     * @OA\Patch(
+     *     path="/api/v1/users/{id}/status",
+     *     summary="修改用户状态",
+     *     tags={"02.用户接口"},
+     *     @OA\Parameter(name="id", in="path", description="用户ID", required=true),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function changeStatus(): \think\response\Json
     {
@@ -133,6 +190,13 @@ final class UserController extends BaseController
 
     /**
      * 下载导入模板
+     *
+     * @OA\Get(
+     *     path="/api/v1/users/template",
+     *     summary="下载用户导入模板",
+     *     tags={"02.用户接口"},
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function template(): \think\response\File
     {
@@ -146,6 +210,16 @@ final class UserController extends BaseController
         ]);
     }
 
+    /**
+     * 导出用户
+     *
+     * @OA\Get(
+     *     path="/api/v1/users/export",
+     *     summary="导出用户",
+     *     tags={"02.用户接口"},
+     *     @OA\Response(response="200", description="成功")
+     * )
+     */
     public function export(): \think\response\File
     {
         $filePath = $this->service(UserService::class)->exportToExcel(
@@ -163,6 +237,13 @@ final class UserController extends BaseController
 
     /**
      * 导入用户
+     *
+     * @OA\Post(
+     *     path="/api/v1/users/import",
+     *     summary="导入用户",
+     *     tags={"02.用户接口"},
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function import(): \think\response\Json
     {
@@ -184,6 +265,13 @@ final class UserController extends BaseController
 
     /**
      * 获取用户下拉选项
+     *
+     * @OA\Get(
+     *     path="/api/v1/users/options",
+     *     summary="用户下拉列表",
+     *     tags={"02.用户接口"},
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function options(): \think\response\Json
     {
@@ -194,6 +282,13 @@ final class UserController extends BaseController
 
     /**
      * 获取个人中心用户信息
+     *
+     * @OA\Get(
+     *     path="/api/v1/users/profile",
+     *     summary="获取个人中心用户信息",
+     *     tags={"02.用户接口"},
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function profile(): \think\response\Json
     {
@@ -206,6 +301,14 @@ final class UserController extends BaseController
 
     /**
      * 个人中心修改用户信息
+     *
+     * @OA\Put(
+     *     path="/api/v1/users/profile",
+     *     summary="修改个人中心用户信息",
+     *     tags={"02.用户接口"},
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function updateProfile(): \think\response\Json
     {
@@ -221,6 +324,13 @@ final class UserController extends BaseController
 
     /**
      * 当前用户修改密码
+     *
+     * @OA\Patch(
+     *     path="/api/v1/users/password",
+     *     summary="修改密码",
+     *     tags={"02.用户接口"},
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function changePassword(): \think\response\Json
     {
@@ -242,6 +352,14 @@ final class UserController extends BaseController
 
     /**
      * 获取用户表单数据
+     *
+     * @OA\Get(
+     *     path="/api/v1/users/{id}/form",
+     *     summary="获取用户表单数据",
+     *     tags={"02.用户接口"},
+     *     @OA\Parameter(name="id", in="path", description="用户ID", required=true),
+     *     @OA\Response(response="200", description="成功")
+     * )
      */
     public function form(): \think\response\Json
     {
@@ -375,5 +493,44 @@ final class UserController extends BaseController
         );
 
         return $this->success(null, '邮箱解绑成功');
+    }
+
+    /**
+     * 用户事件列表
+     */
+    public function events(): \think\response\Json
+    {
+        $userId = $this->getAuthUserId();
+        $params = $this->getAllParams();
+        $pageNum = (int) ($params['pageNum'] ?? 0);
+        $pageSize = (int) ($params['pageSize'] ?? 0);
+
+        $logService = $this->service(\app\system\service\LogService::class);
+
+        if ($pageNum > 0 && $pageSize > 0) {
+            [$list, $total] = $logService->getUserEventPage($userId, $params);
+            return $this->successPaginate($list, $total, $pageNum, $pageSize);
+        }
+
+        $list = $logService->getUserEventList($userId, $params, 50);
+        return $this->success($list);
+    }
+
+    /**
+     * 登录设备列表
+     */
+    public function loginDevices(): \think\response\Json
+    {
+        $userId = $this->getAuthUserId();
+        $days = (int) $this->getParam('days', 30);
+        $limit = (int) $this->getParam('limit', 10);
+
+        $list = $this->service(\app\system\service\LogService::class)->getLoginDevices(
+            $userId,
+            $days > 0 ? $days : 30,
+            $limit > 0 ? $limit : 10
+        );
+
+        return $this->success($list);
     }
 }

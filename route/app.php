@@ -1,19 +1,18 @@
 <?php declare(strict_types=1);
 
 use app\auth\controller\AuthController;
-use app\auth\controller\WechatMiniappAuthController;
+use app\auth\controller\WxMaAuthController;
 use app\codegen\controller\CodegenController;
 use app\system\controller\UserController;
 use app\system\controller\RoleController;
 use app\system\controller\MenuController;
 use app\system\controller\DeptController;
 use app\system\controller\NoticeController;
-use app\system\controller\StatisticsController;
 use app\system\controller\ConfigController;
 use app\system\controller\DictController;
 use app\file\controller\FileController;
 use app\system\controller\LogController;
-use app\swagger\SwaggerController;
+use app\common\sse\SseController;
 use think\facade\Route;
 
 // ==================== 认证接口（无需登录） ====================
@@ -29,10 +28,10 @@ Route::group('api/v1/auth', function () {
 
 // ==================== 微信小程序认证接口（无需登录） ====================
 
-Route::group('api/v1/wechat/miniapp/auth', function () {
-    Route::post('silent-login', [WechatMiniappAuthController::class, 'silentLogin']);
-    Route::post('phone-login', [WechatMiniappAuthController::class, 'phoneLogin']);
-    Route::post('bind-mobile', [WechatMiniappAuthController::class, 'bindMobile']);
+Route::group('api/v1/wxma/auth', function () {
+    Route::post('silent-login', [WxMaAuthController::class, 'silentLogin']);
+    Route::post('phone-login', [WxMaAuthController::class, 'phoneLogin']);
+    Route::post('bind-mobile', [WxMaAuthController::class, 'bindMobile']);
 });
 
 // ==================== 业务接口（需要登录） ====================
@@ -55,6 +54,8 @@ Route::group('api/v1', function () {
         Route::get('template', [UserController::class, 'template']);
         Route::get('export', [UserController::class, 'export'])->middleware('perm', 'sys:user:export');
         Route::post('import', [UserController::class, 'import'])->middleware('perm', 'sys:user:import');
+        Route::get('events', [UserController::class, 'events']);
+        Route::get('login-devices', [UserController::class, 'loginDevices']);
         Route::get('', [UserController::class, 'page'])->middleware('perm', 'sys:user:list');
         Route::get(':id/form', [UserController::class, 'form'])->pattern(['id' => '\d+']);
         Route::get(':id', [UserController::class, 'detail'])->pattern(['id' => '\d+']);
@@ -155,12 +156,14 @@ Route::group('api/v1', function () {
     // 日志管理
     Route::group('logs', function () {
         Route::get('', [LogController::class, 'page']);
+        Route::get('views/trend', [LogController::class, 'viewsTrend']);
+        Route::get('views', [LogController::class, 'views']);
     });
 
-    // 统计分析
-    Route::group('statistics', function () {
-        Route::get('visits/trend', [StatisticsController::class, 'visitsTrend']);
-        Route::get('visits/overview', [StatisticsController::class, 'visitsOverview']);
+    // SSE连接
+    Route::group('sse', function () {
+        Route::get('connect', [SseController::class, 'connect']);
+        Route::get('online-count', [SseController::class, 'onlineCount']);
     });
 
     // 代码生成
@@ -176,11 +179,3 @@ Route::group('api/v1', function () {
 })->middleware([
     'auth',
 ]);
-
-// ==================== Swagger 文档接口（无需登录） ====================
-
-Route::group('api/v1/swagger', function () {
-    Route::get('doc', [SwaggerController::class, 'doc']);
-    Route::get('json', [SwaggerController::class, 'json']);
-    Route::get('assets/*', [SwaggerController::class, 'assets']);
-});
