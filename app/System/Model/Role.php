@@ -2,12 +2,12 @@
 
 namespace app\system\model;
 
-use app\common\model\Model;
+use app\common\model\BaseModel;
 
 /**
  * 角色模型。
  */
-class Role extends Model
+class Role extends BaseModel
 {
     protected $name = 'sys_role';
 

@@ -3,7 +3,6 @@
 namespace app\system\service;
 
 use app\common\exception\BusinessException;
-use app\common\web\ResultCode;
 use app\system\model\Dept;
 use think\facade\Db;
 
@@ -27,14 +26,16 @@ final class DeptService
     }
 
     /**
-     * 获取所有部门（平铺）
+     * 获取部门列表（树形结构，管理页面用）
      */
     public function getAll(): array
     {
-        return Dept::order('sort', 'asc')
+        $list = Dept::order('sort', 'asc')
             ->order('id', 'asc')
             ->select()
             ->toArray();
+
+        return $this->buildTree($list);
     }
 
     /**
@@ -88,12 +89,12 @@ final class DeptService
     {
         $dept = Dept::find($id);
         if (!$dept) {
-            throw new BusinessException(ResultCode::USER_ERROR, '部门不存在');
+            throw new BusinessException('部门不存在');
         }
 
         // 不能把自己设为父级
         if (isset($data['parent_id']) && (int) $data['parent_id'] === $id) {
-            throw new BusinessException(ResultCode::USER_ERROR, '父级部门不能是自己');
+            throw new BusinessException('父级部门不能是自己');
         }
 
         // 更新树路径
@@ -120,16 +121,19 @@ final class DeptService
         // 检查是否有子部门
         $childCount = Dept::where('parent_id', $id)->count();
         if ($childCount > 0) {
-            throw new BusinessException(ResultCode::USER_ERROR, '存在子部门，无法删除');
+            throw new BusinessException('存在子部门，无法删除');
         }
 
         // 检查是否有用户
-        $userCount = Db::name('sys_user')->where('dept_id', $id)->count();
+        $userCount = Db::name('sys_user')->where('dept_id', $id)->where('is_deleted', 0)->count();
         if ($userCount > 0) {
-            throw new BusinessException(ResultCode::USER_ERROR, '部门下存在用户，无法删除');
+            throw new BusinessException('部门下存在用户，无法删除');
         }
 
-        return Dept::destroy($id) > 0;
+        return Db::name('sys_dept')->where('id', $id)->update([
+            'is_deleted' => 1,
+            'update_time' => date('Y-m-d H:i:s'),
+        ]) > 0;
     }
 
     /**
@@ -147,6 +151,9 @@ final class DeptService
 
     // ==================== 私有方法 ====================
 
+    /**
+     * 构建下拉选项树
+     */
     private function buildOptions(array $list, int $parentId): array
     {
         $options = [];
@@ -168,6 +175,9 @@ final class DeptService
         return $options;
     }
 
+    /**
+     * 构建部门树结构
+     */
     private function buildTree(array $list, int $parentId = 0): array
     {
         $tree = [];
@@ -185,6 +195,9 @@ final class DeptService
         return $tree;
     }
 
+    /**
+     * 生成部门 tree_path（如 0,5,12）
+     */
     private function buildTreePath(int $parentId): string
     {
         if ($parentId <= 0) {

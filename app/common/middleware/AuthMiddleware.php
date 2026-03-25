@@ -3,23 +3,23 @@
 namespace app\common\middleware;
 
 use app\common\exception\BusinessException;
-use app\common\security\TokenManagerResolver;
+use extend\jwt\TokenManagerResolver;
 use app\common\web\ResultCode;
+use think\Response;
 
 final class AuthMiddleware
 {
-    public function handle($request, \Closure $next)
+    public function handle($request, \Closure $next): Response
     {
-        // 预检请求直接放行
         if (strtoupper((string) $request->method()) === 'OPTIONS') {
-            return $next($request);
+            $response = $next($request);
+            return $response instanceof Response ? $response : response($response);
         }
 
         $path = '/' . ltrim((string) $request->pathinfo(), '/');
-
-        // 认证接口不做鉴权
         if (str_starts_with($path, '/api/v1/auth/')) {
-            return $next($request);
+            $response = $next($request);
+            return $response instanceof Response ? $response : response($response);
         }
 
         $headerName = (string) config('security.token_header');
@@ -29,28 +29,19 @@ final class AuthMiddleware
         if ($raw === '') {
             $raw = (string) $request->header(strtolower($headerName));
         }
-
-        if ($raw === '') {
-            throw new BusinessException(ResultCode::ACCESS_UNAUTHORIZED);
-        }
+        if ($raw === '') throw new BusinessException(ResultCode::ACCESS_UNAUTHORIZED);
 
         $token = $raw;
-        // 兼容 Bearer 前缀
         if ($tokenPrefix !== '' && str_starts_with($raw, $tokenPrefix)) {
             $token = substr($raw, strlen($tokenPrefix));
         }
 
         $token = trim((string) $token);
-        if ($token === '') {
-            throw new BusinessException(ResultCode::ACCESS_TOKEN_INVALID);
-        }
+        if ($token === '') throw new BusinessException(ResultCode::ACCESS_TOKEN_INVALID);
 
-        // 解析 token 并写入上下文
-        $user = (new TokenManagerResolver())->get()->parseAccessToken($token);
+        $request->__authUser = TokenManagerResolver::resolve()->parseAccessToken($token);
 
-        // 使用动态属性存储用户信息
-        $request->__authUser = $user;
-
-        return $next($request);
+        $response = $next($request);
+        return $response instanceof Response ? $response : response($response);
     }
 }

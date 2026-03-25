@@ -3,25 +3,17 @@
 namespace app\system\service;
 
 use app\common\exception\BusinessException;
-use app\common\web\ResultCode;
 use app\system\model\Notice;
-use app\common\sse\SseService;
+use extend\sse\SseService;
 use think\facade\Db;
 
 /**
- * 通知公告业务
- *
- * 公告分页 详情 已读 发布撤回 我的通知
+ * 通知公告服务
  */
 final class NoticeService
 {
     /**
      * 通知公告分页列表
-     *
-     * @param int   $userId
-     * @param array $queryParams
-     *
-     * @return array
      */
     public function getNoticePage(int $userId, array $queryParams, ?array $authUser = null): array
     {
@@ -61,7 +53,8 @@ final class NoticeService
 
         $rows = $q
             ->field('n.id,n.title,n.publish_status,n.type,n.level,n.target_type,n.publish_time,n.revoke_time,n.create_time,pu.nickname as publisher_name,un.is_read')
-            ->order('n.id', 'desc')
+            ->order('n.publish_time', 'desc')
+            ->order('n.create_time', 'desc')
             ->page($pageNum, $pageSize)
             ->select()
             ->toArray();
@@ -88,16 +81,12 @@ final class NoticeService
 
     /**
      * 获取通知公告表单数据
-     *
-     * @param int $id
-     *
-     * @return array
      */
     public function getNoticeFormData(int $id): array
     {
-        $notice = Notice::where('id', $id)->where('is_deleted', 0)->find();
+        $notice = Notice::find($id);
         if ($notice === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告不存在');
+            throw new BusinessException('通知公告不存在');
         }
 
         $n = $notice->toArray();
@@ -116,18 +105,12 @@ final class NoticeService
             'level' => $n['level'] ?? null,
             'publishStatus' => $this->fromDbPublishStatus((int) ($n['publish_status'] ?? 0)),
             'targetType' => isset($n['target_type']) ? (int) ($n['target_type']) : null,
-            // 关键点：前端指定用户是多选（数组），数据库存逗号分隔字符串
             'targetUserIds' => $targetUserIds,
         ];
     }
 
     /**
      * 新增通知公告
-     *
-     * @param int   $userId
-     * @param array $data
-     *
-     * @return bool
      */
     public function saveNotice(int $userId, array $data): bool
     {
@@ -140,11 +123,11 @@ final class NoticeService
         $targetUserIds = $this->normalizeTargetUserIds($data['targetUserIds'] ?? null);
 
         if ($title === '' || trim(strip_tags($content)) === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+            throw new BusinessException('标题或内容不能为空');
         }
 
         if ($targetType === 2 && empty($targetUserIds)) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '推送指定用户不能为空');
+            throw new BusinessException('推送指定用户不能为空');
         }
 
         $now = date('Y-m-d H:i:s');
@@ -169,18 +152,12 @@ final class NoticeService
 
     /**
      * 修改通知公告
-     *
-     * @param int   $userId
-     * @param int   $id
-     * @param array $data
-     *
-     * @return bool
      */
     public function updateNotice(int $userId, int $id, array $data): bool
     {
-        $notice = Notice::where('id', $id)->where('is_deleted', 0)->find();
+        $notice = Notice::find($id);
         if ($notice === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告不存在');
+            throw new BusinessException('通知公告不存在');
         }
 
         $title = trim((string) ($data['title'] ?? ''));
@@ -192,11 +169,11 @@ final class NoticeService
         $targetUserIds = $this->normalizeTargetUserIds($data['targetUserIds'] ?? null);
 
         if ($title === '' || trim(strip_tags($content)) === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+            throw new BusinessException('标题或内容不能为空');
         }
 
         if ($targetType === 2 && empty($targetUserIds)) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '推送指定用户不能为空');
+            throw new BusinessException('推送指定用户不能为空');
         }
 
         $notice->save([
@@ -214,34 +191,28 @@ final class NoticeService
     }
 
     /**
-     * 发布通知公告并生成用户通知
-     *
-     * @param int $userId
-     * @param int $id
-     *
-     * @return bool
+     * 发布通知公告
      */
     public function publishNotice(int $userId, int $id): bool
     {
         $notice = Db::name('sys_notice')->where('id', $id)->where('is_deleted', 0)->find();
         if (!$notice) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告不存在');
+            throw new BusinessException('通知公告不存在');
         }
 
         if ((int) ($notice['publish_status'] ?? 0) === 1) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告已发布');
+            throw new BusinessException('通知公告已发布');
         }
 
         $targetType = (int) ($notice['target_type'] ?? 1);
         // 指定用户模式需要目标用户列表
         $targetUserIds = (string) ($notice['target_user_ids'] ?? '');
         if ($targetType === 2 && trim($targetUserIds) === '') {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '推送指定用户不能为空');
+            throw new BusinessException('推送指定用户不能为空');
         }
 
         $now = date('Y-m-d H:i:s');
 
-        // 关键点：发布需要写入用户通知表（sys_user_notice），用于“我的通知/已读状态”等。
         Db::transaction(function () use ($userId, $id, $targetType, $targetUserIds, $now) {
             Db::name('sys_notice')->where('id', $id)->update([
                 'publish_status' => 1,
@@ -298,22 +269,17 @@ final class NoticeService
     }
 
     /**
-     * 撤回通知公告并清理用户通知
-     *
-     * @param int $userId
-     * @param int $id
-     *
-     * @return bool
+     * 撤回通知公告
      */
     public function revokeNotice(int $userId, int $id): bool
     {
         $notice = Db::name('sys_notice')->where('id', $id)->where('is_deleted', 0)->find();
         if (!$notice) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告不存在');
+            throw new BusinessException('通知公告不存在');
         }
 
         if ((int) ($notice['publish_status'] ?? 0) !== 1) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告未发布或已撤回');
+            throw new BusinessException('通知公告未发布或已撤回');
         }
 
         $now = date('Y-m-d H:i:s');
@@ -340,24 +306,20 @@ final class NoticeService
     }
 
     /**
-     * 删除通知公告（批量）
-     *
-     * @param string $ids
-     *
-     * @return bool
+     * 批量删除通知公告
      */
     public function deleteNotices(string $ids): bool
     {
         $ids = trim($ids);
         if ($ids === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+            throw new BusinessException('ID不能为空');
         }
 
         $parts = array_values(array_filter(array_map('trim', explode(',', $ids)), fn($v) => $v !== ''));
         $idList = [];
         foreach ($parts as $p) {
             if (!ctype_digit($p)) {
-                throw new BusinessException(ResultCode::PARAMETER_FORMAT_MISMATCH);
+                throw new BusinessException('ID格式不正确');
             }
             $idList[] = (int) $p;
         }
@@ -380,11 +342,7 @@ final class NoticeService
     }
 
     /**
-     * 全部标记为已读
-     *
-     * @param int $userId
-     *
-     * @return bool
+     * 全部标记已读
      */
     public function readAll(int $userId): bool
     {
@@ -403,12 +361,7 @@ final class NoticeService
     }
 
     /**
-     * 阅读并获取通知公告详情
-     *
-     * @param int $userId
-     * @param int $id
-     *
-     * @return array
+     * 阅读通知详情（同时标记已读）
      */
     public function getNoticeDetail(int $userId, int $id): array
     {
@@ -421,10 +374,10 @@ final class NoticeService
             ->find();
 
         if (!$row) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '通知公告不存在');
+            throw new BusinessException('通知公告不存在');
         }
 
-        // 关键点：阅读详情时，更新用户通知已读状态
+        // 标记已读
         $now = date('Y-m-d H:i:s');
         Db::name('sys_user_notice')
             ->where('notice_id', $id)
@@ -447,11 +400,6 @@ final class NoticeService
 
     /**
      * 我的通知分页列表
-     *
-     * @param int   $userId
-     * @param array $queryParams
-     *
-     * @return array
      */
     public function getMyNoticePage(int $userId, array $queryParams): array
     {
@@ -507,10 +455,6 @@ final class NoticeService
 
     /**
      * 规范化 targetUserIds（支持字符串/数组）
-     *
-     * @param mixed $value
-     *
-     * @return array
      */
     private function normalizeTargetUserIds(mixed $value): array
     {
@@ -541,25 +485,17 @@ final class NoticeService
     }
 
     /**
-     * 数据库发布状态转前端状态
-     *
-     * @param int $dbStatus
-     *
-     * @return int
+     * 数据库发布状态 → 前端状态
+     * 数据库: 0未发布 / 1已发布 / -1已撤回
+     * 前端:   0草稿  / 1已发布 /  2已撤回
      */
     private function fromDbPublishStatus(int $dbStatus): int
     {
-        // 数据库：0未发布 / 1已发布 / -1已撤回
-        // 前端：0草稿 / 1已发布 / 2已撤回
         return $dbStatus === -1 ? 2 : $dbStatus;
     }
 
     /**
-     * 前端发布状态转数据库状态
-     *
-     * @param int $status
-     *
-     * @return int
+     * 前端发布状态 → 数据库状态
      */
     private function toDbPublishStatus(int $status): int
     {

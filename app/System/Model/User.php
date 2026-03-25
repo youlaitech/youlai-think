@@ -2,12 +2,12 @@
 
 namespace app\system\model;
 
-use app\common\model\Model;
+use app\common\model\BaseModel;
 
 /**
  * 用户模型。
  */
-class User extends Model
+class User extends BaseModel
 {
     protected $name = 'sys_user';
 

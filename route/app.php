@@ -2,7 +2,7 @@
 
 use app\auth\controller\AuthController;
 use app\auth\controller\WxMaAuthController;
-use app\codegen\controller\CodegenController;
+use app\module\codegen\controller\CodegenController;
 use app\system\controller\UserController;
 use app\system\controller\RoleController;
 use app\system\controller\MenuController;
@@ -10,9 +10,8 @@ use app\system\controller\DeptController;
 use app\system\controller\NoticeController;
 use app\system\controller\ConfigController;
 use app\system\controller\DictController;
-use app\file\controller\FileController;
+use app\module\file\controller\FileController;
 use app\system\controller\LogController;
-use app\common\sse\SseController;
 use think\facade\Route;
 
 // ==================== 认证接口（无需登录） ====================
@@ -54,8 +53,6 @@ Route::group('api/v1', function () {
         Route::get('template', [UserController::class, 'template']);
         Route::get('export', [UserController::class, 'export'])->middleware('perm', 'sys:user:export');
         Route::post('import', [UserController::class, 'import'])->middleware('perm', 'sys:user:import');
-        Route::get('events', [UserController::class, 'events']);
-        Route::get('login-devices', [UserController::class, 'loginDevices']);
         Route::get('', [UserController::class, 'page'])->middleware('perm', 'sys:user:list');
         Route::get(':id/form', [UserController::class, 'form'])->pattern(['id' => '\d+']);
         Route::get(':id', [UserController::class, 'detail'])->pattern(['id' => '\d+']);
@@ -118,7 +115,7 @@ Route::group('api/v1', function () {
         Route::get('', [NoticeController::class, 'page'])->middleware('perm', 'sys:notice:list');
         Route::post('', [NoticeController::class, 'create'])->middleware('perm', 'sys:notice:create');
         Route::put(':id', [NoticeController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:notice:update');
-        Route::delete(':ids', [NoticeController::class, 'delete']);
+        Route::delete(':ids', [NoticeController::class, 'delete'])->middleware('perm', 'sys:notice:delete');
     });
 
     // 系统配置
@@ -160,12 +157,6 @@ Route::group('api/v1', function () {
         Route::get('views', [LogController::class, 'views']);
     });
 
-    // SSE连接
-    Route::group('sse', function () {
-        Route::get('connect', [SseController::class, 'connect']);
-        Route::get('online-count', [SseController::class, 'onlineCount']);
-    });
-
     // 代码生成
     Route::group('codegen', function () {
         Route::get('table', [CodegenController::class, 'tablePage']);
@@ -177,5 +168,5 @@ Route::group('api/v1', function () {
     });
 
 })->middleware([
-    'auth',
+    \app\common\middleware\AuthMiddleware::class,
 ]);

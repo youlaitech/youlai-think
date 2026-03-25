@@ -39,7 +39,8 @@
   },
   "autoload": {
     "psr-4": {
-      "app\\": "app"
+      "app\\": "app",
+      "extend\\": "extend"
     }
   },
   "config": {
@@ -54,6 +55,6 @@
       "@php think vendor:publish"
     ],
     "test": "vendor/bin/phpunit",
-    "swagger": "php -d error_reporting=0 -d display_errors=0 vendor/bin/openapi app/docs/swagger.php app/auth/controller app/system/controller app/file/controller app/codegen/controller -o public/swagger.json --format json 2>nul"
+    "swagger": "php -d error_reporting=0 -d display_errors=0 vendor/bin/openapi config/swagger.php app/auth/controller app/system/controller app/file/controller app/codegen/controller -o public/swagger.json --format json 2>nul"
   }
 }

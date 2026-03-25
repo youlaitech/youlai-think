@@ -3,7 +3,6 @@
 namespace app\system\service;
 
 use app\common\exception\BusinessException;
-use app\common\web\ResultCode;
 use app\system\model\Menu;
 use think\facade\Db;
 
@@ -17,8 +16,7 @@ final class MenuService
      */
     public function getOptions(bool $onlyParent = false): array
     {
-        $query = Menu::where('visible', 1)
-            ->order('sort', 'asc')
+        $query = Menu::order('sort', 'asc')
             ->order('id', 'asc');
 
         if ($onlyParent) {
@@ -67,6 +65,21 @@ final class MenuService
                 ->whereIn('role_id', $roleIds)
                 ->column('menu_id');
 
+            // 过滤平台管理目录（/support）及其子菜单
+            $supportMenuId = Menu::where('route_path', '/support')
+                ->where('parent_id', 0)
+                ->where('type', 'C')
+                ->value('id');
+            if ($supportMenuId) {
+                $excludeIds = Db::name('sys_menu')
+                    ->where('id', $supportMenuId)
+                    ->whereOr('tree_path', 'LIKE', '%,' . $supportMenuId . ',%')
+                    ->whereOr('tree_path', 'LIKE', '%,' . $supportMenuId)
+                    ->whereOr('tree_path', 'LIKE', $supportMenuId . ',%')
+                    ->column('id');
+                $menuIds = array_diff($menuIds, $excludeIds);
+            }
+
             $menus = Menu::whereIn('id', $menuIds)
                 ->where('type', '<>', 'B')
                 ->order('sort', 'asc')
@@ -109,14 +122,16 @@ final class MenuService
     }
 
     /**
-     * 获取所有菜单（平铺）
+     * 获取菜单列表（树形结构，管理页面用）
      */
     public function getAll(): array
     {
-        return Menu::order('sort', 'asc')
+        $list = Menu::order('sort', 'asc')
             ->order('id', 'asc')
             ->select()
             ->toArray();
+
+        return $this->buildTree($list);
     }
 
     /**
@@ -125,9 +140,11 @@ final class MenuService
     public function create(array $data): int
     {
         $now = date('Y-m-d H:i:s');
+        $parentId = (int) ($data['parent_id'] ?? 0);
+        $treePath = $this->generateMenuTreePath($parentId);
 
-        return (int) Menu::insertGetId([
-            'parent_id' => $data['parent_id'] ?? 0,
+        $menuId = (int) Menu::insertGetId([
+            'parent_id' => $parentId,
             'type' => $data['type'] ?? 'M',
             'name' => $data['name'],
             'route_path' => $data['route_path'] ?? '',
@@ -136,10 +153,13 @@ final class MenuService
             'icon' => $data['icon'] ?? '',
             'sort' => $data['sort'] ?? 0,
             'visible' => $data['visible'] ?? 1,
+            'tree_path' => $treePath,
             'params' => $this->transformParams($data['params'] ?? null),
             'create_time' => $now,
             'update_time' => $now,
         ]);
+
+        return $menuId;
     }
 
     /**
@@ -149,16 +169,19 @@ final class MenuService
     {
         $menu = Menu::find($id);
         if (!$menu) {
-            throw new BusinessException(ResultCode::USER_ERROR, '菜单不存在');
+            throw new BusinessException('菜单不存在');
         }
 
         // 不能把自己设为父级
         if (isset($data['parent_id']) && (int) $data['parent_id'] === $id) {
-            throw new BusinessException(ResultCode::USER_ERROR, '父级菜单不能是自己');
+            throw new BusinessException('父级菜单不能是自己');
         }
 
         $oldPerm = $menu->perm;
         $newPerm = $data['perm'] ?? $menu->perm;
+
+        // 检查父级是否变更
+        $parentChanged = isset($data['parent_id']) && (int) $data['parent_id'] !== (int) $menu->parent_id;
 
         $menu->parent_id = $data['parent_id'] ?? $menu->parent_id;
         $menu->type = $data['type'] ?? $menu->type;
@@ -171,7 +194,17 @@ final class MenuService
         $menu->visible = $data['visible'] ?? $menu->visible;
         $menu->params = $this->transformParams($data['params'] ?? null);
 
+        // 父级变更时更新 tree_path
+        if ($parentChanged) {
+            $menu->tree_path = $this->generateMenuTreePath((int) $menu->parent_id);
+        }
+
         $result = $menu->save();
+
+        // 父级变更时递归更新子菜单的 tree_path
+        if ($result && $parentChanged) {
+            $this->updateChildrenTreePath($id, $menu->tree_path . ',' . $id);
+        }
 
         // perm 变更时刷新相关角色的权限缓存
         if ($result && $oldPerm !== $newPerm) {
@@ -186,16 +219,23 @@ final class MenuService
      */
     public function delete(int $id): bool
     {
+        $menu = Menu::find($id);
+        if (!$menu || (int) $menu->is_deleted === 1) {
+            throw new BusinessException('菜单不存在');
+        }
+
         // 检查是否有子菜单
         $childCount = Menu::where('parent_id', $id)->count();
         if ($childCount > 0) {
-            throw new BusinessException(ResultCode::USER_ERROR, '存在子菜单，无法删除');
+            throw new BusinessException('存在子菜单，无法删除');
         }
 
         // 删除关联
         Db::name('sys_role_menu')->where('menu_id', $id)->delete();
 
-        return Menu::destroy($id) > 0;
+        // 软删除
+        $menu->is_deleted = 1;
+        return $menu->save();
     }
 
     /**
@@ -205,7 +245,7 @@ final class MenuService
     {
         $menu = Menu::find($id);
         if (!$menu) {
-            throw new BusinessException(ResultCode::USER_ERROR, '菜单不存在');
+            throw new BusinessException('菜单不存在');
         }
 
         $menu->visible = $visible;
@@ -213,6 +253,31 @@ final class MenuService
     }
 
     // ==================== 私有方法 ====================
+
+    /**
+     * 生成菜单 tree_path
+     */
+    private function generateMenuTreePath(int $parentId): string
+    {
+        if ($parentId === 0) {
+            return '0';
+        }
+        $parent = Menu::find($parentId);
+        return $parent ? ($parent->tree_path ?? '0') . ',' . $parentId : '0,' . $parentId;
+    }
+
+    /**
+     * 递归更新子菜单的 tree_path
+     */
+    private function updateChildrenTreePath(int $parentId, string $parentTreePath): void
+    {
+        $children = Menu::where('parent_id', $parentId)->select();
+        foreach ($children as $child) {
+            $child->tree_path = $parentTreePath;
+            $child->save();
+            $this->updateChildrenTreePath((int) $child->id, $parentTreePath . ',' . $child->id);
+        }
+    }
 
     /**
      * 构建树结构
@@ -234,6 +299,9 @@ final class MenuService
         return $tree;
     }
 
+    /**
+     * 构建下拉选项树（value/label 格式）
+     */
     private function buildOptionTree(array $list, int $parentId = 0): array
     {
         $options = [];
@@ -241,7 +309,7 @@ final class MenuService
         foreach ($list as $item) {
             if ((int) ($item['parent_id'] ?? 0) === $parentId) {
                 $node = [
-                    'value' => (int) $item['id'],
+                    'value' => (string) $item['id'],
                     'label' => (string) ($item['name'] ?? ''),
                 ];
 
@@ -318,7 +386,7 @@ final class MenuService
                 'title' => $menu['name'] ?? '',
                 'icon' => $menu['icon'] ?? null,
                 'hidden' => ($menu['visible'] ?? 1) === 0,
-                'keepAlive' => ($menu['keep_alive'] ?? 0) === 1,
+                'keepAlive' => $menuType === 'M' && ($menu['keep_alive'] ?? 0) === 1,
                 'alwaysShow' => ($menu['always_show'] ?? 0) === 1,
                 'params' => $menu['params'] ?? null,
             ],

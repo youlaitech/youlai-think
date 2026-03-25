@@ -3,7 +3,6 @@
 namespace app\system\service;
 
 use app\common\exception\BusinessException;
-use app\common\web\ResultCode;
 use app\system\model\Menu;
 use app\system\model\Role;
 use app\system\model\RoleMenu;
@@ -114,9 +113,10 @@ final class RoleService
      */
     public function create(array $data): int
     {
-        // 检查编码是否重复
-        if (Role::where('code', $data['code'])->find()) {
-            throw new BusinessException(ResultCode::USER_ERROR, '角色编码已存在');
+        // 检查编码和名称是否重复
+        $name = $data['name'] ?? '';
+        if (Role::where('code', $data['code'])->find() || Role::where('name', $name)->find()) {
+            throw new BusinessException('角色名称或角色编码已存在');
         }
 
         return Db::transaction(function () use ($data) {
@@ -154,12 +154,12 @@ final class RoleService
     {
         $role = Role::find($id);
         if (!$role) {
-            throw new BusinessException(ResultCode::USER_ERROR, '角色不存在');
+            throw new BusinessException('角色不存在');
         }
 
         // ROOT 角色不允许修改
         if ($role->code === 'ROOT') {
-            throw new BusinessException(ResultCode::USER_ERROR, '超级管理员角色不允许修改');
+            throw new BusinessException('超级管理员角色不允许修改');
         }
 
         return Db::transaction(function () use ($id, $role, $data) {
@@ -202,8 +202,12 @@ final class RoleService
             // 删除角色菜单关联
             RoleMenu::whereIn('role_id', $ids)->delete();
 
-            // 删除角色
-            return Role::destroy($ids);
+            // 软删除角色
+            Db::name('sys_role')->whereIn('id', $ids)->update([
+                'is_deleted' => 1,
+                'update_time' => date('Y-m-d H:i:s'),
+            ]);
+            return count($ids);
         });
     }
 
@@ -259,16 +263,23 @@ final class RoleService
     {
         $role = Role::find($id);
         if (!$role) {
-            throw new BusinessException(ResultCode::USER_ERROR, '角色不存在');
+            throw new BusinessException('角色不存在');
         }
 
         // ROOT 角色不允许修改状态
         if ($role->code === 'ROOT') {
-            throw new BusinessException(ResultCode::USER_ERROR, '超级管理员角色不允许修改状态');
+            throw new BusinessException('超级管理员角色不允许修改状态');
         }
 
         $role->status = $status;
-        return $role->save();
+        $result = $role->save();
+
+        // 状态变更时刷新权限缓存
+        if ($result) {
+            (new RolePermService())->refreshRolePermsCache($role->code);
+        }
+
+        return $result;
     }
 
     /**

@@ -2,7 +2,7 @@
 
 namespace app\system\controller;
 
-use app\BaseController;
+use app\common\controller\BaseController;
 use app\system\service\LogService;
 use OpenApi\Annotations as OA;
 
@@ -29,7 +29,7 @@ final class LogController extends BaseController
     public function page(): \think\Response
     {
         [$list, $total] = $this->service(LogService::class)->getLogPage($this->getAllParams());
-        return $this->okPage($list, $total);
+        return $this->success($list, $total);
     }
 
     /**

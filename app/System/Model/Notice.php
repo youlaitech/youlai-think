@@ -2,7 +2,7 @@
 
 namespace app\system\model;
 
-use app\common\model\Model;
+use app\common\model\BaseModel;
 
 /**
  * 通知公告模型
@@ -18,7 +18,7 @@ use app\common\model\Model;
  *
  * @property User   $creator      创建人
  */
-class Notice extends Model
+class Notice extends BaseModel
 {
     protected $name = 'sys_notice';
 

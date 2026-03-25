@@ -2,7 +2,7 @@
 
 namespace app\system\model;
 
-use app\common\model\Model;
+use app\common\model\BaseModel;
 
 /**
  * 字典项模型
@@ -16,7 +16,7 @@ use app\common\model\Model;
  *
  * @property Dict   $dict        所属字典
  */
-class DictItem extends Model
+class DictItem extends BaseModel
 {
     protected $name = 'sys_dict_item';
 

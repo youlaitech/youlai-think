@@ -42,7 +42,10 @@ trait AuthTrait
      */
     protected function getAuthRoleCodes(): array
     {
-        return (array) ($this->getAuthUser()['roleCodes'] ?? []);
+        $authUser = $this->getAuthUser();
+        // authorities 格式为 ['ROLE_ROOT', 'ROLE_ADMIN']，提取角色代码
+        $authorities = (array) ($authUser['authorities'] ?? []);
+        return array_map(fn($a) => str_starts_with($a, 'ROLE_') ? substr($a, 5) : $a, $authorities);
     }
 
     /**

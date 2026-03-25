@@ -4,7 +4,8 @@ namespace app\common\middleware;
 
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
-use app\system\Service\RolePermService;
+use app\system\service\RolePermService;
+use think\Response;
 
 /**
  * 权限校验中间件
@@ -14,10 +15,11 @@ final class PermMiddleware
     /**
      * 校验当前用户是否具备指定权限
      */
-    public function handle($request, \Closure $next, string $perm = '')
+    public function handle($request, \Closure $next, string $perm = ''): Response
     {
         if ($perm === '') {
-            return $next($request);
+            $response = $next($request);
+            return $response instanceof Response ? $response : response($response);
         }
 
         $authUser = (array) ($request->__authUser ?? []);
@@ -26,14 +28,17 @@ final class PermMiddleware
             throw new BusinessException(ResultCode::ACCESS_TOKEN_INVALID);
         }
 
-        $roleCodes = (array) ($authUser['roles'] ?? []);
+        // authorities 格式为 ['ROLE_ROOT', 'ROLE_ADMIN']，提取角色代码
+        $authorities = (array) ($authUser['authorities'] ?? []);
+        $roleCodes = array_map(fn($a) => str_starts_with($a, 'ROLE_') ? substr($a, 5) : $a, $authorities);
         if (empty($roleCodes)) {
             throw new BusinessException(ResultCode::ACCESS_PERMISSION_EXCEPTION);
         }
 
         // ROOT/ADMIN 直接放行
         if (in_array('ROOT', $roleCodes, true) || in_array('ADMIN', $roleCodes, true)) {
-            return $next($request);
+            $response = $next($request);
+            return $response instanceof Response ? $response : response($response);
         }
 
         // 从缓存获取权限
@@ -44,6 +49,7 @@ final class PermMiddleware
             throw new BusinessException(ResultCode::ACCESS_PERMISSION_EXCEPTION);
         }
 
-        return $next($request);
+        $response = $next($request);
+        return $response instanceof Response ? $response : response($response);
     }
 }

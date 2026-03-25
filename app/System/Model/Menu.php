@@ -2,7 +2,7 @@
 
 namespace app\system\model;
 
-use app\common\model\Model;
+use app\common\model\BaseModel;
 
 /**
  * 菜单模型
@@ -23,7 +23,7 @@ use app\common\model\Model;
  * @property Menu   $parent      父菜单
  * @property Menu[] $children    子菜单
  */
-class Menu extends Model
+class Menu extends BaseModel
 {
     protected $name = 'sys_menu';
 

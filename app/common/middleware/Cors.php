@@ -6,22 +6,16 @@ use Closure;
 use think\Request;
 use think\Response;
 
-/**
- * 跨域中间件
- */
 final class Cors
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // 预检请求直接返回
         if (strtoupper($request->method()) === 'OPTIONS') {
             return $this->createCorsResponse();
         }
 
         /** @var Response $response */
         $response = $next($request);
-
-        // 添加 CORS 头
         $response->header([
             'Access-Control-Allow-Origin' => $request->header('origin', '*'),
             'Access-Control-Allow-Methods' => 'GET,POST,PUT,DELETE,PATCH,OPTIONS',
@@ -29,7 +23,6 @@ final class Cors
             'Access-Control-Allow-Credentials' => 'true',
             'Access-Control-Max-Age' => '86400',
         ]);
-
         return $response;
     }
 

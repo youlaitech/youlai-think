@@ -3,10 +3,9 @@
 namespace app\system\service;
 
 use app\common\exception\BusinessException;
-use app\common\web\ResultCode;
 use app\system\model\Dict;
 use app\system\model\DictItem;
-use app\common\sse\SseService;
+use extend\sse\SseService;
 use think\facade\Db;
 
 final class DictService
@@ -21,7 +20,7 @@ final class DictService
         $keywords = trim((string) ($queryParams['keywords'] ?? ''));
         $status = $queryParams['status'] ?? null;
 
-        $q = Dict::where('is_deleted', 0);
+        $q = new Dict();
 
         if ($keywords !== '') {
             $kw = '%' . $keywords . '%';
@@ -58,6 +57,7 @@ final class DictService
     {
         $rows = Db::name('sys_dict')
             ->where('is_deleted', 0)
+            ->where('status', 1)
             ->order('id', 'asc')
             ->field('dict_code,name')
             ->select()
@@ -81,9 +81,9 @@ final class DictService
 
     public function getDictForm(int $id): array
     {
-        $dict = Dict::where('id', $id)->where('is_deleted', 0)->find();
+        $dict = Dict::find($id);
         if ($dict === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '字典不存在');
+            throw new BusinessException('字典不存在');
         }
 
         $d = $dict->toArray();
@@ -103,12 +103,12 @@ final class DictService
         $dictCode = trim((string) ($data['dictCode'] ?? $data['dict_code'] ?? ''));
 
         if ($name === '' || $dictCode === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+            throw new BusinessException('字典名称和编码不能为空');
         }
 
-        $exists = Dict::where('is_deleted', 0)->where('dict_code', $dictCode)->count();
+        $exists = Dict::where('dict_code', $dictCode)->count();
         if ($exists > 0) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '字典编码已存在');
+            throw new BusinessException('字典编码已存在');
         }
 
         $now = date('Y-m-d H:i:s');
@@ -132,30 +132,29 @@ final class DictService
 
     public function updateDict(int $id, array $data): bool
     {
-        $dict = Dict::where('id', $id)->where('is_deleted', 0)->find();
+        $dict = Dict::find($id);
         if ($dict === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '字典不存在');
+            throw new BusinessException('字典不存在');
         }
 
         $name = trim((string) ($data['name'] ?? ''));
         $dictCode = trim((string) ($data['dictCode'] ?? $data['dict_code'] ?? ''));
 
         if ($name === '' || $dictCode === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+            throw new BusinessException('字典名称和编码不能为空');
         }
 
-        $exists = Dict::where('is_deleted', 0)
-            ->where('dict_code', $dictCode)
+        $exists = Dict::where('dict_code', $dictCode)
             ->where('id', '<>', $id)
             ->count();
         if ($exists > 0) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '字典编码已存在');
+            throw new BusinessException('字典编码已存在');
         }
 
         $old = $dict->toArray();
         $oldCode = (string) ($old['dict_code'] ?? '');
 
-        // 关键点：如果字典编码发生变化，需要同步更新 sys_dict_item.dict_code
+        // 字典编码变更时需同步更新 sys_dict_item.dict_code
         Db::transaction(function () use ($dict, $id, $data, $name, $dictCode, $oldCode) {
             $dict->save([
                 'name' => $name,
@@ -183,20 +182,21 @@ final class DictService
     {
         $ids = trim($ids);
         if ($ids === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+            throw new BusinessException('ID不能为空');
         }
 
         $parts = array_values(array_filter(array_map('trim', explode(',', $ids)), fn($v) => $v !== ''));
         $idList = [];
         foreach ($parts as $p) {
             if (!ctype_digit($p)) {
-                throw new BusinessException(ResultCode::PARAMETER_FORMAT_MISMATCH);
+                throw new BusinessException('ID格式不正确');
             }
             $idList[] = (int) $p;
         }
 
-        // 关键点：字典删除需要同时清理字典项（sys_dict_item 无 is_deleted 字段）
-        Db::transaction(function () use ($idList) {
+        // 清理字典项（sys_dict_item 无 is_deleted 字段）
+        $dictCodes = [];
+        Db::transaction(function () use ($idList, &$dictCodes) {
             $dictCodes = Db::name('sys_dict')
                 ->whereIn('id', $idList)
                 ->where('is_deleted', 0)
@@ -289,7 +289,7 @@ final class DictService
     {
         $item = DictItem::where('id', $itemId)->find();
         if ($item === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '字典项不存在');
+            throw new BusinessException('字典项不存在');
         }
 
         $i = $item->toArray();
@@ -310,7 +310,7 @@ final class DictService
         $value = trim((string) ($data['value'] ?? ''));
 
         if ($label === '' || $value === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+            throw new BusinessException('标签和值不能为空');
         }
 
         $now = date('Y-m-d H:i:s');
@@ -338,14 +338,14 @@ final class DictService
     {
         $item = DictItem::where('id', $itemId)->find();
         if ($item === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '字典项不存在');
+            throw new BusinessException('字典项不存在');
         }
 
         $label = trim((string) ($data['label'] ?? ''));
         $value = trim((string) ($data['value'] ?? ''));
 
         if ($label === '' || $value === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+            throw new BusinessException('标签和值不能为空');
         }
 
         $item->save([
@@ -370,14 +370,14 @@ final class DictService
     {
         $itemIds = trim($itemIds);
         if ($itemIds === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+            throw new BusinessException('ID不能为空');
         }
 
         $parts = array_values(array_filter(array_map('trim', explode(',', $itemIds)), fn($v) => $v !== ''));
         $idList = [];
         foreach ($parts as $p) {
             if (!ctype_digit($p)) {
-                throw new BusinessException(ResultCode::PARAMETER_FORMAT_MISMATCH);
+                throw new BusinessException('ID格式不正确');
             }
             $idList[] = (int) $p;
         }

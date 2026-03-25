@@ -4,7 +4,6 @@ namespace app\common\web;
 
 /**
  * 统一响应封装
- * 支持普通响应和分页响应
  */
 final class Result
 {
@@ -13,8 +12,7 @@ final class Result
         public mixed $data,
         public string $msg,
         public ?string $traceId = null,
-    ) {
-    }
+    ) {}
 
     /**
      * 成功响应

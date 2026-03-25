@@ -3,8 +3,8 @@
 namespace app\auth\service;
 
 use app\common\exception\BusinessException;
-use app\common\redis\RedisClient;
-use app\common\security\JwtTokenManager;
+use extend\redis\RedisClient;
+use extend\jwt\JwtTokenManager;
 use app\common\web\ResultCode;
 use app\system\model\User;
 use think\facade\Db;
@@ -40,13 +40,24 @@ final class AuthService
 
         // 检查状态
         if ($user->status != 1) {
-            throw new BusinessException(ResultCode::USER_ERROR, '账号已被禁用');
+            throw new BusinessException('账号已被禁用');
         }
 
-        // 构建用户认证信息，JwtTokenManager 会自动查询角色和权限
+        // 查询用户角色
+        $roles = Db::name('sys_user_role')
+            ->alias('ur')
+            ->join('sys_role r', 'ur.role_id = r.id')
+            ->where('ur.user_id', $user->id)
+            ->where('r.is_deleted', 0)
+            ->where('r.status', 1)
+            ->column('r.code');
+        $authorities = array_map(fn(string $code) => 'ROLE_' . $code, $roles);
+
+        // 构建用户认证信息
         $userAuthInfo = [
             'userId' => (int) $user->id,
             'deptId' => $user->dept_id ?? null,
+            'authorities' => $authorities,
         ];
 
         // 生成 Token
@@ -68,7 +79,7 @@ final class AuthService
         // 检查手机号是否已注册
         $user = User::where('mobile', $mobile)->find();
         if (!$user) {
-            throw new BusinessException(ResultCode::USER_ERROR, '该手机号未注册');
+            throw new BusinessException('该手机号未注册');
         }
 
         // 生成验证码（测试环境固定为1234）
@@ -95,7 +106,7 @@ final class AuthService
         $cachedCode = $redis->get($key);
 
         if (!$cachedCode || $cachedCode !== $code) {
-            throw new BusinessException(ResultCode::USER_ERROR, '验证码错误或已过期');
+            throw new BusinessException('验证码错误或已过期');
         }
 
         // 删除验证码
@@ -104,18 +115,29 @@ final class AuthService
         // 查找用户
         $user = User::where('mobile', $mobile)->find();
         if (!$user) {
-            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+            throw new BusinessException('用户不存在');
         }
 
         // 检查状态
         if ($user->status != 1) {
-            throw new BusinessException(ResultCode::USER_ERROR, '账号已被禁用');
+            throw new BusinessException('账号已被禁用');
         }
+
+        // 查询用户角色
+        $roles = Db::name('sys_user_role')
+            ->alias('ur')
+            ->join('sys_role r', 'ur.role_id = r.id')
+            ->where('ur.user_id', $user->id)
+            ->where('r.is_deleted', 0)
+            ->where('r.status', 1)
+            ->column('r.code');
+        $authorities = array_map(fn(string $code) => 'ROLE_' . $code, $roles);
 
         // 构建用户认证信息
         $userAuthInfo = [
             'userId' => (int) $user->id,
             'deptId' => $user->dept_id ?? null,
+            'authorities' => $authorities,
         ];
 
         // 生成 Token

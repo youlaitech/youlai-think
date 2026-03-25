@@ -3,7 +3,6 @@
 namespace app\system\service;
 
 use app\common\exception\BusinessException;
-use app\common\web\ResultCode;
 
 final class FileService
 {
@@ -33,7 +32,7 @@ final class FileService
 
         // 按日期分目录，便于管理
         if (!is_dir($targetDir) && !mkdir($targetDir, 0777, true) && !is_dir($targetDir)) {
-            throw new BusinessException(ResultCode::UPLOAD_FILE_EXCEPTION, '创建上传目录失败');
+            throw new BusinessException('创建上传目录失败');
         }
 
         // 随机文件名避免冲突
@@ -59,11 +58,11 @@ final class FileService
             }
 
             if ($tmpPath === null || $tmpPath === '' || !is_file($tmpPath)) {
-                throw new BusinessException(ResultCode::UPLOAD_FILE_EXCEPTION);
+                throw new BusinessException('上传文件不存在');
             }
 
             if (!@copy($tmpPath, $targetPath)) {
-                throw new BusinessException(ResultCode::UPLOAD_FILE_EXCEPTION);
+                throw new BusinessException('上传文件失败');
             }
         }
 
@@ -79,7 +78,7 @@ final class FileService
     {
         $filePath = trim($filePath);
         if ($filePath === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+            throw new BusinessException('文件路径不能为空');
         }
 
         // 兼容传入完整 URL

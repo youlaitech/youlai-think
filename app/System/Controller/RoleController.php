@@ -2,7 +2,9 @@
 
 namespace app\system\controller;
 
-use app\BaseController;
+use app\common\controller\BaseController;
+use app\system\annotation\Log;
+use app\system\enums\ActionType;
 use app\system\service\RoleService;
 use app\system\validate\RoleValidate;
 use OpenApi\Annotations as OA;
@@ -28,9 +30,7 @@ final class RoleController extends BaseController
             $this->getAllParams()
         );
 
-        $pagination = $this->getPaginationParams();
-
-        return $this->successPaginate($list, $total, $pagination['page'], $pagination['pageSize']);
+        return $this->success($list, $total);
     }
 
     /**
@@ -107,6 +107,7 @@ final class RoleController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::ROLE_CREATE)]
     public function create(): \think\response\Json
     {
         $data = $this->validate($this->getAllParams(), RoleValidate::class, 'create');
@@ -128,6 +129,7 @@ final class RoleController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::ROLE_UPDATE)]
     public function update(): \think\response\Json
     {
         $id = $this->getIdParam();
@@ -149,6 +151,7 @@ final class RoleController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::ROLE_DELETE)]
     public function delete(): \think\response\Json
     {
         $ids = $this->getIdsParam();
@@ -173,6 +176,7 @@ final class RoleController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::ROLE_UPDATE)]
     public function status(): \think\response\Json
     {
         $id = $this->getIdParam();
@@ -214,6 +218,7 @@ final class RoleController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::ROLE_UPDATE)]
     public function assignMenus(): \think\response\Json
     {
         $id = $this->getIdParam();

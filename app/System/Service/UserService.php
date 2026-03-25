@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace app\system\service;
 
 use app\common\exception\BusinessException;
-use app\common\web\ResultCode;
 use app\system\model\Dept;
 use app\system\model\Role;
 use app\system\model\User;
@@ -14,8 +13,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use think\facade\Db;
 
 /**
- * 用户服务。
- * 负责用户相关的业务逻辑处理。
+ * 用户服务
  */
 final class UserService
 {
@@ -79,7 +77,7 @@ final class UserService
         if (!empty($userIds)) {
             $rows = Db::name('sys_user_role')
                 ->alias('sur')
-                ->leftJoin('sys_role r', 'sur.role_id = r.id')
+                ->leftJoin('sys_role r', 'sur.role_id = r.id AND r.is_deleted = 0')
                 ->whereIn('sur.user_id', $userIds)
                 ->group('sur.user_id')
                 ->field('sur.user_id, GROUP_CONCAT(r.name) AS roleNames')
@@ -109,8 +107,8 @@ final class UserService
     public function create(array $data): int
     {
         // 检查用户名是否重复
-        if (User::where('username', $data['username'])->where('is_deleted', 0)->find()) {
-            throw new BusinessException(ResultCode::USER_ERROR, '用户名已存在');
+        if (User::where('username', $data['username'])->find()) {
+            throw new BusinessException('用户名已存在');
         }
 
         return Db::transaction(function () use ($data) {
@@ -152,7 +150,7 @@ final class UserService
     {
         $user = User::find($id);
         if (!$user) {
-            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+            throw new BusinessException('用户不存在');
         }
 
         return Db::transaction(function () use ($user, $data) {
@@ -199,7 +197,11 @@ final class UserService
             UserRole::whereIn('user_id', $ids)->delete();
 
             // 软删除用户
-            return User::destroy($ids);
+            Db::name('sys_user')->whereIn('id', $ids)->update([
+                'is_deleted' => 1,
+                'update_time' => date('Y-m-d H:i:s'),
+            ]);
+            return count($ids);
         });
     }
 
@@ -211,7 +213,7 @@ final class UserService
         $user = User::with(['dept', 'roles'])->find($userId);
 
         if (!$user) {
-            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+            throw new BusinessException('用户不存在');
         }
 
         // 获取角色编码
@@ -225,12 +227,20 @@ final class UserService
             $perms = $roleService->getPermissionsByUserId($userId);
         }
 
+        $roleNames = [];
+        foreach ($user->roles ?? [] as $role) {
+            $roleNames[] = $role->name ?? '';
+        }
+
         return [
             'userId' => (string) $user->id,
             'username' => $user->username,
             'nickname' => $user->nickname,
             'avatar' => $user->avatar,
+            'gender' => (int) ($user->gender ?? 0),
+            'deptName' => $user->dept->name ?? '',
             'roles' => $roleCodes,
+            'roleNames' => $roleNames,
             'perms' => $perms,
         ];
     }
@@ -241,7 +251,6 @@ final class UserService
     public function getOptions(): array
     {
         $list = User::where('status', 1)
-            ->where('is_deleted', 0)
             ->field(['id', 'username', 'nickname'])
             ->order('id', 'asc')
             ->select()
@@ -261,7 +270,7 @@ final class UserService
         $user = User::with(['dept', 'roles'])->find($userId);
 
         if (!$user) {
-            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+            throw new BusinessException('用户不存在');
         }
 
         $data = $user->toArray();
@@ -279,7 +288,7 @@ final class UserService
     {
         $user = User::find($userId);
         if (!$user) {
-            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+            throw new BusinessException('用户不存在');
         }
 
         $user->nickname = $data['nickname'] ?? $user->nickname;
@@ -298,12 +307,12 @@ final class UserService
     {
         $user = User::find($userId);
         if (!$user) {
-            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+            throw new BusinessException('用户不存在');
         }
 
         // 验证原密码
         if (!password_verify($oldPassword, $user->password)) {
-            throw new BusinessException(ResultCode::USER_ERROR, '原密码错误');
+            throw new BusinessException('原密码错误');
         }
 
         $user->password = password_hash($newPassword, PASSWORD_DEFAULT);
@@ -336,11 +345,10 @@ final class UserService
         // 检查手机号是否已被其他用户绑定
         $exists = User::where('mobile', $mobile)
             ->where('id', '<>', $userId)
-            ->where('is_deleted', 0)
             ->find();
 
         if ($exists) {
-            throw new BusinessException(ResultCode::USER_ERROR, '手机号已被其他账号绑定');
+            throw new BusinessException('手机号已被其他账号绑定');
         }
 
         // 生成验证码（测试环境固定为1234）
@@ -350,7 +358,7 @@ final class UserService
         // $this->smsService->sendSms($mobile, 'CHANGE_MOBILE', ['code' => $code]);
 
         // 缓存验证码，5分钟有效
-        $redis = \app\common\redis\RedisClient::get();
+        $redis = \extend\redis\RedisClient::get();
         $key = "sms:mobile:{$mobile}";
         $redis->setex($key, 300, $code);
     }
@@ -362,31 +370,30 @@ final class UserService
     {
         $user = User::find($userId);
         if (!$user) {
-            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+            throw new BusinessException('用户不存在');
         }
 
         // 验证密码
         if (!password_verify($password, $user->password)) {
-            throw new BusinessException(ResultCode::USER_ERROR, '密码错误');
+            throw new BusinessException('密码错误');
         }
 
         // 验证验证码
-        $redis = \app\common\redis\RedisClient::get();
+        $redis = \extend\redis\RedisClient::get();
         $key = "sms:mobile:{$mobile}";
         $cachedCode = $redis->get($key);
 
         if (!$cachedCode || $cachedCode !== $code) {
-            throw new BusinessException(ResultCode::USER_ERROR, '验证码错误或已过期');
+            throw new BusinessException('验证码错误或已过期');
         }
 
         // 检查手机号是否已被其他用户绑定
         $exists = User::where('mobile', $mobile)
             ->where('id', '<>', $userId)
-            ->where('is_deleted', 0)
             ->find();
 
         if ($exists) {
-            throw new BusinessException(ResultCode::USER_ERROR, '手机号已被其他账号绑定');
+            throw new BusinessException('手机号已被其他账号绑定');
         }
 
         // 删除验证码
@@ -404,16 +411,16 @@ final class UserService
     {
         $user = User::find($userId);
         if (!$user) {
-            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+            throw new BusinessException('用户不存在');
         }
 
         if (empty($user->mobile)) {
-            throw new BusinessException(ResultCode::USER_ERROR, '当前账号未绑定手机号');
+            throw new BusinessException('当前账号未绑定手机号');
         }
 
         // 验证密码
         if (!password_verify($password, $user->password)) {
-            throw new BusinessException(ResultCode::USER_ERROR, '密码错误');
+            throw new BusinessException('密码错误');
         }
 
         $user->mobile = null;
@@ -428,11 +435,10 @@ final class UserService
         // 检查邮箱是否已被其他用户绑定
         $exists = User::where('email', $email)
             ->where('id', '<>', $userId)
-            ->where('is_deleted', 0)
             ->find();
 
         if ($exists) {
-            throw new BusinessException(ResultCode::USER_ERROR, '邮箱已被其他账号绑定');
+            throw new BusinessException('邮箱已被其他账号绑定');
         }
 
         // 生成验证码（测试环境固定为1234）
@@ -442,7 +448,7 @@ final class UserService
         // $this->mailService->sendMail($email, '邮箱验证码', "您的验证码为：{$code}，请在5分钟内使用");
 
         // 缓存验证码，5分钟有效
-        $redis = \app\common\redis\RedisClient::get();
+        $redis = \extend\redis\RedisClient::get();
         $key = "sms:email:{$email}";
         $redis->setex($key, 300, $code);
     }
@@ -454,31 +460,30 @@ final class UserService
     {
         $user = User::find($userId);
         if (!$user) {
-            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+            throw new BusinessException('用户不存在');
         }
 
         // 验证密码
         if (!password_verify($password, $user->password)) {
-            throw new BusinessException(ResultCode::USER_ERROR, '密码错误');
+            throw new BusinessException('密码错误');
         }
 
         // 验证验证码
-        $redis = \app\common\redis\RedisClient::get();
+        $redis = \extend\redis\RedisClient::get();
         $key = "sms:email:{$email}";
         $cachedCode = $redis->get($key);
 
         if (!$cachedCode || $cachedCode !== $code) {
-            throw new BusinessException(ResultCode::USER_ERROR, '验证码错误或已过期');
+            throw new BusinessException('验证码错误或已过期');
         }
 
         // 检查邮箱是否已被其他用户绑定
         $exists = User::where('email', $email)
             ->where('id', '<>', $userId)
-            ->where('is_deleted', 0)
             ->find();
 
         if ($exists) {
-            throw new BusinessException(ResultCode::USER_ERROR, '邮箱已被其他账号绑定');
+            throw new BusinessException('邮箱已被其他账号绑定');
         }
 
         // 删除验证码
@@ -496,16 +501,16 @@ final class UserService
     {
         $user = User::find($userId);
         if (!$user) {
-            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+            throw new BusinessException('用户不存在');
         }
 
         if (empty($user->email)) {
-            throw new BusinessException(ResultCode::USER_ERROR, '当前账号未绑定邮箱');
+            throw new BusinessException('当前账号未绑定邮箱');
         }
 
         // 验证密码
         if (!password_verify($password, $user->password)) {
-            throw new BusinessException(ResultCode::USER_ERROR, '密码错误');
+            throw new BusinessException('密码错误');
         }
 
         $user->email = null;
@@ -565,15 +570,28 @@ final class UserService
      */
     private function applyDataScope($query, array $authUser): void
     {
+        // 从 authorities 提取角色编码
+        $authorities = (array) ($authUser['authorities'] ?? []);
+        $roleCodes = array_map(fn($a) => str_starts_with($a, 'ROLE_') ? substr($a, 5) : $a, $authorities);
+
         // 超级管理员不过滤
-        if (in_array('ROOT', $authUser['roleCodes'] ?? [], true)) {
+        if (in_array('ROOT', $roleCodes, true)) {
+            return;
+        }
+
+        // 管理员也跳过数据权限过滤
+        if (in_array('ADMIN', $roleCodes, true)) {
             return;
         }
 
         // 根据数据权限过滤
         $dataScopes = $authUser['dataScopes'] ?? [];
         if (empty($dataScopes)) {
-            $query->whereRaw('1 = 0'); // 无权限
+            // 无数据权限配置时，仅显示本人数据
+            $userId = (int) ($authUser['userId'] ?? 0);
+            if ($userId > 0) {
+                $query->where('id', $userId);
+            }
             return;
         }
 
@@ -627,7 +645,7 @@ final class UserService
         $templatePath = public_path() . 'static/templates/用户导入模板.xlsx';
 
         if (!file_exists($templatePath)) {
-            throw new BusinessException(ResultCode::SYSTEM_ERROR, '模板文件不存在');
+            throw new BusinessException('模板文件不存在');
         }
 
         return $templatePath;
@@ -649,7 +667,7 @@ final class UserService
         if (!empty($userIds)) {
             $rows = Db::name('sys_user_role')
                 ->alias('sur')
-                ->leftJoin('sys_role r', 'sur.role_id = r.id')
+                ->leftJoin('sys_role r', 'sur.role_id = r.id AND r.is_deleted = 0')
                 ->whereIn('sur.user_id', $userIds)
                 ->group('sur.user_id')
                 ->field('sur.user_id, GROUP_CONCAT(r.name) AS roleNames')
@@ -737,7 +755,7 @@ final class UserService
         }
 
         // 获取已存在的用户名
-        $existingUsernames = User::where('is_deleted', 0)->column('username');
+        $existingUsernames = User::column('username');
 
         $validCount = 0;
         $invalidCount = 0;

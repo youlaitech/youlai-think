@@ -2,7 +2,9 @@
 
 namespace app\system\controller;
 
-use app\BaseController;
+use app\common\controller\BaseController;
+use app\system\annotation\Log;
+use app\system\enums\ActionType;
 use app\system\service\DeptService;
 use OpenApi\Annotations as OA;
 
@@ -119,6 +121,7 @@ final class DeptController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::DEPT_CREATE)]
     public function create(): \think\response\Json
     {
         $id = $this->service(DeptService::class)->create($this->getAllParams());
@@ -138,6 +141,7 @@ final class DeptController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::DEPT_UPDATE)]
     public function update(): \think\response\Json
     {
         $id = $this->getIdParam();
@@ -157,6 +161,7 @@ final class DeptController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::DEPT_DELETE)]
     public function delete(): \think\response\Json
     {
         $id = $this->getIdParam();

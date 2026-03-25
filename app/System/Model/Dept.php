@@ -2,7 +2,7 @@
 
 namespace app\system\model;
 
-use app\common\model\Model;
+use app\common\model\BaseModel;
 
 /**
  * 部门模型
@@ -20,7 +20,7 @@ use app\common\model\Model;
  * @property Dept[] $children    子部门
  * @property User[] $users       部门用户
  */
-class Dept extends Model
+class Dept extends BaseModel
 {
     protected $name = 'sys_dept';
 

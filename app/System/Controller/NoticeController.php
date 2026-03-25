@@ -2,7 +2,7 @@
 
 namespace app\system\controller;
 
-use app\BaseController;
+use app\common\controller\BaseController;
 use app\system\service\NoticeService;
 use OpenApi\Annotations as OA;
 
@@ -33,7 +33,7 @@ final class NoticeController extends BaseController
         $userId = $this->getAuthUserId();
         $authUser = $this->getAuthUser();
         [$list, $total] = $this->service(NoticeService::class)->getNoticePage($userId, $this->request->param(), $authUser);
-        return $this->okPage($list, $total);
+        return $this->success($list, $total);
     }
 
     /**
@@ -56,7 +56,7 @@ final class NoticeController extends BaseController
         // 统一读取 body 参数
         $data = $this->mergeJsonParams();
         $this->service(NoticeService::class)->saveNotice($userId, $data);
-        return $this->ok();
+        return $this->success();
     }
 
     /**
@@ -76,7 +76,7 @@ final class NoticeController extends BaseController
     public function form(int $id): \think\Response
     {
         $data = $this->service(NoticeService::class)->getNoticeFormData($id);
-        return $this->ok($data);
+        return $this->success($data);
     }
 
     /**
@@ -98,7 +98,7 @@ final class NoticeController extends BaseController
     {
         $userId = $this->getAuthUserId();
         $data = $this->service(NoticeService::class)->getNoticeDetail($userId, $id);
-        return $this->ok($data);
+        return $this->success($data);
     }
 
     /**
@@ -123,7 +123,7 @@ final class NoticeController extends BaseController
         // 统一读取 body 参数
         $data = $this->mergeJsonParams();
         $this->service(NoticeService::class)->updateNotice($userId, $id, $data);
-        return $this->ok();
+        return $this->success();
     }
 
     /**
@@ -145,7 +145,7 @@ final class NoticeController extends BaseController
     {
         $userId = $this->getAuthUserId();
         $this->service(NoticeService::class)->publishNotice($userId, $id);
-        return $this->ok();
+        return $this->success();
     }
 
     /**
@@ -167,7 +167,7 @@ final class NoticeController extends BaseController
     {
         $userId = $this->getAuthUserId();
         $this->service(NoticeService::class)->revokeNotice($userId, $id);
-        return $this->ok();
+        return $this->success();
     }
 
     /**
@@ -187,7 +187,7 @@ final class NoticeController extends BaseController
     public function delete(string $ids): \think\Response
     {
         $this->service(NoticeService::class)->deleteNotices($ids);
-        return $this->ok();
+        return $this->success();
     }
 
     /**
@@ -208,7 +208,7 @@ final class NoticeController extends BaseController
         $userId = $this->getAuthUserId();
         // 批量标记已读
         $this->service(NoticeService::class)->readAll($userId);
-        return $this->ok();
+        return $this->success();
     }
 
     /**
@@ -231,6 +231,6 @@ final class NoticeController extends BaseController
         $userId = $this->getAuthUserId();
         // 仅查询我的通知列表
         [$list, $total] = $this->service(NoticeService::class)->getMyNoticePage($userId, $this->request->param());
-        return $this->okPage($list, $total);
+        return $this->success($list, $total);
     }
 }

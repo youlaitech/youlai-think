@@ -2,6 +2,8 @@
 
 namespace app\common\middleware;
 
+use think\Response;
+
 /**
  * 数据范围中间件
  *
@@ -12,26 +14,17 @@ final class DataScopeMiddleware
 {
     /**
      * 确保 authUser 中包含 dataScopes
-     *
-     * @param mixed    $request
-     * @param \Closure $next
-     *
-     * @return mixed
      */
-    public function handle($request, \Closure $next)
+    public function handle($request, \Closure $next): Response
     {
-        if (!($request instanceof \app\Request)) {
-            return $next($request);
-        }
-
-        $authUser = $request->getAuthUser();
+        $authUser = (array) ($request->__authUser ?? []);
         $userId = (int) ($authUser['userId'] ?? 0);
         if ($userId <= 0) {
-            return $next($request);
+            $response = $next($request);
+            return $response instanceof Response ? $response : response($response);
         }
 
         // dataScopes 已经在 JWT 中解析，直接使用
-        // 确保 dataScopes 字段存在
         if (!isset($authUser['dataScopes'])) {
             $authUser['dataScopes'] = [];
         }
@@ -46,8 +39,9 @@ final class DataScopeMiddleware
         }
         $authUser['roles'] = $roles;
 
-        $request->setAuthUser($authUser);
+        $request->__authUser = $authUser;
 
-        return $next($request);
+        $response = $next($request);
+        return $response instanceof Response ? $response : response($response);
     }
 }

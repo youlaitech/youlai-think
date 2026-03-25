@@ -3,8 +3,7 @@
 namespace app\system\service;
 
 use app\common\exception\BusinessException;
-use app\common\redis\RedisClient;
-use app\common\web\ResultCode;
+use extend\redis\RedisClient;
 use app\system\model\Config;
 use think\facade\Db;
 
@@ -63,9 +62,9 @@ final class ConfigService
      */
     public function getConfigFormData(int $id): array
     {
-        $row = Config::where('id', $id)->where('is_deleted', 0)->find();
+        $row = Config::find($id);
         if ($row === null) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '系统配置不存在');
+            throw new BusinessException('系统配置不存在');
         }
 
         $r = $row->toArray();
@@ -89,7 +88,7 @@ final class ConfigService
         $remark = $data['remark'] ?? null;
 
         if ($configName === '' || $configKey === '' || $configValue === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+            throw new BusinessException('配置名称、键和值不能为空');
         }
 
         // 配置键唯一性校验
@@ -98,7 +97,7 @@ final class ConfigService
             ->where('config_key', $configKey)
             ->count();
         if ($exists > 0) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '配置键已存在');
+            throw new BusinessException('配置键已存在');
         }
 
         $now = date('Y-m-d H:i:s');
@@ -124,7 +123,7 @@ final class ConfigService
     {
         $row = Db::name('sys_config')->where('id', $id)->where('is_deleted', 0)->find();
         if (!$row) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '系统配置不存在');
+            throw new BusinessException('系统配置不存在');
         }
 
         $configName = trim((string) ($data['configName'] ?? ''));
@@ -133,7 +132,7 @@ final class ConfigService
         $remark = $data['remark'] ?? null;
 
         if ($configName === '' || $configKey === '' || $configValue === '') {
-            throw new BusinessException(ResultCode::REQUEST_REQUIRED_PARAMETER_IS_EMPTY);
+            throw new BusinessException('配置名称、键和值不能为空');
         }
 
         // 更新时排除自己
@@ -143,7 +142,7 @@ final class ConfigService
             ->where('id', '<>', $id)
             ->count();
         if ($exists > 0) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '配置键已存在');
+            throw new BusinessException('配置键已存在');
         }
 
         Db::name('sys_config')->where('id', $id)->update([
@@ -165,7 +164,7 @@ final class ConfigService
     {
         $row = Db::name('sys_config')->where('id', $id)->where('is_deleted', 0)->find();
         if (!$row) {
-            throw new BusinessException(ResultCode::INVALID_USER_INPUT, '系统配置不存在');
+            throw new BusinessException('系统配置不存在');
         }
 
         Db::name('sys_config')->where('id', $id)->update([

@@ -2,7 +2,9 @@
 
 namespace app\system\controller;
 
-use app\BaseController;
+use app\common\controller\BaseController;
+use app\system\annotation\Log;
+use app\system\enums\ActionType;
 use app\system\service\UserService;
 use app\system\validate\UserValidate;
 use OpenApi\Annotations as OA;
@@ -41,6 +43,7 @@ final class UserController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(ActionType::USER_LIST)]
     public function page(): \think\response\Json
     {
         [$list, $total] = $this->service(UserService::class)->paginate(
@@ -48,9 +51,7 @@ final class UserController extends BaseController
             $this->getAuthUser()
         );
 
-        $pagination = $this->getPaginationParams();
-
-        return $this->successPaginate($list, $total, $pagination['page'], $pagination['pageSize']);
+        return $this->success($list, $total);
     }
 
     /**
@@ -87,6 +88,7 @@ final class UserController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::USER_CREATE)]
     public function create(): \think\response\Json
     {
         $data = $this->validate($this->getAllParams(), UserValidate::class, 'create');
@@ -108,6 +110,7 @@ final class UserController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::USER_UPDATE)]
     public function update(): \think\response\Json
     {
         $id = $this->getIdParam();
@@ -129,6 +132,7 @@ final class UserController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::USER_DELETE)]
     public function delete(): \think\response\Json
     {
         $ids = $this->getIdsParam();
@@ -153,6 +157,7 @@ final class UserController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::CHANGE_PWD)]
     public function resetPassword(): \think\response\Json
     {
         $id = $this->getIdParam();
@@ -176,6 +181,7 @@ final class UserController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::USER_UPDATE)]
     public function changeStatus(): \think\response\Json
     {
         $id = $this->getIdParam();
@@ -310,6 +316,7 @@ final class UserController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::UPDATE_PROFILE)]
     public function updateProfile(): \think\response\Json
     {
         $data = $this->getAllParams();
@@ -332,6 +339,7 @@ final class UserController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::CHANGE_PWD)]
     public function changePassword(): \think\response\Json
     {
         $oldPassword = $this->getParam('oldPassword', '');
@@ -495,42 +503,4 @@ final class UserController extends BaseController
         return $this->success(null, '邮箱解绑成功');
     }
 
-    /**
-     * 用户事件列表
-     */
-    public function events(): \think\response\Json
-    {
-        $userId = $this->getAuthUserId();
-        $params = $this->getAllParams();
-        $pageNum = (int) ($params['pageNum'] ?? 0);
-        $pageSize = (int) ($params['pageSize'] ?? 0);
-
-        $logService = $this->service(\app\system\service\LogService::class);
-
-        if ($pageNum > 0 && $pageSize > 0) {
-            [$list, $total] = $logService->getUserEventPage($userId, $params);
-            return $this->successPaginate($list, $total, $pageNum, $pageSize);
-        }
-
-        $list = $logService->getUserEventList($userId, $params, 50);
-        return $this->success($list);
-    }
-
-    /**
-     * 登录设备列表
-     */
-    public function loginDevices(): \think\response\Json
-    {
-        $userId = $this->getAuthUserId();
-        $days = (int) $this->getParam('days', 30);
-        $limit = (int) $this->getParam('limit', 10);
-
-        $list = $this->service(\app\system\service\LogService::class)->getLoginDevices(
-            $userId,
-            $days > 0 ? $days : 30,
-            $limit > 0 ? $limit : 10
-        );
-
-        return $this->success($list);
-    }
 }

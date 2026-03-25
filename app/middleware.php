@@ -1,7 +1,7 @@
-<?php declare(strict_types=1);
-
-// 全局中间件配置
+<?php
+// 应用中间件定义文件
 return [
-    // 跨域处理
-    \app\common\middleware\Cors::class,
+    'auth'     => \app\common\middleware\AuthMiddleware::class,
+    'perm'     => \app\common\middleware\PermMiddleware::class,
+    'dataScope' => \app\common\middleware\DataScopeMiddleware::class,
 ];

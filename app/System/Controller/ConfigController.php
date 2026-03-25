@@ -2,7 +2,9 @@
 
 namespace app\system\controller;
 
-use app\BaseController;
+use app\common\controller\BaseController;
+use app\system\annotation\Log;
+use app\system\enums\ActionType;
 use app\system\service\ConfigService;
 use OpenApi\Annotations as OA;
 
@@ -29,7 +31,7 @@ final class ConfigController extends BaseController
     public function page(): \think\Response
     {
         [$list, $total] = $this->service(ConfigService::class)->page($this->request->param());
-        return $this->okPage($list, $total);
+        return $this->success($list, $total);
     }
 
     /**
@@ -49,7 +51,7 @@ final class ConfigController extends BaseController
     public function form(int $id): \think\Response
     {
         $data = $this->service(ConfigService::class)->getConfigFormData($id);
-        return $this->ok($data);
+        return $this->success($data);
     }
 
     /**
@@ -66,12 +68,13 @@ final class ConfigController extends BaseController
      * @return \think\Response
      * @throws BusinessException 认证信息缺失或令牌无效时抛出
      */
+    #[Log(actionType: ActionType::CONFIG_CREATE)]
     public function create(): \think\Response
     {
         $userId = $this->getAuthUserId();
         $data = $this->mergeJsonParams();
         $this->service(ConfigService::class)->saveConfig($userId, $data);
-        return $this->ok();
+        return $this->success();
     }
 
     /**
@@ -90,12 +93,13 @@ final class ConfigController extends BaseController
      * @return \think\Response
      * @throws BusinessException 认证信息缺失或令牌无效时抛出
      */
+    #[Log(actionType: ActionType::CONFIG_UPDATE)]
     public function update(int $id): \think\Response
     {
         $userId = $this->getAuthUserId();
         $data = $this->mergeJsonParams();
         $this->service(ConfigService::class)->updateConfig($userId, $id, $data);
-        return $this->ok();
+        return $this->success();
     }
 
     /**
@@ -113,11 +117,12 @@ final class ConfigController extends BaseController
      * @return \think\Response
      * @throws BusinessException 认证信息缺失或令牌无效时抛出
      */
+    #[Log(actionType: ActionType::CONFIG_DELETE)]
     public function delete(int $id): \think\Response
     {
         $userId = $this->getAuthUserId();
         $this->service(ConfigService::class)->deleteConfig($userId, $id);
-        return $this->ok();
+        return $this->success();
     }
 
     /**
@@ -135,6 +140,6 @@ final class ConfigController extends BaseController
     public function refresh(): \think\Response
     {
         $this->service(ConfigService::class)->refreshCache();
-        return $this->ok();
+        return $this->success();
     }
 }

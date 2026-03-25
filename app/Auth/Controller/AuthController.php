@@ -3,10 +3,13 @@
 namespace app\auth\controller;
 
 use app\common\exception\BusinessException;
-use app\common\redis\RedisClient;
+use extend\redis\RedisClient;
 use app\common\web\ResultCode;
-use app\BaseController;
+use app\common\controller\BaseController;
 use app\auth\service\AuthService;
+use app\system\annotation\Log;
+use app\system\enums\ActionType;
+use app\system\model\Log as LogModel;
 use Gregwar\Captcha\CaptchaBuilder;
 use OpenApi\Annotations as OA;
 use think\response\Json;
@@ -105,6 +108,7 @@ final class AuthController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::LOGOUT)]
     public function logout(): Json
     {
         $accessToken = $this->request->header('Authorization', '');
@@ -169,6 +173,7 @@ final class AuthController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::LOGIN)]
     public function loginBySms(): Json
     {
         $mobile = $this->getParam('mobile', '');
@@ -179,6 +184,9 @@ final class AuthController extends BaseController
         }
 
         $result = $this->service(AuthService::class)->loginBySms($mobile, $code);
+
+        // 手动记录登录日志（登录接口是公开的，LogMiddleware 无法获取 userId）
+        $this->recordLoginLogByMobile($mobile, '/api/v1/auth/login/sms');
 
         return $this->success($result, '登录成功');
     }
@@ -198,9 +206,55 @@ final class AuthController extends BaseController
         $key = "captcha:{$captchaId}";
         $storedCode = $redis->get($key);
         if (!$storedCode || strtolower((string) $storedCode) !== strtolower($captchaCode)) {
-            throw new BusinessException(ResultCode::USER_ERROR, '验证码错误');
+            throw new BusinessException(ResultCode::USER_VERIFICATION_CODE_ERROR);
         }
 
         $redis->del($key);
+    }
+
+    /**
+     * 手动记录用户名密码登录日志
+     */
+    private function recordLoginLog(string $username, string $requestUri): void
+    {
+        try {
+            $user = \app\system\model\User::where('username', $username)->find();
+            if (!$user) return;
+
+            $this->saveLoginLog((int) $user->id, $requestUri);
+        } catch (\Throwable) {
+            // 日志记录失败不影响登录
+        }
+    }
+
+    /**
+     * 手动记录短信验证码登录日志
+     */
+    private function recordLoginLogByMobile(string $mobile, string $requestUri): void
+    {
+        try {
+            $user = \app\system\model\User::where('mobile', $mobile)->find();
+            if (!$user) return;
+
+            $this->saveLoginLog((int) $user->id, $requestUri);
+        } catch (\Throwable) {
+            // 日志记录失败不影响登录
+        }
+    }
+
+    /**
+     * 保存登录日志记录
+     */
+    private function saveLoginLog(int $userId, string $requestUri): void
+    {
+        LogModel::create([
+            'action_type'    => ActionType::LOGIN->value,
+            'request_uri'    => $requestUri,
+            'request_method' => 'POST',
+            'ip'             => $this->request->ip(),
+            'status'         => 1,
+            'create_by'      => $userId,
+            'create_time'    => date('Y-m-d H:i:s'),
+        ]);
     }
 }

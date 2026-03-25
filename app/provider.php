@@ -4,8 +4,10 @@
 // | 服务提供配置
 // +----------------------------------------------------------------------
 
-use app\common\http\HttpClient;
+use extend\http\HttpClient;
+use think\exception\Handle;
 
 return [
     HttpClient::class => HttpClient::class,
+    Handle::class => \app\common\exception\ExceptionHandle::class,
 ];

@@ -11,16 +11,10 @@ use think\facade\Db;
  */
 class DataPermissionService
 {
-    /**
-     * 应用数据权限过滤
-     *
-     * @param object $query 查询构建器
-     * @param string $deptIdColumn 部门ID字段名（如 'u.dept_id'）
-     * @param string $userIdColumn 用户ID字段名（如 'u.id' 或 'u.create_by'）
-     * @param array $authUser 当前用户信息（包含 userId、deptId、dataScopes、roles）
-     * @return object 过滤后的查询构建器
-     */
-    public function apply(object $query, string $deptIdColumn, string $userIdColumn, array $authUser): object
+/**
+ * 应用数据权限过滤
+ */
+public function apply(object $query, string $deptIdColumn, string $userIdColumn, array $authUser): object
     {
         // 超级管理员跳过过滤
         if ($this->isRoot($authUser)) {
@@ -32,9 +26,9 @@ class DataPermissionService
         $deptId = $authUser['deptId'] ?? null;
         $deptId = $deptId === null || $deptId === '' ? null : (int) $deptId;
 
-        // 没有数据权限配置，默认只能查看本人数据
+        // 没有数据权限配置时，跳过过滤（与 Java 行为一致）
         if (empty($dataScopes)) {
-            return $userId > 0 ? $query->where($userIdColumn, $userId) : $query->whereRaw('1 = 0');
+            return $query;
         }
 
         // 如果任一角色为 ALL，则跳过数据权限过滤
@@ -52,7 +46,13 @@ class DataPermissionService
     private function isRoot(array $authUser): bool
     {
         $roles = $authUser['roles'] ?? [];
-        return in_array('ROOT', $roles, true);
+        if (!empty($roles)) {
+            return in_array('ROOT', $roles, true);
+        }
+        // 兼容 JWT authorities 格式 ['ROLE_ROOT', 'ROLE_ADMIN']
+        $authorities = (array) ($authUser['authorities'] ?? []);
+        $roleCodes = array_map(fn($a) => str_starts_with($a, 'ROLE_') ? substr($a, 5) : $a, $authorities);
+        return in_array('ROOT', $roleCodes, true);
     }
 
     /**
@@ -178,7 +178,6 @@ class DataPermissionService
             ->where('is_deleted', 0)
             ->where(function ($query) use ($deptId, $deptIdStr) {
                 $query->where('id', $deptId)
-                    ->whereOr('tree_path', $deptIdStr)
                     ->whereOrRaw("FIND_IN_SET(?, tree_path)", [$deptIdStr]);
             })
             ->column('id');

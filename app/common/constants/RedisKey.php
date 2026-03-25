@@ -45,6 +45,11 @@ final class RedisKey
     
     /** 数据权限缓存键前缀 */
     public const string DATA_SCOPE = 'data:scope:';
+
+    // ===================== 限流相关 =====================
+
+    /** IP 限流键前缀 */
+    public const string RATE_LIMIT_IP = 'rate_limiter:ip:';
     
     // ===================== 构建方法 =====================
     
@@ -111,7 +116,15 @@ final class RedisKey
     {
         return self::ROLE_MENUS . $roleCode;
     }
-    
+
+    /**
+     * 构建 IP 限流键
+     */
+    public static function rateLimitIp(string $ip): string
+    {
+        return self::RATE_LIMIT_IP . $ip;
+    }
+
     private function __construct()
     {
         // 禁止实例化

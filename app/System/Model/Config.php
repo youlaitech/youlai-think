@@ -2,7 +2,7 @@
 
 namespace app\system\model;
 
-use app\common\model\Model;
+use app\common\model\BaseModel;
 
 /**
  * 系统配置模型
@@ -14,7 +14,7 @@ use app\common\model\Model;
  * @property string $remark      备注
  * @property string $createTime  创建时间
  */
-class Config extends Model
+class Config extends BaseModel
 {
     protected $name = 'sys_config';
 

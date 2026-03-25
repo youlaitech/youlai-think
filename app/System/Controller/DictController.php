@@ -2,7 +2,9 @@
 
 namespace app\system\controller;
 
-use app\BaseController;
+use app\common\controller\BaseController;
+use app\system\annotation\Log;
+use app\system\enums\ActionType;
 use app\system\service\DictService;
 use OpenApi\Annotations as OA;
 
@@ -28,7 +30,7 @@ final class DictController extends BaseController
     public function page(): \think\Response
     {
         [$list, $total] = $this->service(DictService::class)->getDictPage($this->request->param());
-        return $this->okPage($list, $total);
+        return $this->success($list, $total);
     }
 
     /**
@@ -42,7 +44,7 @@ final class DictController extends BaseController
     public function index(): \think\Response
     {
         $list = $this->service(DictService::class)->getDictList();
-        return $this->ok($list);
+        return $this->success($list);
     }
 
     /**
@@ -57,7 +59,7 @@ final class DictController extends BaseController
     public function form(int $id): \think\Response
     {
         $data = $this->service(DictService::class)->getDictForm($id);
-        return $this->ok($data);
+        return $this->success($data);
     }
 
     /**
@@ -69,11 +71,12 @@ final class DictController extends BaseController
      *     @OA\Response(response=200, description="OK")
      * )
      */
+    #[Log(actionType: ActionType::DICT_CREATE)]
     public function create(): \think\Response
     {
         $data = $this->mergeJsonParams();
         $this->service(DictService::class)->saveDict($data);
-        return $this->ok();
+        return $this->success();
     }
 
     /**
@@ -86,11 +89,12 @@ final class DictController extends BaseController
      *     @OA\Response(response=200, description="OK")
      * )
      */
+    #[Log(actionType: ActionType::DICT_UPDATE)]
     public function update(int $id): \think\Response
     {
         $data = $this->mergeJsonParams();
         $this->service(DictService::class)->updateDict($id, $data);
-        return $this->ok();
+        return $this->success();
     }
 
     /**
@@ -102,10 +106,11 @@ final class DictController extends BaseController
      *     @OA\Response(response=200, description="OK")
      * )
      */
+    #[Log(actionType: ActionType::DICT_DELETE)]
     public function delete(string $ids): \think\Response
     {
         $this->service(DictService::class)->deleteDictByIds($ids);
-        return $this->ok();
+        return $this->success();
     }
 
     //---------------------------------------------------
@@ -125,7 +130,7 @@ final class DictController extends BaseController
     public function itemPage(string $dictCode): \think\Response
     {
         [$list, $total] = $this->service(DictService::class)->getDictItemPage($dictCode, $this->request->param());
-        return $this->okPage($list, $total);
+        return $this->success($list, $total);
     }
 
     /**
@@ -140,7 +145,7 @@ final class DictController extends BaseController
     public function items(string $dictCode): \think\Response
     {
         $list = $this->service(DictService::class)->getDictItems($dictCode);
-        return $this->ok($list);
+        return $this->success($list);
     }
 
     /**
@@ -157,7 +162,7 @@ final class DictController extends BaseController
     {
         $data = $this->service(DictService::class)->getDictItemForm($itemId);
         $data['dictCode'] = $dictCode;
-        return $this->ok($data);
+        return $this->success($data);
     }
 
     /**
@@ -170,11 +175,12 @@ final class DictController extends BaseController
      *     @OA\Response(response=200, description="OK")
      * )
      */
+    #[Log(actionType: ActionType::DICT_CREATE)]
     public function createItem(string $dictCode): \think\Response
     {
         $data = $this->mergeJsonParams();
         $this->service(DictService::class)->saveDictItem($dictCode, $data);
-        return $this->ok();
+        return $this->success();
     }
 
     /**
@@ -188,11 +194,12 @@ final class DictController extends BaseController
      *     @OA\Response(response=200, description="OK")
      * )
      */
+    #[Log(actionType: ActionType::DICT_UPDATE)]
     public function updateItem(string $dictCode, int $itemId): \think\Response
     {
         $data = $this->mergeJsonParams();
         $this->service(DictService::class)->updateDictItem($dictCode, $itemId, $data);
-        return $this->ok();
+        return $this->success();
     }
 
     /**
@@ -205,9 +212,10 @@ final class DictController extends BaseController
      *     @OA\Response(response=200, description="OK")
      * )
      */
+    #[Log(actionType: ActionType::DICT_DELETE)]
     public function deleteItems(string $dictCode, string $itemIds): \think\Response
     {
         $this->service(DictService::class)->deleteDictItems($dictCode, $itemIds);
-        return $this->ok();
+        return $this->success();
     }
 }

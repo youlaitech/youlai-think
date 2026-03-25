@@ -25,12 +25,12 @@ return [
         'refresh_ttl' => (int) env('REDIS_TOKEN_REFRESH_TTL', 604800),
 
         'keys' => [
-            'access_token_user' => 'auth:token:access:{}',
-            'refresh_token_user' => 'auth:token:refresh:{}',
-            'user_access_token' => 'auth:user:access:{}',
-            'user_refresh_token' => 'auth:user:refresh:{}',
-            'blacklist_token' => 'auth:token:blacklist:{}',
-            'user_token_version' => 'auth:user:token_version:{}',
+            'access_token_user' => 'auth:token:access:%s',
+            'refresh_token_user' => 'auth:token:refresh:%s',
+            'user_access_token' => 'auth:user:access:%d',
+            'user_refresh_token' => 'auth:user:refresh:%d',
+            'blacklist_token' => 'auth:token:blacklist:%s',
+            'user_token_version' => 'auth:user:token_version:%d',
         ],
     ],
 ];

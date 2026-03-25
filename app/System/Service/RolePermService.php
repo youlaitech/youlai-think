@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace app\system\service;
 
-use app\common\redis\RedisClient;
+use extend\redis\RedisClient;
 use think\facade\Db;
 
 /**

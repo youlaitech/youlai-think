@@ -3,9 +3,9 @@
 namespace app\auth\service;
 
 use app\common\exception\BusinessException;
-use app\common\model\SysUserSocial;
-use app\common\redis\RedisClient;
-use app\common\security\JwtTokenManager;
+use app\system\model\SysUserSocial;
+use extend\redis\RedisClient;
+use extend\jwt\JwtTokenManager;
 use app\common\web\ResultCode;
 use app\system\model\User;
 use GuzzleHttp\Client;
@@ -44,7 +44,7 @@ final class WxMaAuthService
         $openId = $session['openid'] ?? '';
 
         if (empty($openId)) {
-            throw new BusinessException(ResultCode::USER_LOGIN_ERROR, '微信登录失败：无法获取用户标识');
+            throw new BusinessException(ResultCode::USER_LOGIN_EXCEPTION, '微信登录失败：无法获取用户标识');
         }
 
         // 查找是否已绑定用户
@@ -130,7 +130,7 @@ final class WxMaAuthService
             if (isset($data['errcode']) && $data['errcode'] != 0) {
                 $errMsg = $data['errmsg'] ?? 'Unknown error';
                 Log::error("获取微信会话信息失败：code={$code}, errcode={$data['errcode']}, errmsg={$errMsg}");
-                throw new BusinessException(ResultCode::USER_LOGIN_ERROR, "微信登录失败：{$errMsg}");
+                throw new BusinessException(ResultCode::USER_LOGIN_EXCEPTION, "微信登录失败：{$errMsg}");
             }
 
             return $data;
@@ -138,7 +138,7 @@ final class WxMaAuthService
             throw $e;
         } catch (\Exception $e) {
             Log::error("获取微信会话信息失败：code={$code}, error={$e->getMessage()}");
-            throw new BusinessException(ResultCode::USER_LOGIN_ERROR, '微信登录失败：' . $e->getMessage());
+            throw new BusinessException(ResultCode::USER_LOGIN_EXCEPTION, '微信登录失败：' . $e->getMessage());
         }
     }
 
@@ -157,15 +157,15 @@ final class WxMaAuthService
             if ($data['errcode'] != 0) {
                 $errMsg = $data['errmsg'] ?? 'Unknown error';
                 Log::error("获取微信手机号失败：phoneCode={$phoneCode}, errcode={$data['errcode']}, errmsg={$errMsg}");
-                throw new BusinessException(ResultCode::USER_LOGIN_ERROR, "获取手机号失败：{$errMsg}");
+                throw new BusinessException(ResultCode::USER_LOGIN_EXCEPTION, "获取手机号失败：{$errMsg}");
             }
 
-            return $data['phone_info']['phoneNumber'] ?? throw new BusinessException(ResultCode::USER_LOGIN_ERROR, '获取手机号失败');
+            return $data['phone_info']['phoneNumber'] ?? throw new BusinessException(ResultCode::USER_LOGIN_EXCEPTION, '获取手机号失败');
         } catch (BusinessException $e) {
             throw $e;
         } catch (\Exception $e) {
             Log::error("获取微信手机号失败：phoneCode={$phoneCode}, error={$e->getMessage()}");
-            throw new BusinessException(ResultCode::USER_LOGIN_ERROR, '获取手机号失败：' . $e->getMessage());
+            throw new BusinessException(ResultCode::USER_LOGIN_EXCEPTION, '获取手机号失败：' . $e->getMessage());
         }
     }
 
@@ -191,7 +191,7 @@ final class WxMaAuthService
 
         if (isset($data['errcode']) && $data['errcode'] != 0) {
             $errMsg = $data['errmsg'] ?? 'Unknown error';
-            throw new BusinessException(ResultCode::USER_LOGIN_ERROR, "获取微信AccessToken失败：{$errMsg}");
+            throw new BusinessException(ResultCode::USER_LOGIN_EXCEPTION, "获取微信AccessToken失败：{$errMsg}");
         }
 
         // 缓存 token（提前5分钟过期）
@@ -206,7 +206,7 @@ final class WxMaAuthService
      */
     private function findOrCreateUser(string $mobile): User
     {
-        $user = User::where('mobile', $mobile)->where('is_deleted', 0)->find();
+        $user = User::where('mobile', $mobile)->find();
 
         if ($user) {
             return $user;
@@ -234,7 +234,7 @@ final class WxMaAuthService
             return $user;
         } catch (\Exception $e) {
             Db::rollback();
-            throw new BusinessException(ResultCode::USER_ERROR, '创建用户失败：' . $e->getMessage());
+            throw new BusinessException('创建用户失败：' . $e->getMessage());
         }
     }
 
@@ -300,12 +300,23 @@ final class WxMaAuthService
         $user = User::find($userId);
 
         if (!$user) {
-            throw new BusinessException(ResultCode::USER_ERROR, '用户不存在');
+            throw new BusinessException('用户不存在');
         }
+
+        // 查询用户角色
+        $roles = Db::name('sys_user_role')
+            ->alias('ur')
+            ->join('sys_role r', 'ur.role_id = r.id')
+            ->where('ur.user_id', $userId)
+            ->where('r.is_deleted', 0)
+            ->where('r.status', 1)
+            ->column('r.code');
+        $authorities = array_map(fn(string $code) => 'ROLE_' . $code, $roles);
 
         $userAuthInfo = [
             'userId' => $userId,
             'deptId' => $user->dept_id ?? null,
+            'authorities' => $authorities,
         ];
 
         $token = $this->jwt->generateToken($userAuthInfo);

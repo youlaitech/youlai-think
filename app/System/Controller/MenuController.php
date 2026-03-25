@@ -2,7 +2,9 @@
 
 namespace app\system\controller;
 
-use app\BaseController;
+use app\common\controller\BaseController;
+use app\system\annotation\Log;
+use app\system\enums\ActionType;
 use app\system\service\MenuService;
 use OpenApi\Annotations as OA;
 
@@ -140,6 +142,7 @@ final class MenuController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::MENU_CREATE)]
     public function create(): \think\response\Json
     {
         $id = $this->service(MenuService::class)->create($this->getAllParams());
@@ -159,6 +162,7 @@ final class MenuController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::MENU_UPDATE)]
     public function update(): \think\response\Json
     {
         $id = $this->getIdParam();
@@ -178,6 +182,7 @@ final class MenuController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::MENU_DELETE)]
     public function delete(): \think\response\Json
     {
         $id = $this->getIdParam();
@@ -197,6 +202,7 @@ final class MenuController extends BaseController
      *     @OA\Response(response="200", description="成功")
      * )
      */
+    #[Log(actionType: ActionType::MENU_UPDATE)]
     public function visible(): \think\response\Json
     {
         $id = $this->getIdParam();
