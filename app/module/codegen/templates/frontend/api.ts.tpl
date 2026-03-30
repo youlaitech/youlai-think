@@ -1,5 +1,6 @@
 import request from "@/utils/request";
-import type { {{entityName}}QueryParams, {{entityName}}Item, {{entityName}}Form } from "@/types/api/{{entityKebab}}";
+import type { {{entityName}}QueryParams, {{entityName}}Item, {{entityName}}Form } from "./types";
+import type { PageResult } from "@/api/common";
 
 const BASE_URL = "/api/v1/{{entityKebab}}";
 
@@ -49,3 +50,6 @@ const {{entityKebab}}API = {
 };
 
 export default {{entityKebab}}API;
+
+// 重导出类型
+export * from "./types";

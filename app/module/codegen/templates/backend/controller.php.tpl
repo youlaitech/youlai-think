@@ -18,7 +18,7 @@ final class {{entityName}}Controller extends ApiController
     public function page(): \think\Response
     {
         [$list, $total] = (new {{entityName}}Service())->page($this->request->param());
-        return $this->okPage($list, $total);
+        return $this->success($list, $total);
     }
 
     /**
@@ -27,7 +27,7 @@ final class {{entityName}}Controller extends ApiController
     public function form(int $id): \think\Response
     {
         $data = (new {{entityName}}Service())->getFormData($id);
-        return $this->ok($data);
+        return $this->success($data);
     }
 
     /**
@@ -37,7 +37,7 @@ final class {{entityName}}Controller extends ApiController
     {
         $data = $this->mergeJsonParams();
         (new {{entityName}}Service())->create($data);
-        return $this->ok();
+        return $this->success();
     }
 
     /**
@@ -47,7 +47,7 @@ final class {{entityName}}Controller extends ApiController
     {
         $data = $this->mergeJsonParams();
         (new {{entityName}}Service())->update($id, $data);
-        return $this->ok();
+        return $this->success();
     }
 
     /**
@@ -56,6 +56,6 @@ final class {{entityName}}Controller extends ApiController
     public function delete(string $ids): \think\Response
     {
         (new {{entityName}}Service())->delete($ids);
-        return $this->ok();
+        return $this->success();
     }
 }

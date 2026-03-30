@@ -1,6 +1,6 @@
 <template>
-  <div class="app-container">
-    <div class="search-container">
+  <div class="page-container">
+    <el-card class="page-search" shadow="never">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
 {{searchFormItems}}
         <el-form-item class="search-buttons">
@@ -8,10 +8,11 @@
           <el-button icon="refresh" @click="handleResetQuery">重置</el-button>
         </el-form-item>
       </el-form>
-    </div>
+    </el-card>
 
-    <el-card shadow="never">
-      <div class="mb-10px">
+    <el-card class="page-content" shadow="never">
+      <div class="page-toolbar">
+        <div class="page-toolbar__left">
         <el-button
           v-hasPerm="['{{moduleName}}:{{entityKebab}}:create']"
           type="success"
@@ -25,6 +26,7 @@
           icon="delete"
           @click="handleDelete()"
         >删除</el-button>
+        </div>
       </div>
 
       <el-table
@@ -63,13 +65,15 @@
         </el-table-column>
       </el-table>
 
-      <pagination
-        v-if="total > 0"
-        v-model:total="total"
-        v-model:page="queryParams.pageNum"
-        v-model:limit="queryParams.pageSize"
-        @pagination="handleQuery()"
-      />
+      <div class="page-pagination">
+        <pagination
+          v-if="total > 0"
+          v-model:total="total"
+          v-model:page="queryParams.pageNum"
+          v-model:limit="queryParams.pageSize"
+          @pagination="handleQuery()"
+        />
+      </div>
     </el-card>
 
     <el-dialog
@@ -98,7 +102,7 @@ defineOptions({
 });
 
 import {{entityName}}API from "@/api/{{moduleName}}/{{entityKebab}}";
-import type { {{entityName}}Item, {{entityName}}Form, {{entityName}}QueryParams } from "@/types/api/{{entityKebab}}";
+import type { {{entityName}}Item, {{entityName}}Form, {{entityName}}QueryParams } from "@/api/{{moduleName}}/{{entityKebab}}";
 
 const queryFormRef = ref();
 const dataFormRef = ref();
