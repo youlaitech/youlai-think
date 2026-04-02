@@ -106,7 +106,6 @@ final class RolePermService
             ->whereIn('r.code', $roleCodes)
             ->where('r.is_deleted', 0)
             ->where('r.status', 1)
-            ->where('m.is_deleted', 0)
             ->where('m.type', 'B')
             ->where('m.perm', '<>', '')
             ->where('m.perm', 'not null')

@@ -220,7 +220,7 @@ final class MenuService
     public function delete(int $id): bool
     {
         $menu = Menu::find($id);
-        if (!$menu || (int) $menu->is_deleted === 1) {
+        if (!$menu) {
             throw new BusinessException('菜单不存在');
         }
 
@@ -233,9 +233,8 @@ final class MenuService
         // 删除关联
         Db::name('sys_role_menu')->where('menu_id', $id)->delete();
 
-        // 软删除
-        $menu->is_deleted = 1;
-        return $menu->save();
+        // 物理删除（sys_menu 表无 is_deleted 字段）
+        return $menu->delete();
     }
 
     /**

@@ -20,6 +20,9 @@ class DictItem extends BaseModel
 {
     protected $name = 'sys_dict_item';
 
+    // sys_dict_item 表无 is_deleted 字段，禁用软删除全局作用域
+    protected $deleteTime = false;
+
     protected $type = [
         'id' => 'integer',
         'sort' => 'integer',

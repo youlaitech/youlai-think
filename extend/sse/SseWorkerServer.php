@@ -36,6 +36,7 @@ class SseWorkerServer extends Worker
         $this->loadJwtConfig();
         $this->onWorkerStart = [$this, 'onWorkerStart'];
         $this->onMessage = [$this, 'onMessage'];
+        $this->onWorkerStop = [$this, 'onWorkerStop'];
     }
 
     public function onWorkerStart(): void
@@ -179,6 +180,23 @@ class SseWorkerServer extends Worker
     private function getGlobalOnlineCount(): int
     {
         try { return (int)$this->redis->hlen(self::REDIS_ONLINE_KEY); } catch (\Throwable) { return $this->registry->getOnlineUserCount(); }
+    }
+
+    public function onWorkerStop(): void
+    {
+        // Worker 进程退出时主动关闭所有 SSE 连接
+        $emitters = $this->registry->getAllEmitters();
+        foreach ($emitters as $emitter) {
+            try { $emitter->close(); } catch (\Throwable) {}
+        }
+        try {
+            $this->registry->getOnlineUsers();
+            // 清理 Redis 在线用户数据
+            $users = $this->registry->getOnlineUsers();
+            foreach ($users as $username) {
+                $this->redis->hdel(self::REDIS_ONLINE_KEY, $username);
+            }
+        } catch (\Throwable) {}
     }
 
     private function createRedisClient(): RedisClient
