@@ -1,4 +1,4 @@
-import type { BaseQueryParams } from "@/types/api/common";
+import type { BaseQueryParams } from "@/api/common";
 
 /** 列表对象 */
 export interface {{entityName}}Item {
