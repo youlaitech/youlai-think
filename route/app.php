@@ -153,8 +153,8 @@ Route::group('api/v1', function () {
     // 日志管理
     Route::group('logs', function () {
         Route::get('', [LogController::class, 'page']);
-        Route::get('views/trend', [LogController::class, 'viewsTrend']);
-        Route::get('views', [LogController::class, 'views']);
+        Route::get('analytics/trend', [LogController::class, 'viewsTrend']);
+        Route::get('analytics/overview', [LogController::class, 'views']);
     });
 
     // 代码生成

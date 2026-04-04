@@ -36,7 +36,7 @@ final class LogController extends BaseController
      * 访问趋势统计
      *
      * @OA\Get(
-     *     path="/api/v1/logs/views/trend",
+     *     path="/api/v1/logs/analytics/trend",
      *     summary="访问趋势统计",
      *     tags={"09.日志接口"},
      *     @OA\Parameter(name="startDate", in="query", description="开始日期", required=true),
@@ -58,7 +58,7 @@ final class LogController extends BaseController
      * 访问统计概览
      *
      * @OA\Get(
-     *     path="/api/v1/logs/views",
+     *     path="/api/v1/logs/analytics/overview",
      *     summary="访问统计概览",
      *     tags={"09.日志接口"},
      *     @OA\Response(response=200, description="OK")
