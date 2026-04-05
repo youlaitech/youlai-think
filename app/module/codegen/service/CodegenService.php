@@ -508,27 +508,27 @@ ORDER BY ORDINAL_POSITION ASC
         $apiTpl = $this->resolveFrontendTemplatePath('frontend/api.ts.tpl', $frontendType);
         $apiExt = $this->resolveFrontendExtension('api', $frontendType);
         $previews[] = $this->buildPreviewItem(
-            self::DEFAULT_FRONTEND_APP_NAME . '/src/api/' . $moduleName,
-            $entityKebab . $apiExt,
+            self::DEFAULT_FRONTEND_APP_NAME . '/src/api/' . $moduleName . '/' . $entityKebab,
+            'index' . $apiExt,
             $this->renderFromTemplate($apiTpl, $vars),
             'frontend'
         );
 
         if ($frontendType !== 'js') {
             $previews[] = $this->buildPreviewItem(
-                self::DEFAULT_FRONTEND_APP_NAME . '/src/types/api',
-                $entityKebab . '.ts',
-                $this->renderFromTemplate('frontend/types.ts.tpl', $vars),
+                self::DEFAULT_FRONTEND_APP_NAME . '/src/api/' . $moduleName . '/' . $entityKebab,
+                'types.ts',
+                $this->renderFromTemplate('frontend/ts/types.ts.tpl', $vars),
                 'frontend'
             );
         }
 
         $viewTpl = $this->resolveFrontendTemplatePath('frontend/index.vue.tpl', $frontendType);
         if ($finalPageType === 'curd') {
-            if ($viewTpl === 'frontend/index.js.vue.tpl') {
-                $viewTpl = 'frontend/index.curd.js.vue.tpl';
-            } elseif ($viewTpl === 'frontend/index.vue.tpl') {
-                $viewTpl = 'frontend/index.curd.vue.tpl';
+            if ($viewTpl === 'frontend/js/index.vue.tpl') {
+                $viewTpl = 'frontend/js/index.curd.vue.tpl';
+            } elseif ($viewTpl === 'frontend/ts/index.vue.tpl') {
+                $viewTpl = 'frontend/ts/index.curd.vue.tpl';
             }
         }
         $previews[] = $this->buildPreviewItem(
@@ -601,14 +601,18 @@ ORDER BY ORDINAL_POSITION ASC
 
     private function resolveFrontendTemplatePath(string $relativePath, string $frontendType): string
     {
-        if ($frontendType !== 'js') {
+        if ($frontendType === 'js') {
+            if ($relativePath === 'frontend/api.ts.tpl') {
+                return 'frontend/js/api.js.tpl';
+            }
+            if ($relativePath === 'frontend/index.vue.tpl') {
+                return 'frontend/js/index.vue.tpl';
+            }
             return $relativePath;
         }
-        if ($relativePath === 'frontend/api.ts.tpl') {
-            return 'frontend/api.js.tpl';
-        }
-        if ($relativePath === 'frontend/index.vue.tpl') {
-            return 'frontend/index.js.vue.tpl';
+
+        if (str_starts_with($relativePath, 'frontend/')) {
+            return str_replace('frontend/', 'frontend/ts/', $relativePath);
         }
         return $relativePath;
     }

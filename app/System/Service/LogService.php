@@ -139,16 +139,16 @@ final class LogService
         }
 
         $pvList = [];
-        $ipList = [];
+        $uvList = [];
         foreach ($dates as $d) {
             $pvList[] = $pvMap[$d] ?? 0;
-            $ipList[] = $ipMap[$d] ?? 0;
+            $uvList[] = $ipMap[$d] ?? 0;
         }
 
         return [
             'dates' => $dates,
             'pvList' => $pvList,
-            'ipList' => $ipList,
+            'uvList' => $uvList,
         ];
     }
 
