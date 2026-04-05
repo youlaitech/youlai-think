@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace app\{{moduleNameStudly}}\Model;
+namespace app\{$moduleNameStudly}\Model;
 
 use app\common\model\BaseModel;
 
 /**
- * {{businessName}} 模型
+ * {$businessName} 模型
  */
-final class {{entityName}} extends BaseModel
+final class {$entityName} extends BaseModel
 {
-    protected $name = '{{tableName}}';
+    protected $name = '{$tableName}';
 }

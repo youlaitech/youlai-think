@@ -2,7 +2,7 @@
   <div class="page-container">
     <el-card class="page-search" shadow="never">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
-{{searchFormItems}}
+{$searchFormItems}
         <el-form-item class="search-buttons">
           <el-button type="primary" icon="search" @click="handleQuery">搜索</el-button>
           <el-button icon="refresh" @click="handleResetQuery">重置</el-button>
@@ -14,13 +14,13 @@
       <div class="page-toolbar">
         <div class="page-toolbar__left">
         <el-button
-          v-hasPerm="['{{moduleName}}:{{entityKebab}}:create']"
+          v-hasPerm="['{$moduleName}:{$entityKebab}:create']"
           type="success"
           icon="plus"
           @click="handleOpenDialog()"
         >新增</el-button>
         <el-button
-          v-hasPerm="['{{moduleName}}:{{entityKebab}}:delete']"
+          v-hasPerm="['{$moduleName}:{$entityKebab}:delete']"
           type="danger"
           :disabled="removeIds.length === 0"
           icon="delete"
@@ -38,11 +38,11 @@
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" width="55" align="center" />
-{{tableColumns}}
+{$tableColumns}
         <el-table-column fixed="right" label="操作" width="220">
           <template #default="scope">
             <el-button
-              v-hasPerm="['{{moduleName}}:{{entityKebab}}:update']"
+              v-hasPerm="['{$moduleName}:{$entityKebab}:update']"
               type="primary"
               size="small"
               link
@@ -52,7 +52,7 @@
               编辑
             </el-button>
             <el-button
-              v-hasPerm="['{{moduleName}}:{{entityKebab}}:delete']"
+              v-hasPerm="['{$moduleName}:{$entityKebab}:delete']"
               type="danger"
               size="small"
               link
@@ -83,7 +83,7 @@
       @close="handleCloseDialog"
     >
       <el-form ref="dataFormRef" :model="formData" :rules="rules" label-width="100px">
-{{formItems}}
+{$formItems}
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -97,11 +97,11 @@
 
 <script setup>
 defineOptions({
-  name: "{{entityName}}",
+  name: "{$entityName}",
   inheritAttrs: false,
 });
 
-import {{entityName}}API from "@/api/{{moduleName}}/{{entityKebab}}";
+import {$entityName}API from "@/api/{$moduleName}/{$entityKebab}";
 
 const queryFormRef = ref();
 const dataFormRef = ref();
@@ -125,12 +125,12 @@ const dialog = reactive({
 const formData = reactive({});
 
 const rules = reactive({
-{{rules}}
+{$rules}
 });
 
 function handleQuery() {
   loading.value = true;
-  {{entityName}}API.getPage(queryParams)
+  {$entityName}API.getPage(queryParams)
     .then((data) => {
       pageData.value = data.list;
       total.value = data.total ?? 0;
@@ -153,12 +153,12 @@ function handleSelectionChange(selection) {
 function handleOpenDialog(id) {
   dialog.visible = true;
   if (id) {
-    dialog.title = "修改{{businessName}}";
-    {{entityName}}API.getForm(id).then((data) => {
+    dialog.title = "修改{$businessName}";
+    {$entityName}API.getForm(id).then((data) => {
       Object.assign(formData, data);
     });
   } else {
-    dialog.title = "新增{{businessName}}";
+    dialog.title = "新增{$businessName}";
   }
 }
 
@@ -170,7 +170,7 @@ function handleSubmit() {
 
     loading.value = true;
     const id = formData.id;
-    const action = id ? {{entityName}}API.update(id, formData) : {{entityName}}API.create(formData);
+    const action = id ? {$entityName}API.update(id, formData) : {$entityName}API.create(formData);
     action
       .then(() => {
         ElMessage.success(id ? "修改成功" : "新增成功");
@@ -202,7 +202,7 @@ function handleDelete(id) {
   }).then(
     () => {
       loading.value = true;
-      {{entityName}}API.deleteByIds(ids)
+      {$entityName}API.deleteByIds(ids)
         .then(() => {
           ElMessage.success("删除成功");
           handleResetQuery();

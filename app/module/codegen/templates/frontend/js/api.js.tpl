@@ -1,8 +1,8 @@
 import request from "@/utils/request";
 
-const BASE_URL = "/api/v1/{{entityKebab}}";
+const BASE_URL = "/api/v1/{$entityKebab}";
 
-const {{entityKebab}}API = {
+const {$entityKebab}API = {
   /** 分页 */
   getPage(params) {
     return request({
@@ -47,4 +47,4 @@ const {{entityKebab}}API = {
   },
 };
 
-export default {{entityKebab}}API;
+export default {$entityKebab}API;

@@ -7,7 +7,7 @@
       @query-click="handleQueryClick"
       @reset-click="handleResetClick"
     >
-{{searchSlotsCurd}}
+{$searchSlotsCurd}
     </PageSearch>
 
     <!-- 列表 -->
@@ -19,26 +19,26 @@
       @search-click="handleSearchClick"
       @filter-change="handleFilterChange"
     >
-{{listSlotsCurd}}
+{$listSlotsCurd}
     </PageContent>
 
     <!-- 新增 -->
     <PageModal ref="addModalRef" :modal-config="addModalConfig" @submit-click="handleSubmitClick">
-{{formSlotsCurd}}
+{$formSlotsCurd}
     </PageModal>
 
     <!-- 编辑 -->
     <PageModal ref="editModalRef" :modal-config="editModalConfig" @submit-click="handleSubmitClick">
-{{formSlotsCurd}}
+{$formSlotsCurd}
     </PageModal>
   </div>
 </template>
 
 <script setup lang="ts">
-defineOptions({ name: "{{entityName}}" });
+defineOptions({ name: "{$entityName}" });
 
-import {{entityName}}API from "@/api/{{moduleName}}/{{entityKebab}}";
-import type { {{entityName}}Form, {{entityName}}QueryParams, {{entityName}}Item } from "@/api/{{moduleName}}/{{entityKebab}}";
+import {$entityName}API from "@/api/{$moduleName}/{$entityKebab}";
+import type { {$entityName}Form, {$entityName}QueryParams, {$entityName}Item } from "@/api/{$moduleName}/{$entityKebab}";
 import type { IModalConfig, IContentConfig, ISearchConfig } from "@/components/CURD/types";
 import usePage from "@/components/CURD/usePage";
 
@@ -58,21 +58,21 @@ const {
 } = usePage();
 
 const searchConfig: ISearchConfig = reactive({
-  permPrefix: "{{moduleName}}:{{entityKebab}}",
+  permPrefix: "{$moduleName}:{$entityKebab}",
   formItems: [
-{{searchConfigItemsCurd}}
+{$searchConfigItemsCurd}
   ],
 });
 
-const contentConfig: IContentConfig<{{entityName}}QueryParams, {{entityName}}Item> = reactive({
-  permPrefix: "{{moduleName}}:{{entityKebab}}",
+const contentConfig: IContentConfig<{$entityName}QueryParams, {$entityName}Item> = reactive({
+  permPrefix: "{$moduleName}:{$entityKebab}",
   table: {
     border: true,
     highlightCurrentRow: true,
   },
   pk: "id",
-  indexAction: {{entityName}}API.getPage,
-  deleteAction: {{entityName}}API.deleteByIds,
+  indexAction: {$entityName}API.getPage,
+  deleteAction: {$entityName}API.deleteByIds,
   parseData(res: any) {
     return {
       total: res?.total ?? 0,
@@ -89,7 +89,7 @@ const contentConfig: IContentConfig<{{entityName}}QueryParams, {{entityName}}Ite
   defaultToolbar: ["refresh", "filter"],
   cols: [
     { type: "selection", width: 55, align: "center" },
-{{contentColsCurd}}
+{$contentColsCurd}
     {
       label: "操作",
       prop: "operation",
@@ -100,11 +100,11 @@ const contentConfig: IContentConfig<{{entityName}}QueryParams, {{entityName}}Ite
   ],
 });
 
-const addModalConfig: IModalConfig<{{entityName}}Form> = reactive({
-  permPrefix: "{{moduleName}}:{{entityKebab}}",
+const addModalConfig: IModalConfig<{$entityName}Form> = reactive({
+  permPrefix: "{$moduleName}:{$entityKebab}",
   pk: "id",
   dialog: {
-    title: "新增{{businessName}}",
+    title: "新增{$businessName}",
     width: 800,
     draggable: true,
   },
@@ -112,15 +112,15 @@ const addModalConfig: IModalConfig<{{entityName}}Form> = reactive({
     labelWidth: 100,
   },
   formItems: [
-{{modalFormItemsCurd}}
+{$modalFormItemsCurd}
   ],
 });
 
-const editModalConfig: IModalConfig<{{entityName}}Form> = reactive({
-  permPrefix: "{{moduleName}}:{{entityKebab}}",
+const editModalConfig: IModalConfig<{$entityName}Form> = reactive({
+  permPrefix: "{$moduleName}:{$entityKebab}",
   pk: "id",
   dialog: {
-    title: "编辑{{businessName}}",
+    title: "编辑{$businessName}",
     width: 800,
     draggable: true,
   },
@@ -128,14 +128,14 @@ const editModalConfig: IModalConfig<{{entityName}}Form> = reactive({
     labelWidth: 100,
   },
   formItems: [
-{{modalFormItemsCurd}}
+{$modalFormItemsCurd}
   ],
-  formAction: async (data: {{entityName}}Form) => {
+  formAction: async (data: {$entityName}Form) => {
     const id = (data as any).id as string | undefined;
     if (id) {
-      return {{entityName}}API.update(id, data);
+      return {$entityName}API.update(id, data);
     }
-    return {{entityName}}API.create(data);
+    return {$entityName}API.create(data);
   },
 });
 </script>

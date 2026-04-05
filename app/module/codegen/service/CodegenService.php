@@ -701,7 +701,7 @@ ORDER BY ORDINAL_POSITION ASC
     private function buildDeleteBody(array $fieldConfigs): string
     {
         if (!$this->hasColumn($fieldConfigs, 'is_deleted')) {
-            return "        Db::name('{{tableName}}')->whereIn('id', \$idList)->delete();";
+            return "        Db::name('{\$tableName}')->whereIn('id', \$idList)->delete();";
         }
 
         $payload = "        \$payload = ['is_deleted' => 1";
@@ -709,7 +709,7 @@ ORDER BY ORDINAL_POSITION ASC
             $payload .= ", 'update_time' => date('Y-m-d H:i:s')";
         }
         $payload .= "];\n";
-        $payload .= "        Db::name('{{tableName}}')->whereIn('id', \$idList)->update(\$payload);";
+        $payload .= "        Db::name('{\$tableName}')->whereIn('id', \$idList)->update(\$payload);";
         return $payload;
     }
 

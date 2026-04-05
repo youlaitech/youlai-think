@@ -1,13 +1,13 @@
 import request from "@/utils/request";
-import type { {{entityName}}QueryParams, {{entityName}}Item, {{entityName}}Form } from "./types";
+import type { {$entityName}QueryParams, {$entityName}Item, {$entityName}Form } from "./types";
 import type { PageResult } from "@/api/common";
 
-const BASE_URL = "/api/v1/{{entityKebab}}";
+const BASE_URL = "/api/v1/{$entityKebab}";
 
-const {{entityKebab}}API = {
+const {$entityKebab}API = {
   /** 分页 */
-  getPage(queryParams: {{entityName}}QueryParams) {
-    return request<any, PageResult<{{entityName}}Item>>({
+  getPage(queryParams: {$entityName}QueryParams) {
+    return request<any, PageResult<{$entityName}Item>>({
       url: `${BASE_URL}`,
       method: "get",
       params: queryParams,
@@ -16,14 +16,14 @@ const {{entityKebab}}API = {
 
   /** 表单 */
   getForm(id: string) {
-    return request<any, {{entityName}}Form>({
+    return request<any, {$entityName}Form>({
       url: `${BASE_URL}/${id}/form`,
       method: "get",
     });
   },
 
   /** 新增 */
-  create(data: {{entityName}}Form) {
+  create(data: {$entityName}Form) {
     return request({
       url: `${BASE_URL}`,
       method: "post",
@@ -32,7 +32,7 @@ const {{entityKebab}}API = {
   },
 
   /** 修改 */
-  update(id: string, data: {{entityName}}Form) {
+  update(id: string, data: {$entityName}Form) {
     return request({
       url: `${BASE_URL}/${id}`,
       method: "put",
@@ -49,7 +49,7 @@ const {{entityKebab}}API = {
   },
 };
 
-export default {{entityKebab}}API;
+export default {$entityKebab}API;
 
 // 重导出类型
 export * from "./types";

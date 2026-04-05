@@ -7,7 +7,7 @@
       @query-click="handleQueryClick"
       @reset-click="handleResetClick"
     >
-{{searchSlotsCurd}}
+{$searchSlotsCurd}
     </PageSearch>
 
     <!-- 列表 -->
@@ -19,25 +19,25 @@
       @search-click="handleSearchClick"
       @filter-change="handleFilterChange"
     >
-{{listSlotsCurd}}
+{$listSlotsCurd}
     </PageContent>
 
     <!-- 新增 -->
     <PageModal ref="addModalRef" :modal-config="addModalConfig" @submit-click="handleSubmitClick">
-{{formSlotsCurd}}
+{$formSlotsCurd}
     </PageModal>
 
     <!-- 编辑 -->
     <PageModal ref="editModalRef" :modal-config="editModalConfig" @submit-click="handleSubmitClick">
-{{formSlotsCurd}}
+{$formSlotsCurd}
     </PageModal>
   </div>
 </template>
 
 <script setup>
-defineOptions({ name: "{{entityName}}" });
+defineOptions({ name: "{$entityName}" });
 
-import {{entityName}}API from "@/api/{{moduleName}}/{{entityKebab}}";
+import {$entityName}API from "@/api/{$moduleName}/{$entityKebab}";
 import usePage from "@/components/CURD/usePage";
 
 const {
@@ -56,21 +56,21 @@ const {
 } = usePage();
 
 const searchConfig = reactive({
-  permPrefix: "{{moduleName}}:{{entityKebab}}",
+  permPrefix: "{$moduleName}:{$entityKebab}",
   formItems: [
-{{searchConfigItemsCurd}}
+{$searchConfigItemsCurd}
   ],
 });
 
 const contentConfig = reactive({
-  permPrefix: "{{moduleName}}:{{entityKebab}}",
+  permPrefix: "{$moduleName}:{$entityKebab}",
   table: {
     border: true,
     highlightCurrentRow: true,
   },
   pk: "id",
-  indexAction: {{entityName}}API.getPage,
-  deleteAction: {{entityName}}API.deleteByIds,
+  indexAction: {$entityName}API.getPage,
+  deleteAction: {$entityName}API.deleteByIds,
   parseData(res) {
     return {
       total: res?.total ?? 0,
@@ -87,7 +87,7 @@ const contentConfig = reactive({
   defaultToolbar: ["refresh", "filter"],
   cols: [
     { type: "selection", width: 55, align: "center" },
-{{contentColsCurd}}
+{$contentColsCurd}
     {
       label: "操作",
       prop: "operation",
@@ -99,10 +99,10 @@ const contentConfig = reactive({
 });
 
 const addModalConfig = reactive({
-  permPrefix: "{{moduleName}}:{{entityKebab}}",
+  permPrefix: "{$moduleName}:{$entityKebab}",
   pk: "id",
   dialog: {
-    title: "新增{{businessName}}",
+    title: "新增{$businessName}",
     width: 800,
     draggable: true,
   },
@@ -110,15 +110,15 @@ const addModalConfig = reactive({
     labelWidth: 100,
   },
   formItems: [
-{{modalFormItemsCurd}}
+{$modalFormItemsCurd}
   ],
 });
 
 const editModalConfig = reactive({
-  permPrefix: "{{moduleName}}:{{entityKebab}}",
+  permPrefix: "{$moduleName}:{$entityKebab}",
   pk: "id",
   dialog: {
-    title: "编辑{{businessName}}",
+    title: "编辑{$businessName}",
     width: 800,
     draggable: true,
   },
@@ -126,14 +126,14 @@ const editModalConfig = reactive({
     labelWidth: 100,
   },
   formItems: [
-{{modalFormItemsCurd}}
+{$modalFormItemsCurd}
   ],
   formAction: async (data) => {
     const id = data?.id;
     if (id) {
-      return {{entityName}}API.update(id, data);
+      return {$entityName}API.update(id, data);
     }
-    return {{entityName}}API.create(data);
+    return {$entityName}API.create(data);
   },
 });
 </script>

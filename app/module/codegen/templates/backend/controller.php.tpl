@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace app\{{moduleNameStudly}}\Controller;
+namespace app\{$moduleNameStudly}\Controller;
 
 use app\common\controller\ApiController;
-use app\{{moduleNameStudly}}\Service\{{entityName}}Service;
+use app\{$moduleNameStudly}\Service\{$entityName}Service;
 
 /**
- * {{businessName}}接口
+ * {$businessName}接口
  */
-final class {{entityName}}Controller extends ApiController
+final class {$entityName}Controller extends ApiController
 {
     /**
      * 分页
      */
     public function page(): \think\Response
     {
-        [$list, $total] = (new {{entityName}}Service())->page($this->request->param());
+        [$list, $total] = (new {$entityName}Service())->page($this->request->param());
         return $this->success($list, $total);
     }
 
@@ -26,7 +26,7 @@ final class {{entityName}}Controller extends ApiController
      */
     public function form(int $id): \think\Response
     {
-        $data = (new {{entityName}}Service())->getFormData($id);
+        $data = (new {$entityName}Service())->getFormData($id);
         return $this->success($data);
     }
 
@@ -36,7 +36,7 @@ final class {{entityName}}Controller extends ApiController
     public function create(): \think\Response
     {
         $data = $this->mergeJsonParams();
-        (new {{entityName}}Service())->create($data);
+        (new {$entityName}Service())->create($data);
         return $this->success();
     }
 
@@ -46,7 +46,7 @@ final class {{entityName}}Controller extends ApiController
     public function update(int $id): \think\Response
     {
         $data = $this->mergeJsonParams();
-        (new {{entityName}}Service())->update($id, $data);
+        (new {$entityName}Service())->update($id, $data);
         return $this->success();
     }
 
@@ -55,7 +55,7 @@ final class {{entityName}}Controller extends ApiController
      */
     public function delete(string $ids): \think\Response
     {
-        (new {{entityName}}Service())->delete($ids);
+        (new {$entityName}Service())->delete($ids);
         return $this->success();
     }
 }
