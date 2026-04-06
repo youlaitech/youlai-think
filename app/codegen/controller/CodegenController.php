@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace app\module\codegen\controller;
+namespace app\codegen\controller;
 
 use app\common\controller\BaseController;
-use app\module\codegen\service\CodegenService;
+use app\codegen\service\CodegenService;
 use OpenApi\Annotations as OA;
 
 /**

@@ -2,7 +2,7 @@
 
 use app\auth\controller\AuthController;
 use app\auth\controller\WxMaAuthController;
-use app\module\codegen\controller\CodegenController;
+use app\codegen\controller\CodegenController;
 use app\system\controller\UserController;
 use app\system\controller\RoleController;
 use app\system\controller\MenuController;
@@ -10,7 +10,7 @@ use app\system\controller\DeptController;
 use app\system\controller\NoticeController;
 use app\system\controller\ConfigController;
 use app\system\controller\DictController;
-use app\module\file\controller\FileController;
+use app\file\controller\FileController;
 use app\system\controller\LogController;
 use think\facade\Route;
 

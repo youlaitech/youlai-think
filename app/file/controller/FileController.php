@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace app\module\file\controller;
+namespace app\file\controller;
 
 use app\common\controller\BaseController;
 use app\common\exception\BusinessException;
 use app\common\web\Result;
 use app\common\web\ResultCode;
-use app\module\file\service\FileService;
+use app\file\service\FileService;
 use OpenApi\Annotations as OA;
 
 /**

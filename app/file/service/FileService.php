@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace app\module\file\service;
+namespace app\file\service;
 
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;

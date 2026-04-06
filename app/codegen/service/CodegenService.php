@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace app\module\codegen\service;
+namespace app\codegen\service;
 
 use app\common\exception\BusinessException;
 use app\common\util\TemplateRenderer;

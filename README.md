@@ -38,22 +38,26 @@
 
 ## 目录结构
 
+> 遵循 [ThinkPHP 8 官方目录结构](https://doc.thinkphp.cn/v8_0/directory_structure.html) 规范设计。
+
 ```text
 youlai-think/
 ├─ app/                       # 应用目录
-│  ├─ auth/                   # 认证模块
-│  ├─ system/                 # 系统模块（用户/角色/菜单/部门/字典/通知/日志）
+│  ├─ Auth/                   # 认证模块（登录/鉴权）
+│  ├─ System/                 # 系统模块（用户/角色/菜单/部门/字典/通知/日志）
 │  ├─ codegen/                # 代码生成模块
 │  ├─ common/                 # 公共模块（枚举/异常/中间件/模型/工具）
+│  ├─ file/                   # 文件上传模块
+│  ├─ AppService.php          # 应用服务注册
 │  ├─ ExceptionHandle.php     # 全局异常处理
 │  ├─ middleware.php          # 全局中间件
 │  └─ provider.php            # 服务提供者
 ├─ config/                    # 配置文件
 ├─ extend/                    # 扩展类库（Redis/SSE）
 ├─ public/                    # Web 入口
-├─ route/                     # 路由定义
-├─ sql/                       # 数据库脚本
-├─ bin/                       # 脚本工具
+├─ route/                     # 路由定义（含版本分组）
+├─ sql/                       # 数据库初始化脚本
+├─ runtime/                   # 运行时日志与缓存
 ├─ .env                       # 环境变量
 └─ composer.json              # 依赖管理
 ```
