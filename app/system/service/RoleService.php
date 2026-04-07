@@ -3,14 +3,12 @@
 namespace app\system\service;
 
 use app\common\exception\BusinessException;
+use app\common\util\PageUtil;
 use app\system\model\Menu;
 use app\system\model\Role;
 use app\system\model\RoleMenu;
 use think\facade\Db;
 
-/**
- * 角色服务
- */
 final class RoleService
 {
     /**
@@ -60,8 +58,7 @@ final class RoleService
      */
     public function paginate(array $params): array
     {
-        $page = (int) ($params['pageNum'] ?? 1);
-        $pageSize = min((int) ($params['pageSize'] ?? 10), 100);
+        [$page, $pageSize] = PageUtil::resolve($params);
 
         $query = Role::field(self::LIST_FIELDS)
             ->order('sort', 'asc')
@@ -276,7 +273,7 @@ final class RoleService
 
         // 状态变更时刷新权限缓存
         if ($result) {
-            (new RolePermService())->refreshRolePermsCache($role->code);
+            app()->make(RolePermService::class)->refreshRolePermsCache($role->code);
         }
 
         return $result;
@@ -314,7 +311,7 @@ final class RoleService
         // 刷新角色权限缓存
         $role = Role::find($roleId);
         if ($role && $role->code) {
-            (new RolePermService())->refreshRolePermsCache($role->code);
+            app()->make(RolePermService::class)->refreshRolePermsCache($role->code);
         }
     }
 

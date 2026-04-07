@@ -3,13 +3,11 @@
 namespace app\system\service;
 
 use app\common\exception\BusinessException;
+use app\common\util\PageUtil;
 use app\system\model\Notice;
 use extend\sse\SseService;
 use think\facade\Db;
 
-/**
- * 通知公告服务
- */
 final class NoticeService
 {
     /**
@@ -17,10 +15,7 @@ final class NoticeService
      */
     public function getNoticePage(int $userId, array $queryParams, ?array $authUser = null): array
     {
-        $pageNum = (int) ($queryParams['pageNum'] ?? 1);
-        $pageSize = (int) ($queryParams['pageSize'] ?? 10);
-        $pageNum = $pageNum > 0 ? $pageNum : 1;
-        $pageSize = $pageSize > 0 ? $pageSize : 10;
+        [$pageNum, $pageSize] = PageUtil::resolve($queryParams);
 
         $title = trim((string) ($queryParams['title'] ?? ''));
         $publishStatus = $queryParams['publishStatus'] ?? null;
@@ -403,10 +398,7 @@ final class NoticeService
      */
     public function getMyNoticePage(int $userId, array $queryParams): array
     {
-        $pageNum = (int) ($queryParams['pageNum'] ?? 1);
-        $pageSize = (int) ($queryParams['pageSize'] ?? 10);
-        $pageNum = $pageNum > 0 ? $pageNum : 1;
-        $pageSize = $pageSize > 0 ? $pageSize : 10;
+        [$pageNum, $pageSize] = PageUtil::resolve($queryParams);
 
         $title = trim((string) ($queryParams['title'] ?? ''));
         $isRead = $queryParams['isRead'] ?? null;

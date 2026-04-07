@@ -3,7 +3,7 @@
 namespace app\common\web;
 
 /**
- * 分页结果 DTO
+ * 分页查询的 list + total 包装
  */
 final class PageResult
 {

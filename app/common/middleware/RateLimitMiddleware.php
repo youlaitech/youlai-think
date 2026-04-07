@@ -30,7 +30,7 @@ final class RateLimitMiddleware
     {
         try {
             $redis = RedisClient::get();
-            $key = \app\common\constants\RedisKey::rateLimitIp($ip);
+            $key = \app\constants\\RedisKey::rateLimitIp($ip);
             $count = $redis->incr($key);
             if ($count === 1) $redis->expire($key, self::RATE_LIMIT_WINDOW_SEC);
             return $count > self::DEFAULT_IP_LIMIT;

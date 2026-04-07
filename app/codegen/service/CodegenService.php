@@ -7,9 +7,6 @@ use app\common\util\TemplateRenderer;
 use app\common\web\ResultCode;
 use think\facade\Db;
 
-/**
- * 代码生成服务
- */
 final class CodegenService
 {
     private const TEMPLATE_BASE_DIR = '/templates';

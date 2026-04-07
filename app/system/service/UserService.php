@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace app\system\service;
 
 use app\common\exception\BusinessException;
+use app\common\util\PageUtil;
+use app\common\util\VerifyCodeHelper;
 use app\system\model\Dept;
 use app\system\model\Role;
 use app\system\model\User;
@@ -12,9 +14,6 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use think\facade\Db;
 
-/**
- * 用户服务
- */
 final class UserService
 {
     /**
@@ -24,6 +23,11 @@ final class UserService
         'id', 'username', 'nickname', 'mobile', 'email',
         'avatar', 'gender', 'status', 'dept_id', 'create_time',
     ];
+
+    /**
+     * 默认密码
+     */
+    private const DEFAULT_PASSWORD = '123456';
 
     /**
      * 根据ID获取用户详情
@@ -56,8 +60,7 @@ final class UserService
      */
     public function paginate(array $params, array $authUser): array
     {
-        $page = (int) ($params['pageNum'] ?? 1);
-        $pageSize = min((int) ($params['pageSize'] ?? 10), 100);
+        [$page, $pageSize] = PageUtil::resolve($params);
 
         $query = User::with(['dept'])
             ->field(array_merge(self::LIST_FIELDS, ['dept_id']))
@@ -116,7 +119,7 @@ final class UserService
 
             $password = $data['password'] ?? '';
             if ($password === '' || $password === null) {
-                $password = '123456';
+                $password = self::DEFAULT_PASSWORD;
             }
 
             // 创建用户
@@ -222,9 +225,7 @@ final class UserService
         // 获取权限标识
         $perms = [];
         if (!empty($roleCodes)) {
-            $roleIds = array_column($user->roles->toArray() ?? [], 'id');
-            $roleService = new RoleService();
-            $perms = $roleService->getPermissionsByUserId($userId);
+            $perms = app()->make(RoleService::class)->getPermissionsByUserId($userId);
         }
 
         $roleNames = [];
@@ -351,16 +352,8 @@ final class UserService
             throw new BusinessException('手机号已被其他账号绑定');
         }
 
-        // 生成验证码（测试环境固定为1234）
-        $code = '1234';
-
-        // TODO: 实际发送短信验证码
-        // $this->smsService->sendSms($mobile, 'CHANGE_MOBILE', ['code' => $code]);
-
-        // 缓存验证码，5分钟有效
-        $redis = \extend\redis\RedisClient::get();
-        $key = "sms:mobile:{$mobile}";
-        $redis->setex($key, 300, $code);
+        // 生成验证码并缓存
+        VerifyCodeHelper::generateAndCache('sms:mobile', $mobile);
     }
 
     /**
@@ -379,11 +372,7 @@ final class UserService
         }
 
         // 验证验证码
-        $redis = \extend\redis\RedisClient::get();
-        $key = "sms:mobile:{$mobile}";
-        $cachedCode = $redis->get($key);
-
-        if (!$cachedCode || $cachedCode !== $code) {
+        if (!VerifyCodeHelper::verify('sms:mobile', $mobile, $code)) {
             throw new BusinessException('验证码错误或已过期');
         }
 
@@ -395,9 +384,6 @@ final class UserService
         if ($exists) {
             throw new BusinessException('手机号已被其他账号绑定');
         }
-
-        // 删除验证码
-        $redis->del($key);
 
         // 更新手机号
         $user->mobile = $mobile;
@@ -441,16 +427,8 @@ final class UserService
             throw new BusinessException('邮箱已被其他账号绑定');
         }
 
-        // 生成验证码（测试环境固定为1234）
-        $code = '1234';
-
-        // TODO: 实际发送邮件验证码
-        // $this->mailService->sendMail($email, '邮箱验证码', "您的验证码为：{$code}，请在5分钟内使用");
-
-        // 缓存验证码，5分钟有效
-        $redis = \extend\redis\RedisClient::get();
-        $key = "sms:email:{$email}";
-        $redis->setex($key, 300, $code);
+        // 生成验证码并缓存
+        VerifyCodeHelper::generateAndCache('sms:email', $email);
     }
 
     /**
@@ -469,11 +447,7 @@ final class UserService
         }
 
         // 验证验证码
-        $redis = \extend\redis\RedisClient::get();
-        $key = "sms:email:{$email}";
-        $cachedCode = $redis->get($key);
-
-        if (!$cachedCode || $cachedCode !== $code) {
+        if (!VerifyCodeHelper::verify('sms:email', $email, $code)) {
             throw new BusinessException('验证码错误或已过期');
         }
 
@@ -485,9 +459,6 @@ final class UserService
         if ($exists) {
             throw new BusinessException('邮箱已被其他账号绑定');
         }
-
-        // 删除验证码
-        $redis->del($key);
 
         // 更新邮箱
         $user->email = $email;
@@ -834,7 +805,7 @@ final class UserService
             $now = date('Y-m-d H:i:s');
             $userId = User::insertGetId([
                 'username' => $username,
-                'password' => password_hash('123456', PASSWORD_DEFAULT),
+                'password' => password_hash(self::DEFAULT_PASSWORD, PASSWORD_DEFAULT),
                 'nickname' => $nickname,
                 'mobile' => $mobile,
                 'email' => $email,

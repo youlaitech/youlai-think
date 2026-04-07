@@ -12,9 +12,6 @@ use GuzzleHttp\Client;
 use think\facade\Db;
 use think\facade\Log;
 
-/**
- * 微信小程序认证服务
- */
 final class WxMaAuthService
 {
     private const string JS_CODE_2_SESSION_URL = 'https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code';

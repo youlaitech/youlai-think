@@ -42,8 +42,7 @@ final class PermMiddleware
         }
 
         // 从缓存获取权限
-        $rolePermService = new RolePermService();
-        $perms = $rolePermService->getRolePermsByRoleCodes($roleCodes);
+        $perms = app()->make(RolePermService::class)->getRolePermsByRoleCodes($roleCodes);
 
         if (!in_array($perm, $perms, true)) {
             throw new BusinessException(ResultCode::ACCESS_PERMISSION_EXCEPTION);

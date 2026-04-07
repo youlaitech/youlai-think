@@ -6,9 +6,6 @@ use app\common\exception\BusinessException;
 use app\system\model\Menu;
 use think\facade\Db;
 
-/**
- * 菜单服务。
- */
 final class MenuService
 {
     /**
@@ -325,7 +322,7 @@ final class MenuService
     }
 
     /**
-     * 构建路由结构（与 Java RouteVO 兼容）
+     * 构建路由结构
      */
     private function buildRoutes(int $parentId, array $menuList): array
     {
@@ -419,7 +416,7 @@ final class MenuService
             ->column('r.code');
 
         if (!empty($roleCodes)) {
-            (new RolePermService())->refreshRolePermsCacheBatch($roleCodes);
+            app()->make(RolePermService::class)->refreshRolePermsCacheBatch($roleCodes);
         }
     }
 

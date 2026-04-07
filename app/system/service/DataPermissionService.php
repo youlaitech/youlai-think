@@ -11,10 +11,10 @@ use think\facade\Db;
  */
 class DataPermissionService
 {
-/**
- * 应用数据权限过滤
- */
-public function apply(object $query, string $deptIdColumn, string $userIdColumn, array $authUser): object
+    /**
+     * 应用数据权限过滤
+     */
+    public function apply(object $query, string $deptIdColumn, string $userIdColumn, array $authUser): object
     {
         // 超级管理员跳过过滤
         if ($this->isRoot($authUser)) {
@@ -26,7 +26,7 @@ public function apply(object $query, string $deptIdColumn, string $userIdColumn,
         $deptId = $authUser['deptId'] ?? null;
         $deptId = $deptId === null || $deptId === '' ? null : (int) $deptId;
 
-        // 没有数据权限配置时，跳过过滤（与 Java 行为一致）
+        // 没有数据权限配置时，跳过过滤
         if (empty($dataScopes)) {
             return $query;
         }

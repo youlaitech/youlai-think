@@ -3,7 +3,7 @@
 namespace app\common\web;
 
 /**
- * 统一响应封装
+ * 所有接口返回值均通过此类封装，确保 code/data/msg 结构一致
  */
 final class Result
 {

@@ -20,8 +20,7 @@ trait ParamsTrait
      */
     protected function getIdParam(): int
     {
-        $id = (int) $this->request->param('id', 0);
-        return $id > 0 ? $id : 0;
+        return max(0, (int) $this->request->param('id', 0));
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace app\system\service;
 
 use app\common\exception\BusinessException;
+use app\common\util\PageUtil;
 use app\system\model\Dict;
 use app\system\model\DictItem;
 use extend\sse\SseService;
@@ -12,10 +13,7 @@ final class DictService
 {
     public function getDictPage(array $queryParams): array
     {
-        $pageNum = (int) ($queryParams['pageNum'] ?? 1);
-        $pageSize = (int) ($queryParams['pageSize'] ?? 10);
-        $pageNum = $pageNum > 0 ? $pageNum : 1;
-        $pageSize = $pageSize > 0 ? $pageSize : 10;
+        [$pageNum, $pageSize] = PageUtil::resolve($queryParams);
 
         $keywords = trim((string) ($queryParams['keywords'] ?? ''));
         $status = $queryParams['status'] ?? null;
@@ -224,10 +222,7 @@ final class DictService
 
     public function getDictItemPage(string $dictCode, array $queryParams): array
     {
-        $pageNum = (int) ($queryParams['pageNum'] ?? 1);
-        $pageSize = (int) ($queryParams['pageSize'] ?? 10);
-        $pageNum = $pageNum > 0 ? $pageNum : 1;
-        $pageSize = $pageSize > 0 ? $pageSize : 10;
+        [$pageNum, $pageSize] = PageUtil::resolve($queryParams);
 
         $keywords = trim((string) ($queryParams['keywords'] ?? ''));
 

@@ -1,30 +1,26 @@
 <?php declare(strict_types=1);
 
-namespace app\common\controller;
+namespace app\controller;
 
 use app\common\exception\BusinessException;
 use app\common\util\IdStringify;
 use app\common\web\Result;
 use app\common\web\ResultCode;
 use app\common\traits\AuthTrait;
-use app\common\traits\PaginationTrait;
 use app\common\traits\ParamsTrait;
 use think\App;
-use think\exception\ValidateException;
 use think\response\Json;
 
 /**
- * 控制器基类。
- * 提供通用的请求处理和响应方法。
+ * 封装 success/fail 响应方法、参数读取、分页、ID转换等公共能力
  */
 abstract class BaseController
 {
     use AuthTrait;
-    use PaginationTrait;
     use ParamsTrait;
 
     protected App $app;
-    protected $request;
+    protected \think\Request $request;
     protected bool $requireAuth = false;
 
     public function __construct(App $app)
@@ -55,7 +51,7 @@ abstract class BaseController
                 $this->stringifyIds($this->camelizeKeys($data)),
                 $arg2
             );
-            return json($result->toArray(), 200, [], ['json_encode_param' => JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES]);
+            return $this->jsonResponse($result);
         }
 
         // 第二个参数是字符串 → 带消息响应
@@ -65,7 +61,7 @@ abstract class BaseController
             $message ?: ResultCode::SUCCESS->getMsg()
         );
 
-        return json($result->toArray(), 200, [], ['json_encode_param' => JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES]);
+        return $this->jsonResponse($result);
     }
 
     protected function fail(string $code = '', string $message = ''): Json
@@ -76,6 +72,14 @@ abstract class BaseController
             $message ?: $resultCode->getMsg()
         );
 
+        return $this->jsonResponse($result);
+    }
+
+    /**
+     * 统一 JSON 响应（保持编码格式一致）
+     */
+    private function jsonResponse(Result $result): Json
+    {
         return json($result->toArray(), 200, [], ['json_encode_param' => JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES]);
     }
 

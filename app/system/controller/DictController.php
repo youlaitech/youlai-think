@@ -2,7 +2,7 @@
 
 namespace app\system\controller;
 
-use app\common\controller\BaseController;
+use app\controller\BaseController;
 use app\system\annotation\Log;
 use app\system\enums\ActionType;
 use app\system\service\DictService;

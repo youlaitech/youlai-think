@@ -24,7 +24,7 @@ return [
     'exception_tmpl'   => app()->getThinkPath() . 'tpl/think_exception.tpl',
 
     // 自定义异常处理类
-    'exception_handle' => \app\common\exception\ExceptionHandle::class,
+    'exception_handle' => \app\ExceptionHandle::class,
 
     // 错误显示信息,非调试模式有效
     'error_message'    => '页面错误！请稍后再试～',

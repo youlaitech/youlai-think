@@ -2,7 +2,7 @@
 
 namespace app\codegen\controller;
 
-use app\common\controller\BaseController;
+use app\controller\BaseController;
 use app\codegen\service\CodegenService;
 use OpenApi\Annotations as OA;
 

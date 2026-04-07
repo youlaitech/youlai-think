@@ -2,7 +2,7 @@
 
 namespace app\file\controller;
 
-use app\common\controller\BaseController;
+use app\controller\BaseController;
 use app\common\exception\BusinessException;
 use app\common\web\Result;
 use app\common\web\ResultCode;
@@ -59,6 +59,6 @@ final class FileController extends BaseController
         }
 
         $result = $this->service(FileService::class)->deleteFile($filePath);
-        return json(Result::judge($result)->toArray());
+        return $result ? $this->success() : $this->fail('A0710');
     }
 }

@@ -3,6 +3,7 @@
 namespace app\system\service;
 
 use app\common\exception\BusinessException;
+use app\common\util\PageUtil;
 use app\system\enums\LogModule;
 use app\system\enums\ActionType;
 use think\facade\Db;
@@ -14,10 +15,7 @@ final class LogService
 {
     public function getLogPage(array $queryParams): array
     {
-        $pageNum = (int) ($queryParams['pageNum'] ?? 1);
-        $pageSize = (int) ($queryParams['pageSize'] ?? 10);
-        $pageNum = $pageNum > 0 ? $pageNum : 1;
-        $pageSize = $pageSize > 0 ? $pageSize : 10;
+        [$pageNum, $pageSize] = PageUtil::resolve($queryParams);
 
         $createTime = $queryParams['createTime'] ?? null;
 
@@ -191,6 +189,4 @@ final class LogService
             'pvGrowthRate' => $pvGrowth,
         ];
     }
-
-
 }

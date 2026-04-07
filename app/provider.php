@@ -9,5 +9,5 @@ use think\exception\Handle;
 
 return [
     HttpClient::class => HttpClient::class,
-    Handle::class => \app\common\exception\ExceptionHandle::class,
+    Handle::class => \app\ExceptionHandle::class,
 ];

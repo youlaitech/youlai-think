@@ -6,9 +6,6 @@ use app\common\exception\BusinessException;
 use app\system\model\Dept;
 use think\facade\Db;
 
-/**
- * 部门服务
- */
 final class DeptService
 {
     /**

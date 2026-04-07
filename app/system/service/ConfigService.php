@@ -3,15 +3,11 @@
 namespace app\system\service;
 
 use app\common\exception\BusinessException;
+use app\common\util\PageUtil;
 use extend\redis\RedisClient;
 use app\system\model\Config;
 use think\facade\Db;
 
-/**
- * 系统配置业务
- *
- * 配置分页 表单 增删改 缓存
- */
 final class ConfigService
 {
     private const CACHE_KEY = 'system:config';
@@ -21,10 +17,7 @@ final class ConfigService
      */
     public function page(array $queryParams): array
     {
-        $pageNum = (int) ($queryParams['pageNum'] ?? 1);
-        $pageSize = (int) ($queryParams['pageSize'] ?? 10);
-        $pageNum = $pageNum > 0 ? $pageNum : 1;
-        $pageSize = $pageSize > 0 ? $pageSize : 10;
+        [$pageNum, $pageSize] = PageUtil::resolve($queryParams);
 
         $keywords = trim((string) ($queryParams['keywords'] ?? ''));
 

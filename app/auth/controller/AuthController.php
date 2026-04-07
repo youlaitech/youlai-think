@@ -5,7 +5,7 @@ namespace app\auth\controller;
 use app\common\exception\BusinessException;
 use extend\redis\RedisClient;
 use app\common\web\ResultCode;
-use app\common\controller\BaseController;
+use app\controller\BaseController;
 use app\auth\service\AuthService;
 use app\system\annotation\Log;
 use app\system\enums\ActionType;

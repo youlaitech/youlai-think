@@ -43,11 +43,15 @@
 ```text
 youlai-think/
 ├─ app/                       # 应用目录
-│  ├─ Auth/                   # 认证模块（登录/鉴权）
-│  ├─ System/                 # 系统模块（用户/角色/菜单/部门/字典/通知/日志）
+│  ├─ auth/                   # 认证模块（登录/鉴权）
+│  ├─ system/                 # 系统模块（用户/角色/菜单/部门/字典/通知/日志）
 │  ├─ codegen/                # 代码生成模块
-│  ├─ common/                 # 公共模块（枚举/异常/中间件/模型/工具）
 │  ├─ file/                   # 文件上传模块
+│  ├─ common/                 # 公共模块（中间件/模型/工具/验证器/响应）
+│  ├─ constants/              # 常量定义
+│  ├─ controller/             # 控制器基类
+│  ├─ enums/                  # 枚举定义
+│  ├─ exception/              # 异常类
 │  ├─ AppService.php          # 应用服务注册
 │  ├─ ExceptionHandle.php     # 全局异常处理
 │  ├─ middleware.php          # 全局中间件

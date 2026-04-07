@@ -2,7 +2,7 @@
 
 namespace app\system\controller;
 
-use app\common\controller\BaseController;
+use app\controller\BaseController;
 use app\system\service\LogService;
 use OpenApi\Annotations as OA;
 

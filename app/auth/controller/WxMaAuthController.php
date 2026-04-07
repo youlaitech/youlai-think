@@ -2,7 +2,7 @@
 
 namespace app\auth\controller;
 
-use app\common\controller\BaseController;
+use app\controller\BaseController;
 use app\auth\service\WxMaAuthService;
 use OpenApi\Annotations as OA;
 use think\response\Json;

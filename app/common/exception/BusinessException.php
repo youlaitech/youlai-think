@@ -6,10 +6,7 @@ use app\common\web\IResultCode;
 use app\common\web\ResultCode;
 
 /**
- * 业务异常
- * 支持两种调用方式：
- * - throw new BusinessException('消息')：默认使用 SYSTEM_ERROR (B0001)
- * - throw new BusinessException(ResultCode::XXX, '消息')：指定错误码
+ * 业务异常，字符串参数走 SYSTEM_ERROR，ResultCode 参数走指定错误码
  */
 final class BusinessException extends \RuntimeException
 {

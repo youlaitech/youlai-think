@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace app\common\exception;
+namespace app;
 
 use app\common\web\Result;
 use app\common\web\ResultCode;
