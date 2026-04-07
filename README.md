@@ -80,19 +80,14 @@ composer install
 
 # 3. 启动 API 服务（端口 8000）
 php think run
-
-# 4. 启动 SSE 服务（端口 8001，用于字典刷新、在线用户等实时推送）
-php bin/sse_server.php start
 ```
 
 **接口文档**：Swagger UI `http://localhost:8000/swagger-ui/`
 
-**前端联调**：在 `vue3-element-admin` 的 `.env.development` 中配置 SSE 独立端口：
+**前端联调**：在 `vue3-element-admin` 的 `.env.development` 中配置 API 地址：
 
 ```env
 VITE_APP_API_URL=http://localhost:8000
-VITE_APP_SSE_ENABLED=true
-VITE_APP_SSE_PORT=8001
 ```
 
 > 更多配置和部署说明请查阅 [快速开始文档](https://www.youlai.tech/docs/admin/backend/php/quick-start.html)。
