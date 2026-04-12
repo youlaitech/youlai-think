@@ -13,9 +13,7 @@ use OpenApi\Annotations as OA;
  */
 final class DictController extends BaseController
 {
-    //---------------------------------------------------
-    // Dict
-    //---------------------------------------------------
+    // 字典
     /**
      * @OA\Get(
      *     path="/api/v1/dicts",
@@ -113,9 +111,7 @@ final class DictController extends BaseController
         return $this->success();
     }
 
-    //---------------------------------------------------
-    // Dict Items
-    //---------------------------------------------------
+    // 字典项
     /**
      * @OA\Get(
      *     path="/api/v1/dicts/{dictCode}/items",

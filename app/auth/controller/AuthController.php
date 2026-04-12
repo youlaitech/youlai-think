@@ -191,8 +191,6 @@ final class AuthController extends BaseController
         return $this->success($result, '登录成功');
     }
 
-    // ==================== 私有方法 ====================
-
     /**
      * 验证验证码
      */

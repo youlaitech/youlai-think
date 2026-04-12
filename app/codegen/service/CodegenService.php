@@ -5,6 +5,7 @@ namespace app\codegen\service;
 use app\common\exception\BusinessException;
 use app\common\util\TemplateRenderer;
 use app\common\web\ResultCode;
+use app\system\service\MenuService;
 use think\facade\Db;
 
 final class CodegenService
@@ -368,6 +369,21 @@ ORDER BY ORDINAL_POSITION ASC
             if (!empty($rows)) {
                 Db::name('gen_table_column')->insertAll($rows);
             }
+
+            //
+            if ($parentMenuId !== null && $parentMenuId > 0) {
+                try {
+                    app()->make(MenuService::class)->addMenuForCodegen(
+                        $parentMenuId,
+                        $tableName,
+                        $moduleName,
+                        $businessName,
+                        $entityName
+                    );
+                } catch (\Throwable $e) {
+                    //
+                }
+            }
         });
 
         return true;
@@ -475,21 +491,21 @@ ORDER BY ORDINAL_POSITION ASC
         ];
 
         $previews[] = $this->buildPreviewItem(
-            self::DEFAULT_BACKEND_APP_NAME . '/app/' . $moduleNameStudly . '/Model',
+            self::DEFAULT_BACKEND_APP_NAME . '/app/' . $moduleName . '/model',
             $entityName . '.php',
             $this->renderFromTemplate('backend/model.php.tpl', $vars),
             'backend'
         );
 
         $previews[] = $this->buildPreviewItem(
-            self::DEFAULT_BACKEND_APP_NAME . '/app/' . $moduleNameStudly . '/Service',
+            self::DEFAULT_BACKEND_APP_NAME . '/app/' . $moduleName . '/service',
             $entityName . 'Service.php',
             $this->renderFromTemplate('backend/service.php.tpl', $vars),
             'backend'
         );
 
         $previews[] = $this->buildPreviewItem(
-            self::DEFAULT_BACKEND_APP_NAME . '/app/' . $moduleNameStudly . '/Controller',
+            self::DEFAULT_BACKEND_APP_NAME . '/app/' . $moduleName . '/controller',
             $entityName . 'Controller.php',
             $this->renderFromTemplate('backend/controller.php.tpl', $vars),
             'backend'

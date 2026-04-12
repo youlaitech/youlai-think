@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace app\{$moduleNameStudly}\Service;
+namespace app\{$moduleName}\service;
 
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
-use app\{$moduleNameStudly}\Model\{$entityName};
+use app\{$moduleName}\model\{$entityName};
 use think\facade\Db;
 
 /**

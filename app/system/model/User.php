@@ -19,8 +19,6 @@ class User extends BaseModel
         'dept_id' => 'integer',
     ];
 
-    // ==================== 关联关系 ====================
-
     /**
      * 所属部门
      */
@@ -41,8 +39,6 @@ class User extends BaseModel
             'user_id'
         );
     }
-
-    // ==================== 访问器 ====================
 
     /**
      * 部门ID访问器
@@ -71,8 +67,6 @@ class User extends BaseModel
     {
         return (int) ($data['status'] ?? 0) === 1 ? '启用' : '禁用';
     }
-
-    // ==================== 查询作用域 ====================
 
     /**
      * 启用状态

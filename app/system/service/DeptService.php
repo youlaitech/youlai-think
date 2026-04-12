@@ -146,8 +146,6 @@ final class DeptService
         return $dept->getDescendantIds();
     }
 
-    // ==================== 私有方法 ====================
-
     /**
      * 构建下拉选项树
      */

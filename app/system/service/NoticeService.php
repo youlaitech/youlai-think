@@ -44,7 +44,7 @@ final class NoticeService
             $q = $q->where('n.publish_status', $dbStatus);
         }
 
-        $total = (int) (clone $q)->count('n.id');
+        $total = (int) $q->count('n.id');
 
         $rows = $q
             ->field('n.id,n.title,n.publish_status,n.type,n.level,n.target_type,n.publish_time,n.revoke_time,n.create_time,pu.nickname as publisher_name,un.is_read')
@@ -420,7 +420,7 @@ final class NoticeService
             $q = $q->where('un.is_read', (int) $isRead);
         }
 
-        $total = (int) (clone $q)->count('un.id');
+        $total = (int) $q->count('un.id');
 
         $rows = $q
             ->field('n.id,n.title,n.type,n.level,u.nickname as publisher_name,n.publish_time,un.is_read')

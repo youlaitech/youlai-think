@@ -105,7 +105,7 @@ final class MenuService
             return null;
         }
         $data = $menu->toArray();
-        // params: {k: v} -> [{key: k, value: v}]
+        // params 格式转换：{k: v} -> [{key: k, value: v}]
         if (!empty($data['params']) && is_array($data['params'])) {
             $data['params'] = array_map(
                 fn($k, $v) => ['key' => $k, 'value' => $v],
@@ -247,8 +247,6 @@ final class MenuService
         $menu->visible = $visible;
         return $menu->save();
     }
-
-    // ==================== 私有方法 ====================
 
     /**
      * 生成菜单 tree_path
@@ -436,5 +434,77 @@ final class MenuService
             }
         }
         return $result ?: null;
+    }
+
+    /**
+     *
+     */
+    public function addMenuForCodegen(int $parentMenuId, string $tableName, string $moduleName, string $businessName, string $entityName): void
+    {
+        $parent = Menu::find($parentMenuId);
+        if (!$parent) {
+            return;
+        }
+
+        //
+        $sort = 1;
+        $maxSortMenu = Menu::where('parent_id', $parentMenuId)->order('sort', 'desc')->find();
+        if ($maxSortMenu) {
+            $sort = (int) $maxSortMenu->sort + 1;
+        }
+
+        //
+        $entityKebab = $this->toKebabCase($entityName);
+        $treePath = $parent->tree_path . ',' . $parentMenuId;
+
+        //
+        $menuId = (int) Menu::insertGetId([
+            'parent_id' => $parentMenuId,
+            'type' => 'M',
+            'name' => $businessName,
+            'route_name' => $entityName,
+            'route_path' => $entityKebab,
+            'component' => $moduleName . '/' . $entityKebab . '/index',
+            'sort' => $sort,
+            'visible' => 1,
+            'tree_path' => $treePath,
+            'create_time' => date('Y-m-d H:i:s'),
+            'update_time' => date('Y-m-d H:i:s'),
+        ]);
+
+        //
+        $permPrefix = $moduleName . ':' . str_replace('_', '-', $tableName) . ':';
+        $actions = ['add', 'edit', 'delete', 'detail', 'export', 'import'];
+        foreach ($actions as $i => $action) {
+            Menu::insert([
+                'parent_id' => $menuId,
+                'type' => 'B',
+                'name' => $action,
+                'perm' => $permPrefix . $action,
+                'sort' => $i + 1,
+                'tree_path' => $treePath . ',' . $menuId,
+                'create_time' => date('Y-m-d H:i:s'),
+                'update_time' => date('Y-m-d H:i:s'),
+            ]);
+        }
+    }
+
+    /**
+     *
+     */
+    private function toKebabCase(string $s): string
+    {
+        if ($s === '') {
+            return '';
+        }
+        $result = '';
+        for ($i = 0; $i < strlen($s); $i++) {
+            $c = $s[$i];
+            if ($i > 0 && ctype_upper($c)) {
+                $result .= '-';
+            }
+            $result .= strtolower($c);
+        }
+        return $result;
     }
 }

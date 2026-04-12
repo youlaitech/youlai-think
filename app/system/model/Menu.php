@@ -40,8 +40,6 @@ class Menu extends BaseModel
         'params' => 'json',
     ];
 
-    // ==================== 关联关系 ====================
-
     /**
      * 父菜单
      */
@@ -72,8 +70,6 @@ class Menu extends BaseModel
         );
     }
 
-    // ==================== 访问器 ====================
-
     /**
      * 父ID访问器
      */
@@ -81,8 +77,6 @@ class Menu extends BaseModel
     {
         return (string) $value;
     }
-
-    // ==================== 查询作用域 ====================
 
     /**
      * 目录/菜单类型（不含按钮）

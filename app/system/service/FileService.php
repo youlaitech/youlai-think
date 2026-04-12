@@ -51,7 +51,7 @@ final class FileService
         }
 
         if (!$saved) {
-            // fallback 到系统临时文件路径
+            // 回退到系统临时文件路径
             $tmpPath = null;
             if (is_object($file) && method_exists($file, 'getPathname')) {
                 $tmpPath = (string) $file->getPathname();

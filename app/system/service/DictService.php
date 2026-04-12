@@ -29,7 +29,7 @@ final class DictService
             $q = $q->where('status', (int) $status);
         }
 
-        $total = (int) (clone $q)->count();
+        $total = (int) $q->count();
 
         $rows = $q
             ->order('id', 'desc')
@@ -233,7 +233,7 @@ final class DictService
             $q = $q->whereLike('label|value', $kw);
         }
 
-        $total = (int) (clone $q)->count();
+        $total = (int) $q->count();
 
         $rows = $q
             ->order('sort', 'asc')

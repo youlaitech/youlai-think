@@ -31,8 +31,6 @@ class Dept extends BaseModel
         'status' => 'integer',
     ];
 
-    // ==================== 关联关系 ====================
-
     /**
      * 父部门
      */
@@ -58,8 +56,6 @@ class Dept extends BaseModel
         return $this->hasMany(User::class, 'dept_id', 'id');
     }
 
-    // ==================== 访问器 ====================
-
     /**
      * 父ID访问器
      */
@@ -76,8 +72,6 @@ class Dept extends BaseModel
         return (int) ($data['status'] ?? 0) === 1 ? '启用' : '禁用';
     }
 
-    // ==================== 查询作用域 ====================
-
     /**
      * 启用状态
      */
@@ -93,8 +87,6 @@ class Dept extends BaseModel
     {
         return $query->where('code', $code);
     }
-
-    // ==================== 业务方法 ====================
 
     /**
      * 获取所有子部门ID（包含自己）

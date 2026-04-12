@@ -488,8 +488,6 @@ final class UserService
         return $user->save();
     }
 
-    // ==================== 私有方法 ====================
-
     /**
      * 应用查询条件
      */
@@ -605,8 +603,6 @@ final class UserService
             $this->assignRoles($userId, $roleIds);
         }
     }
-
-    // ==================== 导入导出 ====================
 
     /**
      * 生成用户导入模板

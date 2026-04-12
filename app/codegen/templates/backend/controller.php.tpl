@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace app\{$moduleNameStudly}\Controller;
+namespace app\{$moduleName}\controller;
 
-use app\common\controller\ApiController;
-use app\{$moduleNameStudly}\Service\{$entityName}Service;
+use app\controller\BaseController;
+use app\{$moduleName}\service\{$entityName}Service;
 
 /**
  * {$businessName}接口
  */
-final class {$entityName}Controller extends ApiController
+final class {$entityName}Controller extends BaseController
 {
     /**
      * 分页

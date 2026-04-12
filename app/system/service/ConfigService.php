@@ -27,7 +27,7 @@ final class ConfigService
             $q = $q->whereLike('config_key|config_name', $kw);
         }
 
-        $total = (int) (clone $q)->count('id');
+        $total = (int) $q->count('id');
 
         $rows = $q
             ->field('id,config_name,config_key,config_value,remark')

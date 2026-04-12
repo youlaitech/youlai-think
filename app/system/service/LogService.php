@@ -29,7 +29,7 @@ final class LogService
             }
         }
 
-        $total = (int) (clone $q)->count('l.id');
+        $total = (int) $q->count('l.id');
 
         $rows = $q
             ->field('l.id,l.module,l.action_type,l.title,l.content,l.operator_id,l.operator_name,l.status,l.request_uri,l.request_method,l.ip,l.province,l.city,l.device,l.browser,l.os,l.execution_time,l.error_msg,l.create_time')

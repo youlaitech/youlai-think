@@ -8,8 +8,6 @@ namespace app\common\constants;
  */
 final class RedisKey
 {
-    // ===================== 验证码相关 =====================
-
     /** 图片验证码键前缀 */
     public const string CAPTCHA = 'captcha:';
 
@@ -22,8 +20,6 @@ final class RedisKey
     /** 短信绑定邮箱验证码键前缀 */
     public const string SMS_BIND_EMAIL = 'sms:bind:email:';
 
-    // ===================== 用户会话相关 =====================
-
     /** 用户 Token 键前缀 */
     public const string USER_TOKEN = 'user:token:';
 
@@ -33,25 +29,17 @@ final class RedisKey
     /** 用户会话键前缀 */
     public const string USER_SESSION = 'user:session:';
 
-    // ===================== 权限缓存相关 =====================
-
     /** 角色权限缓存键前缀 */
     public const string ROLE_PERMS = 'role:perms:';
 
     /** 角色菜单缓存键前缀 */
     public const string ROLE_MENUS = 'role:menus:';
 
-    // ===================== 数据权限相关 =====================
-
     /** 数据权限缓存键前缀 */
     public const string DATA_SCOPE = 'data:scope:';
 
-    // ===================== 限流相关 =====================
-
     /** IP 限流键前缀 */
     public const string RATE_LIMIT_IP = 'rate_limiter:ip:';
-
-    // ===================== 构建方法 =====================
 
     /**
      * 构建验证码键

@@ -327,8 +327,6 @@ final class RoleService
         }
     }
 
-    // ==================== 私有方法 ====================
-
     private function applyFilters($query, array $params): void
     {
         if (!empty($params['keyword'])) {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace app\{$moduleNameStudly}\Model;
+namespace app\{$moduleName}\model;
 
 use app\common\model\BaseModel;
 
