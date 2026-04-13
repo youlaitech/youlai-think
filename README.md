@@ -47,11 +47,17 @@ youlai-think/
 │  ├─ system/                 # 系统模块（用户/角色/菜单/部门/字典/通知/日志）
 │  ├─ codegen/                # 代码生成模块
 │  ├─ file/                   # 文件上传模块
-│  ├─ common/                 # 公共模块（中间件/模型/工具/验证器/响应）
-│  ├─ constants/              # 常量定义
+│  ├─ common/                 # 公共模块
+│  │  ├─ constants/           # 常量定义
+│  │  ├─ enums/               # 枚举定义
+│  │  ├─ exception/           # 异常类
+│  │  ├─ middleware/          # 中间件
+│  │  ├─ model/               # 基础模型
+│  │  ├─ traits/              # Trait 复用
+│  │  ├─ util/                # 工具类
+│  │  ├─ validate/            # 验证器
+│  │  └─ web/                 # Web 响应/基类
 │  ├─ controller/             # 控制器基类
-│  ├─ enums/                  # 枚举定义
-│  ├─ exception/              # 异常类
 │  ├─ AppService.php          # 应用服务注册
 │  ├─ ExceptionHandle.php     # 全局异常处理
 │  ├─ middleware.php          # 全局中间件
