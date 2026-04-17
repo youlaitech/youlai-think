@@ -472,15 +472,16 @@ final class MenuService
             'update_time' => date('Y-m-d H:i:s'),
         ]);
 
-        //
+        // 生成CURD按钮权限
         $permPrefix = $moduleName . ':' . str_replace('_', '-', $tableName) . ':';
-        $actions = ['add', 'edit', 'delete', 'detail', 'export', 'import'];
+        $actions = ['查询', '新增', '修改', '删除'];
+        $perms = ['list', 'create', 'update', 'delete'];
         foreach ($actions as $i => $action) {
             Menu::insert([
                 'parent_id' => $menuId,
                 'type' => 'B',
                 'name' => $action,
-                'perm' => $permPrefix . $action,
+                'perm' => $permPrefix . $perms[$i],
                 'sort' => $i + 1,
                 'tree_path' => $treePath . ',' . $menuId,
                 'create_time' => date('Y-m-d H:i:s'),
