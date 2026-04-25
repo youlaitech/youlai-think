@@ -5,7 +5,7 @@ namespace app\system\model;
 use app\common\model\BaseModel;
 
 /**
- * 角色模型。
+ * 角色模型
  */
 class Role extends BaseModel
 {

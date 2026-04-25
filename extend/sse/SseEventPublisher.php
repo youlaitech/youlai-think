@@ -4,6 +4,9 @@ namespace extend\sse;
 
 use extend\redis\RedisClient;
 
+/**
+ * SSE 事件发布器（Redis Pub/Sub 模式）
+ */
 final class SseEventPublisher
 {
     private const REDIS_SSE_CHANNEL = 'sse:broadcast';

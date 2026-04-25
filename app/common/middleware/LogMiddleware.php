@@ -8,8 +8,15 @@ use think\Response;
 use ReflectionMethod;
 use Throwable;
 
+/**
+ * 操作日志中间件
+ * 通过反射读取控制器方法上的 #[Log] 注解，自动记录操作日志
+ */
 final class LogMiddleware
 {
+    /**
+     * 拦截请求，执行完后记录操作日志
+     */
     public function handle($request, \Closure $next): Response
     {
         $startTime = microtime(true);
@@ -87,6 +94,9 @@ final class LogMiddleware
         return $response instanceof Response ? $response : response($response);
     }
 
+    /**
+     * 从 User-Agent 里提取 OS 和浏览器信息
+     */
     private function parseUserAgent(string $userAgent): array
     {
         $os = '';

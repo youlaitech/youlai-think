@@ -27,7 +27,7 @@ final class DictController extends BaseController
      */
     public function page(): \think\Response
     {
-        [$list, $total] = $this->service(DictService::class)->getDictPage($this->request->param());
+        [$list, $total] = $this->service(DictService::class)->getDictPage($this->getAllParams());
         return $this->success($list, $total);
     }
 
@@ -125,7 +125,7 @@ final class DictController extends BaseController
      */
     public function itemPage(string $dictCode): \think\Response
     {
-        [$list, $total] = $this->service(DictService::class)->getDictItemPage($dictCode, $this->request->param());
+        [$list, $total] = $this->service(DictService::class)->getDictItemPage($dictCode, $this->getAllParams());
         return $this->success($list, $total);
     }
 
@@ -157,7 +157,7 @@ final class DictController extends BaseController
     public function itemForm(string $dictCode, int $itemId): \think\Response
     {
         $data = $this->service(DictService::class)->getDictItemForm($itemId);
-        $data['dictCode'] = $dictCode;
+        $data['dict_code'] = $dictCode;
         return $this->success($data);
     }
 

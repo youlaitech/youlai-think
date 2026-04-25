@@ -8,6 +8,10 @@ use app\common\web\ResultCode;
 use app\system\service\MenuService;
 use think\facade\Db;
 
+/**
+ * 代码生成服务
+ * 读取数据库表结构，渲染模板生成前后端代码
+ */
 final class CodegenService
 {
     private const TEMPLATE_BASE_DIR = '/templates';
@@ -31,8 +35,8 @@ final class CodegenService
      */
     public function getTablePage(array $queryParams): array
     {
-        $pageNum = (int) ($queryParams['pageNum'] ?? 1);
-        $pageSize = (int) ($queryParams['pageSize'] ?? 10);
+        $pageNum = (int) ($queryParams['page_num'] ?? $queryParams['pageNum'] ?? 1);
+        $pageSize = (int) ($queryParams['page_size'] ?? $queryParams['pageSize'] ?? 10);
         $pageNum = $pageNum > 0 ? $pageNum : 1;
         $pageSize = $pageSize > 0 ? $pageSize : 10;
         $keywords = trim((string) ($queryParams['keywords'] ?? ''));
@@ -71,13 +75,13 @@ LIMIT ? OFFSET ?
         $list = [];
         foreach ($listRows as $r) {
             $list[] = [
-                'tableName' => (string) ($r['tableName'] ?? ''),
-                'tableComment' => (string) ($r['tableComment'] ?? ''),
+                'table_name' => (string) ($r['tableName'] ?? ''),
+                'table_comment' => (string) ($r['tableComment'] ?? ''),
                 'engine' => (string) ($r['engine'] ?? ''),
-                'tableCollation' => (string) ($r['tableCollation'] ?? ''),
+                'table_collation' => (string) ($r['tableCollation'] ?? ''),
                 'charset' => (string) ($r['charset'] ?? ''),
-                'createTime' => (string) ($r['createTime'] ?? ''),
-                'isConfigured' => isset($r['isConfigured']) ? (int) $r['isConfigured'] : 0,
+                'create_time' => (string) ($r['createTime'] ?? ''),
+                'is_configured' => isset($r['isConfigured']) ? (int) $r['isConfigured'] : 0,
             ];
         }
 
@@ -115,37 +119,37 @@ LIMIT ? OFFSET ?
             foreach ($fieldRows as $r) {
                 $fieldConfigs[] = [
                     'id' => isset($r['id']) ? (string) $r['id'] : null,
-                    'columnName' => $r['column_name'] ?? null,
-                    'columnType' => $r['column_type'] ?? null,
-                    'fieldName' => $r['field_name'] ?? null,
-                    'fieldType' => $r['field_type'] ?? null,
-                    'fieldComment' => $r['field_comment'] ?? null,
-                    'isShowInList' => isset($r['is_show_in_list']) ? (int) $r['is_show_in_list'] : 0,
-                    'isShowInForm' => isset($r['is_show_in_form']) ? (int) $r['is_show_in_form'] : 0,
-                    'isShowInQuery' => isset($r['is_show_in_query']) ? (int) $r['is_show_in_query'] : 0,
-                    'isRequired' => isset($r['is_required']) ? (int) $r['is_required'] : 0,
-                    'formType' => isset($r['form_type']) ? (int) $r['form_type'] : null,
-                    'queryType' => isset($r['query_type']) ? (int) $r['query_type'] : null,
-                    'maxLength' => isset($r['max_length']) ? (int) $r['max_length'] : null,
-                    'fieldSort' => isset($r['field_sort']) ? (int) $r['field_sort'] : null,
-                    'dictType' => $r['dict_type'] ?? null,
+                    'column_name' => $r['column_name'] ?? null,
+                    'column_type' => $r['column_type'] ?? null,
+                    'field_name' => $r['field_name'] ?? null,
+                    'field_type' => $r['field_type'] ?? null,
+                    'field_comment' => $r['field_comment'] ?? null,
+                    'is_show_in_list' => isset($r['is_show_in_list']) ? (int) $r['is_show_in_list'] : 0,
+                    'is_show_in_form' => isset($r['is_show_in_form']) ? (int) $r['is_show_in_form'] : 0,
+                    'is_show_in_query' => isset($r['is_show_in_query']) ? (int) $r['is_show_in_query'] : 0,
+                    'is_required' => isset($r['is_required']) ? (int) $r['is_required'] : 0,
+                    'form_type' => isset($r['form_type']) ? (int) $r['form_type'] : null,
+                    'query_type' => isset($r['query_type']) ? (int) $r['query_type'] : null,
+                    'max_length' => isset($r['max_length']) ? (int) $r['max_length'] : null,
+                    'field_sort' => isset($r['field_sort']) ? (int) $r['field_sort'] : null,
+                    'dict_type' => $r['dict_type'] ?? null,
                 ];
             }
 
             return [
                 'id' => isset($cfg['id']) ? (string) $cfg['id'] : null,
-                'tableName' => $cfg['table_name'] ?? $tableName,
-                'businessName' => $cfg['business_name'] ?? null,
-                'moduleName' => $cfg['module_name'] ?? self::DEFAULT_MODULE_NAME,
-                'packageName' => $cfg['package_name'] ?? self::DEFAULT_PACKAGE_NAME,
-                'entityName' => $cfg['entity_name'] ?? null,
+                'table_name' => $cfg['table_name'] ?? $tableName,
+                'business_name' => $cfg['business_name'] ?? null,
+                'module_name' => $cfg['module_name'] ?? self::DEFAULT_MODULE_NAME,
+                'package_name' => $cfg['package_name'] ?? self::DEFAULT_PACKAGE_NAME,
+                'entity_name' => $cfg['entity_name'] ?? null,
                 'author' => $cfg['author'] ?? self::DEFAULT_AUTHOR,
-                'parentMenuId' => isset($cfg['parent_menu_id']) && $cfg['parent_menu_id'] !== null ? (string) $cfg['parent_menu_id'] : null,
-                'backendAppName' => self::DEFAULT_BACKEND_APP_NAME,
-                'frontendAppName' => self::DEFAULT_FRONTEND_APP_NAME,
-                'fieldConfigs' => $fieldConfigs,
-                'pageType' => $cfg['page_type'] ?? 'classic',
-                'removeTablePrefix' => $cfg['remove_table_prefix'] ?? self::DEFAULT_REMOVE_TABLE_PREFIX,
+                'parent_menu_id' => isset($cfg['parent_menu_id']) && $cfg['parent_menu_id'] !== null ? (string) $cfg['parent_menu_id'] : null,
+                'backend_app_name' => self::DEFAULT_BACKEND_APP_NAME,
+                'frontend_app_name' => self::DEFAULT_FRONTEND_APP_NAME,
+                'field_configs' => $fieldConfigs,
+                'page_type' => $cfg['page_type'] ?? 'classic',
+                'remove_table_prefix' => $cfg['remove_table_prefix'] ?? self::DEFAULT_REMOVE_TABLE_PREFIX,
             ];
         }
 
@@ -206,35 +210,35 @@ ORDER BY ORDINAL_POSITION ASC
             }
 
             $fieldConfigs[] = [
-                'columnName' => $columnName,
-                'columnType' => $columnType,
-                'fieldName' => $this->toCamelCase($columnName),
-                'fieldType' => $fieldType,
-                'fieldComment' => $comment,
-                'isRequired' => $nullable ? 0 : 1,
-                'formType' => $formType,
-                'queryType' => 1,
-                'maxLength' => is_numeric($maxLength) ? (int) $maxLength : null,
-                'fieldSort' => $idx + 1,
-                'isShowInList' => $isShowInList,
-                'isShowInForm' => $isShowInForm,
-                'isShowInQuery' => $isShowInQuery,
+                'column_name' => $columnName,
+                'column_type' => $columnType,
+                'field_name' => $this->toCamelCase($columnName),
+                'field_type' => $fieldType,
+                'field_comment' => $comment,
+                'is_required' => $nullable ? 0 : 1,
+                'form_type' => $formType,
+                'query_type' => 1,
+                'max_length' => is_numeric($maxLength) ? (int) $maxLength : null,
+                'field_sort' => $idx + 1,
+                'is_show_in_list' => $isShowInList,
+                'is_show_in_form' => $isShowInForm,
+                'is_show_in_query' => $isShowInQuery,
             ];
         }
 
         return [
-            'tableName' => $tableName,
-            'businessName' => $businessName,
-            'moduleName' => self::DEFAULT_MODULE_NAME,
-            'packageName' => self::DEFAULT_PACKAGE_NAME,
-            'entityName' => $entityName,
+            'table_name' => $tableName,
+            'business_name' => $businessName,
+            'module_name' => self::DEFAULT_MODULE_NAME,
+            'package_name' => self::DEFAULT_PACKAGE_NAME,
+            'entity_name' => $entityName,
             'author' => self::DEFAULT_AUTHOR,
-            'parentMenuId' => null,
-            'backendAppName' => self::DEFAULT_BACKEND_APP_NAME,
-            'frontendAppName' => self::DEFAULT_FRONTEND_APP_NAME,
-            'removeTablePrefix' => $removePrefix,
-            'pageType' => 'classic',
-            'fieldConfigs' => $fieldConfigs,
+            'parent_menu_id' => null,
+            'backend_app_name' => self::DEFAULT_BACKEND_APP_NAME,
+            'frontend_app_name' => self::DEFAULT_FRONTEND_APP_NAME,
+            'remove_table_prefix' => $removePrefix,
+            'page_type' => 'classic',
+            'field_configs' => $fieldConfigs,
         ];
     }
 
@@ -248,29 +252,29 @@ ORDER BY ORDINAL_POSITION ASC
             throw new BusinessException('表名不能为空');
         }
 
-        $moduleName = trim((string) ($formData['moduleName'] ?? ''));
+        $moduleName = trim((string) ($formData['module_name'] ?? ''));
         $moduleName = $moduleName !== '' ? $moduleName : self::DEFAULT_MODULE_NAME;
 
-        $packageName = trim((string) ($formData['packageName'] ?? ''));
+        $packageName = trim((string) ($formData['package_name'] ?? ''));
         $packageName = $packageName !== '' ? $packageName : self::DEFAULT_PACKAGE_NAME;
 
-        $businessName = trim((string) ($formData['businessName'] ?? ''));
+        $businessName = trim((string) ($formData['business_name'] ?? ''));
         $businessName = $businessName !== '' ? $businessName : $tableName;
 
-        $entityName = trim((string) ($formData['entityName'] ?? ''));
+        $entityName = trim((string) ($formData['entity_name'] ?? ''));
         $entityName = $entityName !== '' ? $entityName : $this->toPascalCase($tableName);
 
         $author = trim((string) ($formData['author'] ?? ''));
         $author = $author !== '' ? $author : self::DEFAULT_AUTHOR;
 
-        $parentMenuId = $formData['parentMenuId'] ?? null;
+        $parentMenuId = $formData['parent_menu_id'] ?? null;
         $parentMenuId = $parentMenuId === null || $parentMenuId === '' ? null : (int) $parentMenuId;
 
-        $removeTablePrefix = (string) ($formData['removeTablePrefix'] ?? self::DEFAULT_REMOVE_TABLE_PREFIX);
-        $pageType = (string) ($formData['pageType'] ?? 'classic');
+        $removeTablePrefix = (string) ($formData['remove_table_prefix'] ?? self::DEFAULT_REMOVE_TABLE_PREFIX);
+        $pageType = (string) ($formData['page_type'] ?? 'classic');
         $pageType = $pageType === 'curd' ? 'curd' : 'classic';
 
-        $fieldConfigs = $formData['fieldConfigs'] ?? null;
+        $fieldConfigs = $formData['field_configs'] ?? null;
         if (!is_array($fieldConfigs)) {
             $fieldConfigs = [];
         }
@@ -336,30 +340,30 @@ ORDER BY ORDINAL_POSITION ASC
                     continue;
                 }
 
-                $columnName = isset($fc['columnName']) ? trim((string) $fc['columnName']) : '';
+                $columnName = isset($fc['column_name']) ? trim((string) $fc['column_name']) : '';
                 if ($columnName === '') {
                     continue;
                 }
 
                 // 未传排序时按输入顺序递增
-                $fieldSort = isset($fc['fieldSort']) && is_numeric($fc['fieldSort']) ? (int) $fc['fieldSort'] : $sort;
+                $fieldSort = isset($fc['field_sort']) && is_numeric($fc['field_sort']) ? (int) $fc['field_sort'] : $sort;
 
                 $rows[] = [
                     'table_id' => $tableId,
                     'column_name' => $columnName,
-                    'column_type' => $fc['columnType'] ?? null,
-                    'field_name' => $fc['fieldName'] ?? $this->toCamelCase($columnName),
-                    'field_type' => $fc['fieldType'] ?? null,
+                    'column_type' => $fc['column_type'] ?? null,
+                    'field_name' => $fc['field_name'] ?? $this->toCamelCase($columnName),
+                    'field_type' => $fc['field_type'] ?? null,
                     'field_sort' => $fieldSort,
-                    'field_comment' => $fc['fieldComment'] ?? null,
-                    'max_length' => isset($fc['maxLength']) && is_numeric($fc['maxLength']) ? (int) $fc['maxLength'] : null,
-                    'is_required' => isset($fc['isRequired']) ? (int) $fc['isRequired'] : 0,
-                    'is_show_in_list' => isset($fc['isShowInList']) ? (int) $fc['isShowInList'] : 0,
-                    'is_show_in_form' => isset($fc['isShowInForm']) ? (int) $fc['isShowInForm'] : 0,
-                    'is_show_in_query' => isset($fc['isShowInQuery']) ? (int) $fc['isShowInQuery'] : 0,
-                    'query_type' => isset($fc['queryType']) ? (int) $fc['queryType'] : null,
-                    'form_type' => isset($fc['formType']) ? (int) $fc['formType'] : null,
-                    'dict_type' => $fc['dictType'] ?? null,
+                    'field_comment' => $fc['field_comment'] ?? null,
+                    'max_length' => isset($fc['max_length']) && is_numeric($fc['max_length']) ? (int) $fc['max_length'] : null,
+                    'is_required' => isset($fc['is_required']) ? (int) $fc['is_required'] : 0,
+                    'is_show_in_list' => isset($fc['is_show_in_list']) ? (int) $fc['is_show_in_list'] : 0,
+                    'is_show_in_form' => isset($fc['is_show_in_form']) ? (int) $fc['is_show_in_form'] : 0,
+                    'is_show_in_query' => isset($fc['is_show_in_query']) ? (int) $fc['is_show_in_query'] : 0,
+                    'query_type' => isset($fc['query_type']) ? (int) $fc['query_type'] : null,
+                    'form_type' => isset($fc['form_type']) ? (int) $fc['form_type'] : null,
+                    'dict_type' => $fc['dict_type'] ?? null,
                     'create_time' => $now,
                     'update_time' => $now,
                 ];
@@ -425,27 +429,27 @@ ORDER BY ORDINAL_POSITION ASC
     public function getCodegenPreviewData(string $tableName, string $pageType = 'classic', string $type = 'ts'): array
     {
         $config = $this->getGenConfigFormData($tableName);
-        $finalPageType = (string) ($config['pageType'] ?? 'classic');
+        $finalPageType = (string) ($config['page_type'] ?? 'classic');
         if ($finalPageType === '') {
             $finalPageType = $pageType;
         }
         $finalPageType = $finalPageType === 'curd' ? 'curd' : 'classic';
         $frontendType = strtolower(trim($type)) === 'js' ? 'js' : 'ts';
 
-        $entityName = (string) ($config['entityName'] ?? $this->toPascalCase($tableName));
-        $moduleName = (string) ($config['moduleName'] ?? self::DEFAULT_MODULE_NAME);
-        $businessName = (string) ($config['businessName'] ?? $tableName);
+        $entityName = (string) ($config['entity_name'] ?? $this->toPascalCase($tableName));
+        $moduleName = (string) ($config['module_name'] ?? self::DEFAULT_MODULE_NAME);
+        $businessName = (string) ($config['business_name'] ?? $tableName);
         $entityKebab = $this->toKebabCase($entityName);
         $moduleNameStudly = $this->toPascalCase($moduleName);
 
-        $fieldConfigs = $config['fieldConfigs'] ?? [];
+        $fieldConfigs = $config['field_configs'] ?? [];
         if (!is_array($fieldConfigs)) {
             $fieldConfigs = [];
         }
 
         $previews = [];
 
-        $tableNameFinal = (string) ($config['tableName'] ?? $tableName);
+        $tableNameFinal = (string) ($config['table_name'] ?? $tableName);
         $fieldSql = $this->buildFieldSql($fieldConfigs);
         $fieldsTs = $this->buildFieldsTs($fieldConfigs);
         $listFieldsTs = $this->buildListFieldsTs($fieldConfigs);
@@ -579,7 +583,7 @@ ORDER BY ORDINAL_POSITION ASC
             $list = $this->getCodegenPreviewData($tableName, $pageType, $type);
             foreach ($list as $item) {
                 $path = (string) ($item['path'] ?? '');
-                $fileName = (string) ($item['fileName'] ?? '');
+                $fileName = (string) ($item['file_name'] ?? '');
                 $content = (string) ($item['content'] ?? '');
                 if ($path === '' || $fileName === '') {
                     continue;
@@ -595,7 +599,7 @@ ORDER BY ORDINAL_POSITION ASC
         @unlink($zipPath);
 
         return [
-            'fileName' => self::DEFAULT_BACKEND_APP_NAME . '-code.zip',
+            'file_name' => self::DEFAULT_BACKEND_APP_NAME . '-code.zip',
             'bin' => $bin,
         ];
     }
@@ -645,7 +649,7 @@ ORDER BY ORDINAL_POSITION ASC
     {
         return [
             'path' => $path,
-            'fileName' => $fileName,
+            'file_name' => $fileName,
             'content' => $content,
             'scope' => $scope,
             'language' => $this->resolveLanguage($fileName),
@@ -664,10 +668,10 @@ ORDER BY ORDINAL_POSITION ASC
             if (!is_array($fc)) {
                 continue;
             }
-            if (($fc['isShowInList'] ?? 0) != 1) {
+            if (($fc['is_show_in_list'] ?? 0) != 1) {
                 continue;
             }
-            $col = trim((string) ($fc['columnName'] ?? ''));
+            $col = trim((string) ($fc['column_name'] ?? ''));
             if ($col !== '' && !in_array($col, $selectFields, true)) {
                 $selectFields[] = $col;
             }
@@ -733,7 +737,7 @@ ORDER BY ORDINAL_POSITION ASC
             if (!is_array($fc)) {
                 continue;
             }
-            $name = strtolower((string) ($fc['columnName'] ?? ''));
+            $name = strtolower((string) ($fc['column_name'] ?? ''));
             if ($name === $target) {
                 return true;
             }
@@ -748,13 +752,13 @@ ORDER BY ORDINAL_POSITION ASC
             if (!is_array($fc)) {
                 continue;
             }
-            $name = trim((string) ($fc['fieldName'] ?? ''));
+            $name = trim((string) ($fc['field_name'] ?? ''));
             if ($name === '') {
                 continue;
             }
-            $comment = trim((string) ($fc['fieldComment'] ?? ''));
+            $comment = trim((string) ($fc['field_comment'] ?? ''));
             $comment = $comment !== '' ? $comment : $name;
-            $type = (string) ($fc['fieldType'] ?? 'string');
+            $type = (string) ($fc['field_type'] ?? 'string');
             $tsType = $this->tsTypeByPhpType($type);
             $lines[] = "  /** {$comment} */";
             $lines[] = "  {$name}?: {$tsType};";
@@ -767,16 +771,16 @@ ORDER BY ORDINAL_POSITION ASC
     {
         $lines = [];
         foreach ($fieldConfigs as $fc) {
-            if (!is_array($fc) || ($fc['isShowInList'] ?? 0) != 1) {
+            if (!is_array($fc) || ($fc['is_show_in_list'] ?? 0) != 1) {
                 continue;
             }
-            $name = trim((string) ($fc['fieldName'] ?? ''));
+            $name = trim((string) ($fc['field_name'] ?? ''));
             if ($name === '') {
                 continue;
             }
-            $comment = trim((string) ($fc['fieldComment'] ?? ''));
+            $comment = trim((string) ($fc['field_comment'] ?? ''));
             $comment = $comment !== '' ? $comment : $name;
-            $type = (string) ($fc['fieldType'] ?? 'string');
+            $type = (string) ($fc['field_type'] ?? 'string');
             $tsType = $this->tsTypeByPhpType($type);
             $lines[] = "  /** {$comment} */";
             $lines[] = "  {$name}?: {$tsType};";
@@ -789,16 +793,16 @@ ORDER BY ORDINAL_POSITION ASC
     {
         $lines = [];
         foreach ($fieldConfigs as $fc) {
-            if (!is_array($fc) || ($fc['isShowInForm'] ?? 0) != 1) {
+            if (!is_array($fc) || ($fc['is_show_in_form'] ?? 0) != 1) {
                 continue;
             }
-            $name = trim((string) ($fc['fieldName'] ?? ''));
+            $name = trim((string) ($fc['field_name'] ?? ''));
             if ($name === '') {
                 continue;
             }
-            $comment = trim((string) ($fc['fieldComment'] ?? ''));
+            $comment = trim((string) ($fc['field_comment'] ?? ''));
             $comment = $comment !== '' ? $comment : $name;
-            $type = (string) ($fc['fieldType'] ?? 'string');
+            $type = (string) ($fc['field_type'] ?? 'string');
             $tsType = $this->tsTypeByPhpType($type);
             $lines[] = "  /** {$comment} */";
             $lines[] = "  {$name}?: {$tsType};";
@@ -811,20 +815,20 @@ ORDER BY ORDINAL_POSITION ASC
     {
         $lines = [];
         foreach ($fieldConfigs as $fc) {
-            if (!is_array($fc) || ($fc['isShowInQuery'] ?? 0) != 1) {
+            if (!is_array($fc) || ($fc['is_show_in_query'] ?? 0) != 1) {
                 continue;
             }
-            $name = trim((string) ($fc['fieldName'] ?? ''));
+            $name = trim((string) ($fc['field_name'] ?? ''));
             if ($name === '') {
                 continue;
             }
-            $comment = trim((string) ($fc['fieldComment'] ?? ''));
+            $comment = trim((string) ($fc['field_comment'] ?? ''));
             $comment = $comment !== '' ? $comment : $name;
-            $type = (string) ($fc['fieldType'] ?? 'string');
+            $type = (string) ($fc['field_type'] ?? 'string');
             $tsType = $this->tsTypeByPhpType($type);
-            $queryType = (int) ($fc['queryType'] ?? 0);
+            $queryType = (int) ($fc['query_type'] ?? 0);
             $lines[] = "  /** {$comment} */";
-            if ($this->isDateFormType((int) ($fc['formType'] ?? 0)) && $queryType === 4) {
+            if ($this->isDateFormType((int) ($fc['form_type'] ?? 0)) && $queryType === 4) {
                 $lines[] = "  {$name}?: [string, string];";
             } else {
                 $lines[] = "  {$name}?: {$tsType};";
@@ -838,18 +842,18 @@ ORDER BY ORDINAL_POSITION ASC
     {
         $lines = [];
         foreach ($fieldConfigs as $fc) {
-            if (!is_array($fc) || ($fc['isShowInQuery'] ?? 0) != 1) {
+            if (!is_array($fc) || ($fc['is_show_in_query'] ?? 0) != 1) {
                 continue;
             }
-            $label = trim((string) ($fc['fieldComment'] ?? ''));
-            $label = $label !== '' ? $label : (string) ($fc['fieldName'] ?? '');
-            $fieldName = (string) ($fc['fieldName'] ?? '');
+            $label = trim((string) ($fc['field_comment'] ?? ''));
+            $label = $label !== '' ? $label : (string) ($fc['field_name'] ?? '');
+            $fieldName = (string) ($fc['field_name'] ?? '');
             if ($fieldName === '') {
                 continue;
             }
-            $formType = (int) ($fc['formType'] ?? 1);
-            $dictType = trim((string) ($fc['dictType'] ?? ''));
-            $queryType = (int) ($fc['queryType'] ?? 0);
+            $formType = (int) ($fc['form_type'] ?? 1);
+            $dictType = trim((string) ($fc['dict_type'] ?? ''));
+            $queryType = (int) ($fc['query_type'] ?? 0);
 
             $lines[] = "        <el-form-item label=\"{$label}\" prop=\"{$fieldName}\">";
             if ($dictType !== '') {
@@ -891,16 +895,16 @@ ORDER BY ORDINAL_POSITION ASC
     {
         $lines = [];
         foreach ($fieldConfigs as $fc) {
-            if (!is_array($fc) || ($fc['isShowInList'] ?? 0) != 1) {
+            if (!is_array($fc) || ($fc['is_show_in_list'] ?? 0) != 1) {
                 continue;
             }
-            $label = trim((string) ($fc['fieldComment'] ?? ''));
-            $label = $label !== '' ? $label : (string) ($fc['fieldName'] ?? '');
-            $fieldName = (string) ($fc['fieldName'] ?? '');
+            $label = trim((string) ($fc['field_comment'] ?? ''));
+            $label = $label !== '' ? $label : (string) ($fc['field_name'] ?? '');
+            $fieldName = (string) ($fc['field_name'] ?? '');
             if ($fieldName === '') {
                 continue;
             }
-            $dictType = trim((string) ($fc['dictType'] ?? ''));
+            $dictType = trim((string) ($fc['dict_type'] ?? ''));
             if ($dictType !== '') {
                 $lines[] = "        <el-table-column label=\"{$label}\" width=\"150\" align=\"center\">";
                 $lines[] = "          <template #default=\"scope\">";
@@ -928,17 +932,17 @@ ORDER BY ORDINAL_POSITION ASC
             if (!is_array($fc)) {
                 continue;
             }
-            $formType = (int) ($fc['formType'] ?? 1);
-            if (($fc['isShowInForm'] ?? 0) != 1 || $formType === 10) {
+            $formType = (int) ($fc['form_type'] ?? 1);
+            if (($fc['is_show_in_form'] ?? 0) != 1 || $formType === 10) {
                 continue;
             }
-            $label = trim((string) ($fc['fieldComment'] ?? ''));
-            $label = $label !== '' ? $label : (string) ($fc['fieldName'] ?? '');
-            $fieldName = (string) ($fc['fieldName'] ?? '');
+            $label = trim((string) ($fc['field_comment'] ?? ''));
+            $label = $label !== '' ? $label : (string) ($fc['field_name'] ?? '');
+            $fieldName = (string) ($fc['field_name'] ?? '');
             if ($fieldName === '') {
                 continue;
             }
-            $dictType = trim((string) ($fc['dictType'] ?? ''));
+            $dictType = trim((string) ($fc['dict_type'] ?? ''));
 
             $lines[] = "        <el-form-item label=\"{$label}\" prop=\"{$fieldName}\">";
             if ($dictType !== '') {
@@ -977,14 +981,14 @@ ORDER BY ORDINAL_POSITION ASC
     {
         $lines = [];
         foreach ($fieldConfigs as $fc) {
-            if (!is_array($fc) || ($fc['isShowInForm'] ?? 0) != 1 || ($fc['isRequired'] ?? 0) != 1) {
+            if (!is_array($fc) || ($fc['is_show_in_form'] ?? 0) != 1 || ($fc['is_required'] ?? 0) != 1) {
                 continue;
             }
-            $fieldName = (string) ($fc['fieldName'] ?? '');
+            $fieldName = (string) ($fc['field_name'] ?? '');
             if ($fieldName === '') {
                 continue;
             }
-            $label = trim((string) ($fc['fieldComment'] ?? ''));
+            $label = trim((string) ($fc['field_comment'] ?? ''));
             $label = $label !== '' ? $label : $fieldName;
             $lines[] = "  {$fieldName}: [{ required: true, message: \"请输入{$label}\", trigger: \"blur\" }],";
         }
@@ -996,18 +1000,18 @@ ORDER BY ORDINAL_POSITION ASC
     {
         $lines = [];
         foreach ($fieldConfigs as $fc) {
-            if (!is_array($fc) || ($fc['isShowInQuery'] ?? 0) != 1) {
+            if (!is_array($fc) || ($fc['is_show_in_query'] ?? 0) != 1) {
                 continue;
             }
-            $dictType = trim((string) ($fc['dictType'] ?? ''));
+            $dictType = trim((string) ($fc['dict_type'] ?? ''));
             if ($dictType === '') {
                 continue;
             }
-            $fieldName = (string) ($fc['fieldName'] ?? '');
+            $fieldName = (string) ($fc['field_name'] ?? '');
             if ($fieldName === '') {
                 continue;
             }
-            $type = $this->dictSelectType((int) ($fc['formType'] ?? 0));
+            $type = $this->dictSelectType((int) ($fc['form_type'] ?? 0));
             $lines[] = "      <template #{$fieldName}=\"scope\">";
             $lines[] = "        <DictSelect v-model=\"scope.formData[scope.prop]\" code=\"{$dictType}\" type=\"{$type}\" v-bind=\"scope.attrs\" />";
             $lines[] = "      </template>";
@@ -1020,14 +1024,14 @@ ORDER BY ORDINAL_POSITION ASC
     {
         $lines = [];
         foreach ($fieldConfigs as $fc) {
-            if (!is_array($fc) || ($fc['isShowInList'] ?? 0) != 1) {
+            if (!is_array($fc) || ($fc['is_show_in_list'] ?? 0) != 1) {
                 continue;
             }
-            $dictType = trim((string) ($fc['dictType'] ?? ''));
+            $dictType = trim((string) ($fc['dict_type'] ?? ''));
             if ($dictType === '') {
                 continue;
             }
-            $fieldName = (string) ($fc['fieldName'] ?? '');
+            $fieldName = (string) ($fc['field_name'] ?? '');
             if ($fieldName === '') {
                 continue;
             }
@@ -1043,18 +1047,18 @@ ORDER BY ORDINAL_POSITION ASC
     {
         $lines = [];
         foreach ($fieldConfigs as $fc) {
-            if (!is_array($fc) || ($fc['isShowInForm'] ?? 0) != 1 || (int) ($fc['formType'] ?? 0) === 10) {
+            if (!is_array($fc) || ($fc['is_show_in_form'] ?? 0) != 1 || (int) ($fc['form_type'] ?? 0) === 10) {
                 continue;
             }
-            $dictType = trim((string) ($fc['dictType'] ?? ''));
+            $dictType = trim((string) ($fc['dict_type'] ?? ''));
             if ($dictType === '') {
                 continue;
             }
-            $fieldName = (string) ($fc['fieldName'] ?? '');
+            $fieldName = (string) ($fc['field_name'] ?? '');
             if ($fieldName === '') {
                 continue;
             }
-            $type = $this->dictSelectType((int) ($fc['formType'] ?? 0));
+            $type = $this->dictSelectType((int) ($fc['form_type'] ?? 0));
             $lines[] = "      <template #{$fieldName}=\"scope\">";
             $lines[] = "        <DictSelect v-model=\"scope.formData[scope.prop]\" code=\"{$dictType}\" type=\"{$type}\" v-bind=\"scope.attrs\" />";
             $lines[] = "      </template>";
@@ -1067,17 +1071,17 @@ ORDER BY ORDINAL_POSITION ASC
     {
         $lines = [];
         foreach ($fieldConfigs as $fc) {
-            if (!is_array($fc) || ($fc['isShowInQuery'] ?? 0) != 1) {
+            if (!is_array($fc) || ($fc['is_show_in_query'] ?? 0) != 1) {
                 continue;
             }
-            $label = trim((string) ($fc['fieldComment'] ?? ''));
-            $label = $label !== '' ? $label : (string) ($fc['fieldName'] ?? '');
-            $fieldName = (string) ($fc['fieldName'] ?? '');
+            $label = trim((string) ($fc['field_comment'] ?? ''));
+            $label = $label !== '' ? $label : (string) ($fc['field_name'] ?? '');
+            $fieldName = (string) ($fc['field_name'] ?? '');
             if ($fieldName === '') {
                 continue;
             }
-            $dictType = trim((string) ($fc['dictType'] ?? ''));
-            $formType = (int) ($fc['formType'] ?? 1);
+            $dictType = trim((string) ($fc['dict_type'] ?? ''));
+            $formType = (int) ($fc['form_type'] ?? 1);
 
             $lines[] = "    {";
             if ($dictType !== '') {
@@ -1110,16 +1114,16 @@ ORDER BY ORDINAL_POSITION ASC
     {
         $lines = [];
         foreach ($fieldConfigs as $fc) {
-            if (!is_array($fc) || ($fc['isShowInList'] ?? 0) != 1) {
+            if (!is_array($fc) || ($fc['is_show_in_list'] ?? 0) != 1) {
                 continue;
             }
-            $label = trim((string) ($fc['fieldComment'] ?? ''));
-            $label = $label !== '' ? $label : (string) ($fc['fieldName'] ?? '');
-            $fieldName = (string) ($fc['fieldName'] ?? '');
+            $label = trim((string) ($fc['field_comment'] ?? ''));
+            $label = $label !== '' ? $label : (string) ($fc['field_name'] ?? '');
+            $fieldName = (string) ($fc['field_name'] ?? '');
             if ($fieldName === '') {
                 continue;
             }
-            $dictType = trim((string) ($fc['dictType'] ?? ''));
+            $dictType = trim((string) ($fc['dict_type'] ?? ''));
             if ($dictType !== '') {
                 $lines[] = "    { label: \"{$label}\", prop: \"{$fieldName}\", templet: \"custom\", slotName: \"{$fieldName}\" },";
             } else {
@@ -1134,18 +1138,18 @@ ORDER BY ORDINAL_POSITION ASC
     {
         $lines = [];
         foreach ($fieldConfigs as $fc) {
-            if (!is_array($fc) || ($fc['isShowInForm'] ?? 0) != 1 || (int) ($fc['formType'] ?? 0) === 10) {
+            if (!is_array($fc) || ($fc['is_show_in_form'] ?? 0) != 1 || (int) ($fc['form_type'] ?? 0) === 10) {
                 continue;
             }
-            $label = trim((string) ($fc['fieldComment'] ?? ''));
-            $label = $label !== '' ? $label : (string) ($fc['fieldName'] ?? '');
-            $fieldName = (string) ($fc['fieldName'] ?? '');
+            $label = trim((string) ($fc['field_comment'] ?? ''));
+            $label = $label !== '' ? $label : (string) ($fc['field_name'] ?? '');
+            $fieldName = (string) ($fc['field_name'] ?? '');
             if ($fieldName === '') {
                 continue;
             }
-            $dictType = trim((string) ($fc['dictType'] ?? ''));
-            $formType = (int) ($fc['formType'] ?? 1);
-            $required = ((int) ($fc['isRequired'] ?? 0)) === 1;
+            $dictType = trim((string) ($fc['dict_type'] ?? ''));
+            $formType = (int) ($fc['form_type'] ?? 1);
+            $required = ((int) ($fc['is_required'] ?? 0)) === 1;
 
             $lines[] = "    {";
             if ($dictType !== '') {

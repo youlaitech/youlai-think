@@ -5,6 +5,9 @@ namespace app\file\service;
 use app\common\exception\BusinessException;
 use app\common\web\ResultCode;
 
+/**
+ * 文件上传与删除服务
+ */
 final class FileService
 {
     public function uploadFile(mixed $file, mixed $request = null): array

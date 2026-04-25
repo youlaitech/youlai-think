@@ -4,6 +4,10 @@ namespace extend\sse;
 
 use app\common\constants\NoticeEvents;
 
+/**
+ * 通知公告事件监听器
+ * 监听发布/撤回事件并广播给在线用户
+ */
 class NoticeListener
 {
     public function __construct(private SseService $sseService) {}

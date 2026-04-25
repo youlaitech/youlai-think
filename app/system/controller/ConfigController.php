@@ -30,7 +30,7 @@ final class ConfigController extends BaseController
      */
     public function page(): \think\Response
     {
-        [$list, $total] = $this->service(ConfigService::class)->page($this->request->param());
+        [$list, $total] = $this->service(ConfigService::class)->page($this->getAllParams());
         return $this->success($list, $total);
     }
 

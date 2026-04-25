@@ -66,8 +66,8 @@ final class AuthController extends BaseController
         $base64 = $builder->inline();
 
         return $this->success([
-            'captchaId' => $captchaId,
-            'captchaBase64' => $base64,
+            'captcha_id' => $captchaId,
+            'captcha_base64' => $base64,
         ]);
     }
 
@@ -86,8 +86,8 @@ final class AuthController extends BaseController
     {
         $username = $this->getParam('username', '');
         $password = $this->getParam('password', '');
-        $captchaId = $this->getParam('captchaId', '');
-        $captchaCode = $this->getParam('captchaCode', '');
+        $captchaId = $this->getParam('captcha_id', '');
+        $captchaCode = $this->getParam('captcha_code', '');
 
         // 验证码校验
         $this->validateCaptcha($captchaId, $captchaCode);
@@ -130,7 +130,7 @@ final class AuthController extends BaseController
      */
     public function refresh(): Json
     {
-        $refreshToken = $this->getParam('refreshToken', '');
+        $refreshToken = $this->getParam('refresh_token', '');
 
         $result = $this->service(AuthService::class)->refresh($refreshToken);
 

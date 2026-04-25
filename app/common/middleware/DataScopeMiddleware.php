@@ -2,18 +2,17 @@
 
 namespace app\common\middleware;
 
+use app\common\util\CaseConverter;
 use think\Response;
 
 /**
- * 数据范围中间件
- *
- * 从 JWT 中读取多角色数据权限列表（dataScopes）
- * 支持多角色数据权限合并（并集策略）
+ * 数据权限中间件
+ * 把 JWT 里的 dataScopes 等信息整理后挂到 request 上
  */
 final class DataScopeMiddleware
 {
     /**
-     * 确保 authUser 中包含 dataScopes
+     * 补充 dataScopes、roles 等字段到 authUser
      */
     public function handle($request, \Closure $next): Response
     {
@@ -24,10 +23,13 @@ final class DataScopeMiddleware
             return $response instanceof Response ? $response : response($response);
         }
 
-        // dataScopes 已经在 JWT 中解析，直接使用
-        if (!isset($authUser['dataScopes'])) {
-            $authUser['dataScopes'] = [];
-        }
+        // 将 JWT 中的 camelCase key 转为 snake_case，统一内部数据结构
+        $authUser['user_id'] = $userId;
+        $authUser['dept_id'] = $authUser['deptId'] ?? null;
+
+        // dataScopes 已经在 JWT 中解析，转为 snake_case
+        $dataScopes = $authUser['dataScopes'] ?? [];
+        $authUser['data_scopes'] = CaseConverter::toSnakeCase($dataScopes);
 
         // 提取 roles 列表便于判断 ROOT 角色
         $authorities = $authUser['authorities'] ?? [];

@@ -8,6 +8,9 @@ use extend\redis\RedisClient;
 use app\system\model\Config;
 use think\facade\Db;
 
+/**
+ * 系统参数配置服务
+ */
 final class ConfigService
 {
     private const CACHE_KEY = 'system:config';
@@ -40,9 +43,9 @@ final class ConfigService
         foreach ($rows as $r) {
             $list[] = [
                 'id' => (string) ($r['id'] ?? ''),
-                'configName' => $r['config_name'] ?? null,
-                'configKey' => $r['config_key'] ?? null,
-                'configValue' => $r['config_value'] ?? null,
+                'config_name' => $r['config_name'] ?? null,
+                'config_key' => $r['config_key'] ?? null,
+                'config_value' => $r['config_value'] ?? null,
                 'remark' => $r['remark'] ?? null,
             ];
         }
@@ -63,9 +66,9 @@ final class ConfigService
         $r = $row->toArray();
         return [
             'id' => (string) ($r['id'] ?? ''),
-            'configName' => $r['config_name'] ?? null,
-            'configKey' => $r['config_key'] ?? null,
-            'configValue' => $r['config_value'] ?? null,
+            'config_name' => $r['config_name'] ?? null,
+            'config_key' => $r['config_key'] ?? null,
+            'config_value' => $r['config_value'] ?? null,
             'remark' => $r['remark'] ?? null,
         ];
     }
@@ -75,9 +78,9 @@ final class ConfigService
      */
     public function saveConfig(int $userId, array $data): bool
     {
-        $configName = trim((string) ($data['configName'] ?? ''));
-        $configKey = trim((string) ($data['configKey'] ?? ''));
-        $configValue = (string) ($data['configValue'] ?? '');
+        $configName = trim((string) ($data['config_name'] ?? ''));
+        $configKey = trim((string) ($data['config_key'] ?? ''));
+        $configValue = (string) ($data['config_value'] ?? '');
         $remark = $data['remark'] ?? null;
 
         if ($configName === '' || $configKey === '' || $configValue === '') {
@@ -119,9 +122,9 @@ final class ConfigService
             throw new BusinessException('系统配置不存在');
         }
 
-        $configName = trim((string) ($data['configName'] ?? ''));
-        $configKey = trim((string) ($data['configKey'] ?? ''));
-        $configValue = (string) ($data['configValue'] ?? '');
+        $configName = trim((string) ($data['config_name'] ?? ''));
+        $configKey = trim((string) ($data['config_key'] ?? ''));
+        $configValue = (string) ($data['config_value'] ?? '');
         $remark = $data['remark'] ?? null;
 
         if ($configName === '' || $configKey === '' || $configValue === '') {

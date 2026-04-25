@@ -14,6 +14,9 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use think\facade\Db;
 
+/**
+ * 用户管理服务（增删改查、导入导出）
+ */
 final class UserService
 {
     /**
@@ -41,7 +44,7 @@ final class UserService
         }
 
         $data = $user->toArray();
-        $data['roleIds'] = array_column($data['roles'] ?? [], 'id');
+        $data['role_ids'] = array_column($data['roles'] ?? [], 'id');
         unset($data['roles']);
 
         return $data;
@@ -83,21 +86,21 @@ final class UserService
                 ->leftJoin('sys_role r', 'sur.role_id = r.id AND r.is_deleted = 0')
                 ->whereIn('sur.user_id', $userIds)
                 ->group('sur.user_id')
-                ->field('sur.user_id, GROUP_CONCAT(r.name) AS roleNames')
+                ->field('sur.user_id, GROUP_CONCAT(r.name) AS role_names')
                 ->select()
                 ->toArray();
 
             foreach ($rows as $row) {
-                $roleNameMap[(string) ($row['user_id'] ?? '')] = (string) ($row['roleNames'] ?? '');
+                $roleNameMap[(string) ($row['user_id'] ?? '')] = (string) ($row['role_names'] ?? '');
             }
         }
 
         // 格式化输出
         foreach ($list as &$item) {
-            $item['deptName'] = $item['dept']['name'] ?? '';
-            $item['roleNames'] = $roleNameMap[(string) ($item['id'] ?? '')] ?? '';
-            $item['genderText'] = $item['gender'] == 1 ? '男' : ($item['gender'] == 2 ? '女' : '未知');
-            $item['statusText'] = $item['status'] == 1 ? '启用' : '禁用';
+            $item['dept_name'] = $item['dept']['name'] ?? '';
+            $item['role_names'] = $roleNameMap[(string) ($item['id'] ?? '')] ?? '';
+            $item['gender_text'] = $item['gender'] == 1 ? '男' : ($item['gender'] == 2 ? '女' : '未知');
+            $item['status_text'] = $item['status'] == 1 ? '启用' : '禁用';
             unset($item['dept']);
         }
 
@@ -115,8 +118,6 @@ final class UserService
         }
 
         return Db::transaction(function () use ($data) {
-            $now = date('Y-m-d H:i:s');
-
             $password = $data['password'] ?? '';
             if ($password === '' || $password === null) {
                 $password = self::DEFAULT_PASSWORD;
@@ -133,13 +134,11 @@ final class UserService
                 'gender' => $data['gender'] ?? 0,
                 'status' => $data['status'] ?? 1,
                 'dept_id' => $data['dept_id'] ?? 0,
-                'create_time' => $now,
-                'update_time' => $now,
             ]);
 
             // 分配角色
             if (!empty($data['role_ids'])) {
-                $this->assignRoles($userId, $data['role_ids']);
+                $this->assignRoles((int) $userId, $data['role_ids']);
             }
 
             return (int) $userId;
@@ -234,14 +233,14 @@ final class UserService
         }
 
         return [
-            'userId' => (string) $user->id,
+            'user_id' => (string) $user->id,
             'username' => $user->username,
             'nickname' => $user->nickname,
             'avatar' => $user->avatar,
             'gender' => (int) ($user->gender ?? 0),
-            'deptName' => $user->dept->name ?? '',
+            'dept_name' => $user->dept->name ?? '',
             'roles' => $roleCodes,
-            'roleNames' => $roleNames,
+            'role_names' => $roleNames,
             'perms' => $perms,
         ];
     }
@@ -275,9 +274,9 @@ final class UserService
         }
 
         $data = $user->toArray();
-        $data['roleNames'] = implode(', ', array_column($data['roles'] ?? [], 'name'));
-        $data['deptName'] = $data['dept']['name'] ?? '';
-        $data['genderLabel'] = $data['gender'] == 1 ? '男' : ($data['gender'] == 2 ? '女' : '未知');
+        $data['role_names'] = implode(', ', array_column($data['roles'] ?? [], 'name'));
+        $data['dept_name'] = $data['dept']['name'] ?? '';
+        $data['gender_label'] = $data['gender'] == 1 ? '男' : ($data['gender'] == 2 ? '女' : '未知');
 
         return $data;
     }
@@ -332,7 +331,7 @@ final class UserService
         }
 
         $data = $user->toArray();
-        $data['roleIds'] = array_column($data['roles'] ?? [], 'id');
+        $data['role_ids'] = array_column($data['roles'] ?? [], 'id');
         unset($data['roles'], $data['password']);
 
         return $data;
@@ -502,8 +501,8 @@ final class UserService
             });
         }
 
-        if (isset($params['createTime']) && $params['createTime'] !== '') {
-            $range = $params['createTime'];
+        if (isset($params['create_time']) && $params['create_time'] !== '') {
+            $range = $params['create_time'];
 
             if (is_string($range)) {
                 $range = array_values(array_filter(array_map('trim', preg_split('/\s*,\s*/', $range) ?: [])));
@@ -540,7 +539,7 @@ final class UserService
     private function applyDataScope($query, array $authUser): void
     {
         // 从 authorities 提取角色编码
-        $authorities = (array) ($authUser['authorities'] ?? []);
+        $authorities = (array) ($authUser['roles'] ?? []);
         $roleCodes = array_map(fn($a) => str_starts_with($a, 'ROLE_') ? substr($a, 5) : $a, $authorities);
 
         // 超级管理员不过滤
@@ -554,10 +553,10 @@ final class UserService
         }
 
         // 根据数据权限过滤
-        $dataScopes = $authUser['dataScopes'] ?? [];
+        $dataScopes = $authUser['data_scopes'] ?? [];
         if (empty($dataScopes)) {
             // 无数据权限配置时，仅显示本人数据
-            $userId = (int) ($authUser['userId'] ?? 0);
+            $userId = (int) ($authUser['user_id'] ?? 0);
             if ($userId > 0) {
                 $query->where('id', $userId);
             }
@@ -567,8 +566,8 @@ final class UserService
         // 合并部门权限
         $deptIds = [];
         foreach ($dataScopes as $scope) {
-            if (!empty($scope['customDeptIds'])) {
-                $deptIds = array_merge($deptIds, $scope['customDeptIds']);
+            if (!empty($scope['custom_dept_ids'])) {
+                $deptIds = array_merge($deptIds, $scope['custom_dept_ids']);
             }
         }
 
@@ -582,11 +581,9 @@ final class UserService
      */
     private function assignRoles(int $userId, array $roleIds): void
     {
-        $now = date('Y-m-d H:i:s');
         $data = array_map(fn ($roleId) => [
             'user_id' => $userId,
             'role_id' => $roleId,
-            'create_time' => $now,
         ], $roleIds);
 
         UserRole::insertAll($data);
@@ -637,12 +634,12 @@ final class UserService
                 ->leftJoin('sys_role r', 'sur.role_id = r.id AND r.is_deleted = 0')
                 ->whereIn('sur.user_id', $userIds)
                 ->group('sur.user_id')
-                ->field('sur.user_id, GROUP_CONCAT(r.name) AS roleNames')
+                ->field('sur.user_id, GROUP_CONCAT(r.name) AS role_names')
                 ->select()
                 ->toArray();
 
             foreach ($rows as $row) {
-                $roleNameMap[(string) ($row['user_id'] ?? '')] = (string) ($row['roleNames'] ?? '');
+                $roleNameMap[(string) ($row['user_id'] ?? '')] = (string) ($row['role_names'] ?? '');
             }
         }
 
@@ -695,7 +692,7 @@ final class UserService
         $rows = $sheet->toArray();
 
         if (count($rows) < 2) {
-            return ['validCount' => 0, 'invalidCount' => 0, 'messageList' => ['Excel文件没有数据']];
+            return ['valid_count' => 0, 'invalid_count' => 0, 'message_list' => ['Excel文件没有数据']];
         }
 
         // 预加载角色和部门数据（支持编码或名称匹配）
@@ -798,7 +795,6 @@ final class UserService
             }
 
             // 创建用户
-            $now = date('Y-m-d H:i:s');
             $userId = User::insertGetId([
                 'username' => $username,
                 'password' => password_hash(self::DEFAULT_PASSWORD, PASSWORD_DEFAULT),
@@ -808,21 +804,19 @@ final class UserService
                 'gender' => $gender,
                 'status' => 1,
                 'dept_id' => $deptId,
-                'create_time' => $now,
-                'update_time' => $now,
             ]);
 
             // 分配角色
-            $this->assignRoles($userId, array_unique($roleIds));
+            $this->assignRoles((int) $userId, array_unique($roleIds));
 
             $existingUsernames[] = $username;
             $validCount++;
         }
 
         return [
-            'validCount' => $validCount,
-            'invalidCount' => $invalidCount,
-            'messageList' => $messageList,
+            'valid_count' => $validCount,
+            'invalid_count' => $invalidCount,
+            'message_list' => $messageList,
         ];
     }
 }

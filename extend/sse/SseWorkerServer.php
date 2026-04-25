@@ -12,6 +12,10 @@ use Workerman\Protocols\Http\Response;
 use Workerman\Timer;
 use Workerman\Worker;
 
+/**
+ * SSE 长连接 Worker（基于 Workerman）
+ * 处理心跳、Token 校验、Redis Pub/Sub 消息推送
+ */
 class SseWorkerServer extends Worker
 {
     private SseSessionRegistry $registry;

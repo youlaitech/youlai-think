@@ -222,7 +222,7 @@ final class RoleController extends BaseController
     public function assignMenus(): \think\response\Json
     {
         $id = $this->getIdParam();
-        $payload = $this->getJsonBody();
+        $payload = json_decode((string) $this->request->getContent(), true);
 
         if (!is_array($payload)) {
             return $this->fail('A0400', 'menuIds 参数格式错误');

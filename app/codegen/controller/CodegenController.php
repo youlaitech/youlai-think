@@ -26,7 +26,7 @@ final class CodegenController extends BaseController
      */
     public function tablePage(): \think\Response
     {
-        [$list, $total] = $this->service(CodegenService::class)->getTablePage($this->request->param());
+        [$list, $total] = $this->service(CodegenService::class)->getTablePage($this->getAllParams());
         return $this->success($list, $total);
     }
 
@@ -98,8 +98,8 @@ final class CodegenController extends BaseController
      */
     public function preview(string $tableName): \think\Response
     {
-        $pageType = (string) $this->request->param('pageType', 'classic');
-        $type = (string) $this->request->param('type', 'ts');
+        $pageType = (string) $this->getParam('page_type', 'classic');
+        $type = (string) $this->getParam('type', 'ts');
         $list = $this->service(CodegenService::class)->getCodegenPreviewData($tableName, $pageType, $type);
         return $this->success($list);
     }
@@ -119,13 +119,13 @@ final class CodegenController extends BaseController
      */
     public function download(string $tableName): \think\Response
     {
-        $pageType = (string) $this->request->param('pageType', 'classic');
-        $type = (string) $this->request->param('type', 'ts');
+        $pageType = (string) $this->getParam('page_type', 'classic');
+        $type = (string) $this->getParam('type', 'ts');
         $tableNames = array_values(array_filter(array_map('trim', explode(',', $tableName)), fn($v) => $v !== ''));
 
         $ret = $this->service(CodegenService::class)->downloadZip($tableNames, $pageType, $type);
         $bin = (string) ($ret['bin'] ?? '');
-        $fileName = (string) ($ret['fileName'] ?? ($tableName . '.zip'));
+        $fileName = (string) ($ret['file_name'] ?? ($tableName . '.zip'));
 
         return response($bin, 200)
             ->header([

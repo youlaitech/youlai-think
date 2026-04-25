@@ -2,6 +2,10 @@
 
 namespace extend\sse;
 
+/**
+ * SSE 会话注册表
+ * 维护用户名与 SseEmitter 实例的映射关系
+ */
 class SseSessionRegistry
 {
     /** @var array<string, SseEmitter[]> */

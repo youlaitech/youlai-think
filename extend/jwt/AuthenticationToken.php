@@ -2,6 +2,9 @@
 
 namespace extend\jwt;
 
+/**
+ * 登录成功后返回的 Token 数据对象
+ */
 readonly class AuthenticationToken
 {
     public function __construct(

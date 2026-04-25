@@ -5,7 +5,7 @@ namespace app\system\model;
 use app\common\model\BaseModel;
 
 /**
- * 用户模型。
+ * 用户模型
  */
 class User extends BaseModel
 {

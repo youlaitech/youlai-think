@@ -9,6 +9,9 @@ use app\common\web\ResultCode;
 use app\system\model\User;
 use think\facade\Db;
 
+/**
+ * 认证服务（登录、登出、Token 刷新）
+ */
 final class AuthService
 {
     private JwtTokenManager $jwt;
@@ -97,10 +100,10 @@ final class AuthService
         ]);
 
         return [
-            'accessToken' => $token->accessToken,
-            'refreshToken' => $token->refreshToken,
-            'tokenType' => $token->tokenType,
-            'expiresIn' => $token->expiresIn,
+            'access_token' => $token->accessToken,
+            'refresh_token' => $token->refreshToken,
+            'token_type' => $token->tokenType,
+            'expires_in' => $token->expiresIn,
         ];
     }
 
@@ -120,10 +123,10 @@ final class AuthService
         $token = $this->jwt->refreshToken($refreshToken);
 
         return [
-            'accessToken' => $token->accessToken,
-            'refreshToken' => $token->refreshToken,
-            'tokenType' => $token->tokenType,
-            'expiresIn' => $token->expiresIn,
+            'access_token' => $token->accessToken,
+            'refresh_token' => $token->refreshToken,
+            'token_type' => $token->tokenType,
+            'expires_in' => $token->expiresIn,
         ];
     }
 }

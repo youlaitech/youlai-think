@@ -9,6 +9,10 @@ use extend\redis\KeyFormatter;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
+/**
+ * JWT Token 管理器
+ * 负责生成和解析 Access/Refresh Token
+ */
 class JwtTokenManager implements TokenManager
 {
     private readonly string $secret;

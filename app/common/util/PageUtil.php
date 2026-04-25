@@ -16,8 +16,8 @@ final class PageUtil
     public static function resolve(array $params): array
     {
         return [
-            max(1, (int) ($params['pageNum'] ?? 1)),
-            min(100, max(1, (int) ($params['pageSize'] ?? 10))),
+            max(1, (int) ($params['page_num'] ?? $params['pageNum'] ?? 1)),
+            min(100, max(1, (int) ($params['page_size'] ?? $params['pageSize'] ?? 10))),
         ];
     }
 }

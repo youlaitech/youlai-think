@@ -18,7 +18,7 @@ final class NoticeService
         [$pageNum, $pageSize] = PageUtil::resolve($queryParams);
 
         $title = trim((string) ($queryParams['title'] ?? ''));
-        $publishStatus = $queryParams['publishStatus'] ?? null;
+        $publishStatus = $queryParams['publish_status'] ?? null;
 
         // 关联发布人、创建人、阅读状态
         $q = Db::name('sys_notice')
@@ -59,15 +59,15 @@ final class NoticeService
             $list[] = [
                 'id' => (string) ($r['id'] ?? ''),
                 'title' => (string) ($r['title'] ?? ''),
-                'publishStatus' => $this->fromDbPublishStatus((int) ($r['publish_status'] ?? 0)),
+                'publish_status' => $this->fromDbPublishStatus((int) ($r['publish_status'] ?? 0)),
                 'type' => isset($r['type']) ? (int) $r['type'] : 0,
-                'publisherName' => $r['publisher_name'] ?? null,
+                'publisher_name' => $r['publisher_name'] ?? null,
                 'level' => (string) ($r['level'] ?? ''),
-                'publishTime' => $r['publish_time'] ?? null,
-                'isRead' => isset($r['is_read']) ? (int) $r['is_read'] : 0,
-                'targetType' => isset($r['target_type']) ? (int) $r['target_type'] : null,
-                'createTime' => $r['create_time'] ?? null,
-                'revokeTime' => $r['revoke_time'] ?? null,
+                'publish_time' => $r['publish_time'] ?? null,
+                'is_read' => isset($r['is_read']) ? (int) $r['is_read'] : 0,
+                'target_type' => isset($r['target_type']) ? (int) $r['target_type'] : null,
+                'create_time' => $r['create_time'] ?? null,
+                'revoke_time' => $r['revoke_time'] ?? null,
             ];
         }
 
@@ -98,9 +98,9 @@ final class NoticeService
             'content' => $n['content'] ?? null,
             'type' => isset($n['type']) ? (int) $n['type'] : null,
             'level' => $n['level'] ?? null,
-            'publishStatus' => $this->fromDbPublishStatus((int) ($n['publish_status'] ?? 0)),
-            'targetType' => isset($n['target_type']) ? (int) ($n['target_type']) : null,
-            'targetUserIds' => $targetUserIds,
+            'publish_status' => $this->fromDbPublishStatus((int) ($n['publish_status'] ?? 0)),
+            'target_type' => isset($n['target_type']) ? (int) ($n['target_type']) : null,
+            'target_user_ids' => $targetUserIds,
         ];
     }
 
@@ -113,9 +113,9 @@ final class NoticeService
         $content = (string) ($data['content'] ?? '');
         $type = (int) ($data['type'] ?? 0);
         $level = (string) ($data['level'] ?? 'L');
-        $targetType = (int) ($data['targetType'] ?? 1);
+        $targetType = (int) ($data['target_type'] ?? 1);
         // 支持数组/逗号分隔字符串
-        $targetUserIds = $this->normalizeTargetUserIds($data['targetUserIds'] ?? null);
+        $targetUserIds = $this->normalizeTargetUserIds($data['target_users'] ?? null);
 
         if ($title === '' || trim(strip_tags($content)) === '') {
             throw new BusinessException('标题或内容不能为空');
@@ -125,7 +125,6 @@ final class NoticeService
             throw new BusinessException('推送指定用户不能为空');
         }
 
-        $now = date('Y-m-d H:i:s');
         $notice = new Notice();
         $notice->save([
             'title' => $title,
@@ -136,9 +135,7 @@ final class NoticeService
             'target_user_ids' => empty($targetUserIds) ? null : implode(',', $targetUserIds),
             'publish_status' => 0,
             'create_by' => $userId,
-            'create_time' => $now,
             'update_by' => $userId,
-            'update_time' => $now,
             'is_deleted' => 0,
         ]);
 
@@ -159,9 +156,9 @@ final class NoticeService
         $content = (string) ($data['content'] ?? '');
         $type = (int) ($data['type'] ?? 0);
         $level = (string) ($data['level'] ?? 'L');
-        $targetType = (int) ($data['targetType'] ?? 1);
+        $targetType = (int) ($data['target_type'] ?? 1);
         // 支持数组/逗号分隔字符串
-        $targetUserIds = $this->normalizeTargetUserIds($data['targetUserIds'] ?? null);
+        $targetUserIds = $this->normalizeTargetUserIds($data['target_users'] ?? null);
 
         if ($title === '' || trim(strip_tags($content)) === '') {
             throw new BusinessException('标题或内容不能为空');
@@ -179,7 +176,6 @@ final class NoticeService
             'target_type' => $targetType,
             'target_user_ids' => empty($targetUserIds) ? null : implode(',', $targetUserIds),
             'update_by' => $userId,
-            'update_time' => date('Y-m-d H:i:s'),
         ]);
 
         return true;
@@ -386,10 +382,10 @@ final class NoticeService
             'title' => $row['title'] ?? null,
             'content' => $row['content'] ?? null,
             'type' => isset($row['type']) ? (int) $row['type'] : null,
-            'publisherName' => $row['publisher_name'] ?? null,
+            'publisher_name' => $row['publisher_name'] ?? null,
             'level' => $row['level'] ?? null,
-            'publishStatus' => $this->fromDbPublishStatus((int) ($row['publish_status'] ?? 0)),
-            'publishTime' => $row['publish_time'] ?? null,
+            'publish_status' => $this->fromDbPublishStatus((int) ($row['publish_status'] ?? 0)),
+            'publish_time' => $row['publish_time'] ?? null,
         ];
     }
 
@@ -401,7 +397,7 @@ final class NoticeService
         [$pageNum, $pageSize] = PageUtil::resolve($queryParams);
 
         $title = trim((string) ($queryParams['title'] ?? ''));
-        $isRead = $queryParams['isRead'] ?? null;
+        $isRead = $queryParams['is_read'] ?? null;
 
         $q = Db::name('sys_user_notice')
             ->alias('un')
@@ -436,9 +432,9 @@ final class NoticeService
                 'title' => $r['title'] ?? null,
                 'type' => isset($r['type']) ? (int) $r['type'] : null,
                 'level' => $r['level'] ?? null,
-                'publisherName' => $r['publisher_name'] ?? null,
-                'publishTime' => $r['publish_time'] ?? null,
-                'isRead' => isset($r['is_read']) ? (int) $r['is_read'] : 0,
+                'publisher_name' => $r['publisher_name'] ?? null,
+                'publish_time' => $r['publish_time'] ?? null,
+                'is_read' => isset($r['is_read']) ? (int) $r['is_read'] : 0,
             ];
         }
 
@@ -446,7 +442,7 @@ final class NoticeService
     }
 
     /**
-     * 规范化 targetUserIds（支持字符串/数组）
+     * 把 targetUserIds 转成数组（兼容字符串逗号分隔）
      */
     private function normalizeTargetUserIds(mixed $value): array
     {

@@ -3,8 +3,7 @@
 namespace app\common\constants;
 
 /**
- * Redis 键常量类
- * 统一管理所有 Redis 键名，避免硬编码
+ * Redis 键常量
  */
 final class RedisKey
 {

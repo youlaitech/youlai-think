@@ -2,6 +2,9 @@
 
 namespace extend\jwt;
 
+/**
+ * JWT/Redis 安全相关常量
+ */
 class SecurityConstants
 {
     public const REDIS_USER_ACCESS_TOKEN = 'auth:user:access:%d';

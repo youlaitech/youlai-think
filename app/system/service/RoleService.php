@@ -9,6 +9,9 @@ use app\system\model\Role;
 use app\system\model\RoleMenu;
 use think\facade\Db;
 
+/**
+ * 角色与菜单绑定服务
+ */
 final class RoleService
 {
     /**
@@ -31,14 +34,11 @@ final class RoleService
 
         $data = $role->toArray();
 
-        if (array_key_exists('data_scope', $data) && !array_key_exists('dataScope', $data)) {
-            $data['dataScope'] = (int) $data['data_scope'];
-        }
-        $data['menuIds'] = array_column($data['menus'] ?? [], 'id');
+        $data['menu_ids'] = array_column($data['menus'] ?? [], 'id');
         unset($data['menus']);
 
         // 获取角色关联的部门ID（自定义数据权限用）
-        $data['deptIds'] = array_map('strval', Db::name('sys_role_dept')
+        $data['dept_ids'] = array_map('strval', Db::name('sys_role_dept')
             ->where('role_id', $id)
             ->column('dept_id'));
 
@@ -72,10 +72,10 @@ final class RoleService
 
         // 格式化
         foreach ($list as &$item) {
-            $item['statusText'] = $item['status'] == 1 ? '启用' : '禁用';
+            $item['status_text'] = $item['status'] == 1 ? '启用' : '禁用';
 
             $dataScope = (int) ($item['data_scope'] ?? 0);
-            $item['dataScopeLabel'] = match ($dataScope) {
+            $item['data_scope_label'] = match ($dataScope) {
                 1 => '全部数据',
                 2 => '部门及子部门数据',
                 3 => '本部门数据',
@@ -117,27 +117,23 @@ final class RoleService
         }
 
         return Db::transaction(function () use ($data) {
-            $now = date('Y-m-d H:i:s');
-
             $roleId = Role::insertGetId([
                 'code' => $data['code'],
                 'name' => $data['name'],
                 'status' => $data['status'] ?? 1,
                 'sort' => $data['sort'] ?? 0,
-                'data_scope' => $data['dataScope'] ?? 1,
+                'data_scope' => $data['data_scope'] ?? 1,
                 'remark' => $data['remark'] ?? '',
-                'create_time' => $now,
-                'update_time' => $now,
             ]);
 
             // 分配菜单
-            if (!empty($data['menuIds'])) {
-                $this->assignMenus($roleId, $data['menuIds']);
+            if (!empty($data['menu_ids'])) {
+                $this->assignMenus($roleId, $data['menu_ids']);
             }
 
             // 分配部门（自定义数据权限）
-            if (!empty($data['deptIds'])) {
-                $this->assignDepts($roleId, $data['deptIds']);
+            if (!empty($data['dept_ids'])) {
+                $this->assignDepts($roleId, $data['dept_ids']);
             }
 
             return (int) $roleId;
@@ -163,18 +159,18 @@ final class RoleService
             $role->name = $data['name'] ?? $role->name;
             $role->status = $data['status'] ?? $role->status;
             $role->sort = $data['sort'] ?? $role->sort;
-            $role->data_scope = $data['dataScope'] ?? $role->data_scope;
+            $role->data_scope = $data['data_scope'] ?? $role->data_scope;
             $role->remark = $data['remark'] ?? $role->remark;
             $role->save();
 
             // 更新菜单
-            if (isset($data['menuIds'])) {
-                $this->syncMenus($id, $data['menuIds']);
+            if (isset($data['menu_ids'])) {
+                $this->syncMenus($id, $data['menu_ids']);
             }
 
             // 更新部门
-            if (isset($data['deptIds'])) {
-                $this->syncDepts($id, $data['deptIds']);
+            if (isset($data['dept_ids'])) {
+                $this->syncDepts($id, $data['dept_ids']);
             }
 
             return true;

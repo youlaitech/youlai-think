@@ -7,6 +7,9 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use think\facade\Log;
 
+/**
+ * HTTP 客户端封装（基于 Guzzle）
+ */
 final class HttpClient
 {
     protected Client $client;

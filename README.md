@@ -1,109 +1,176 @@
 <div align="center">
-   <img alt="logo" width="100" height="100" src="https://foruda.gitee.com/images/1733417239320800627/3c5290fe_716974.png">
-   <h2>youlai-think</h2>
-   <img alt="PHP" src="https://img.shields.io/badge/PHP-8.0+-blueviolet.svg"/>
-   <img alt="ThinkPHP" src="https://img.shields.io/badge/ThinkPHP-8.0-blue.svg"/>
-   <a href="https://gitee.com/youlaiorg/youlai-think" target="_blank">
-     <img alt="Gitee star" src="https://gitee.com/youlaiorg/youlai-think/badge/star.svg"/>
-   </a>
-   <a href="https://github.com/youlaitech/youlai-think" target="_blank">
-     <img alt="Github star" src="https://img.shields.io/github/stars/youlaitech/youlai-think.svg?style=social&label=Stars"/>
-   </a>
+
+<img alt="youlai-think" width="80" src="./docs/images/logo/logo.png">
+
+# youlai-think
+
+**ThinkPHP 8 企业级权限管理系统后端**
+
+[![PHP](https://img.shields.io/badge/PHP-8.2+-8892BF?logo=php)](https://www.php.net/)
+[![ThinkPHP](https://img.shields.io/badge/ThinkPHP-8-00B894)](https://www.thinkphp.cn/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue?logo=apache)](LICENSE.txt)
+[![Gitee Star](https://gitee.com/youlaiorg/youlai-think/badge/star.svg)](https://gitee.com/youlaiorg/youlai-think/stargazers)
+[![GitHub Star](https://img.shields.io/github/stars/youlaitech/youlai-think?style=social)](https://github.com/youlaitech/youlai-think)
+
 </div>
 
-<p align="center">
-  <a target="_blank" href="https://vue.youlai.tech/">🖥️ 在线预览</a>
-  <span>&nbsp;|&nbsp;</span>
-  <a target="_blank" href="https://www.youlai.tech/docs/admin/backend/php/quick-start.html">📑 快速开始</a>
-  <span>&nbsp;|&nbsp;</span>
-  <a target="_blank" href="https://www.youlai.tech">🌐 官网</a>
-</p>
+![](https://foruda.gitee.com/images/1708618984641188532/a7cca095_716974.png "rainbow.png")
 
-## 项目简介
+<div align="center">
 
-`youlai-think` 是 **[vue3-element-admin](https://gitee.com/youlaiorg/vue3-element-admin)** 配套的 PHP 后端实现，基于 ThinkPHP 8 + PHP 8 + JWT + Redis + MySQL 构建，是 youlai 全家桶的重要组成部分。
+[🖥️ 在线预览](https://vue.youlai.tech) | [📲 移动端预览](https://app.youlai.tech) | [📖 文档](https://www.youlai.tech/docs/admin/backend/php/)
 
-- **技术栈**：ThinkPHP 8 + PHP 8，轻量高效
-- **安全认证**：JWT 无状态认证 + Redis 会话双模式
-- **权限管理**：RBAC 权限模型，菜单/按钮/接口三级权限
-- **模块能力**：用户、角色、菜单、部门、字典、通知、日志等核心模块
+</div>
 
-## 项目源码
+## 简介
 
-| 项目 | Gitee | GitHub | GitCode |
-| --- | --- | --- | --- |
-| ✅ PHP 后端 | [youlai-think](https://gitee.com/youlaiorg/youlai-think) | [youlai-think](https://github.com/youlaitech/youlai-think) | [youlai-think](https://gitcode.com/youlai/youlai-think) |
-| vue3 前端 | [vue3-element-admin](https://gitee.com/youlaiorg/vue3-element-admin) | [vue3-element-admin](https://github.com/youlaitech/vue3-element-admin) | [vue3-element-admin](https://gitcode.com/youlai/vue3-element-admin) |
-| uni-app 移动端 | [youlai-app](https://gitee.com/youlaiorg/youlai-app) | [youlai-app](https://github.com/youlaitech/youlai-app) | [youlai-app](https://gitcode.com/youlai/youlai-app) |
+**youlai-think** 是一套基于 ThinkPHP 8 的企业级权限管理系统后端，配套前端 [vue3-element-admin](https://gitee.com/youlaiorg/vue3-element-admin) 和移动端 [youlai-app](https://gitee.com/youlaiorg/youlai-app)，并提供 **6 种语言实现**（Java / Node.js / Go / Python / PHP / C#），共享同一套 API 规范与数据库结构。适用于企业中后台管理系统的学习参考与二次开发。
+
+## 核心特性
+
+- 🔐 **安全体系** — JWT + Redis Token 双会话模式、令牌续期、多端互斥
+- 🛡️ **细粒度权限** — RBAC 权限模型，菜单/按钮/接口统一治理
+- ⚡ **代码生成器** — 一键生成前后端 CRUD 代码
+- 📦 **模块齐全** — 用户、角色、菜单、部门、字典、文件、消息中心、操作日志
+- 🔌 **实时通信** — SSE 推送：在线用户数、字典同步、通知广播
+
+## 系统预览
+
+**PC 端**
+
+<table align="center">
+  <tr>
+    <td><img alt="PC预览1" width="400" src="./docs/images/preview/pc-01.png"></td>
+    <td><img alt="PC预览2" width="400" src="./docs/images/preview/pc-02.png"></td>
+  </tr>
+  <tr>
+    <td><img alt="PC预览3" width="400" src="./docs/images/preview/pc-03.png"></td>
+    <td><img alt="PC预览4" width="400" src="./docs/images/preview/pc-04.png"></td>
+  </tr>
+  <tr>
+    <td><img alt="PC预览5" width="400" src="./docs/images/preview/pc-05.png"></td>
+    <td><img alt="PC预览6" width="400" src="./docs/images/preview/pc-06.png"></td>
+  </tr>
+</table>
+
+**移动端**
+
+<table align="center">
+  <tr>
+    <td><img alt="APP预览1" width="200" src="./docs/images/preview/app-01.png"></td>
+    <td><img alt="APP预览2" width="200" src="./docs/images/preview/app-02.png"></td>
+    <td><img alt="APP预览3" width="200" src="./docs/images/preview/app-03.png"></td>
+    <td><img alt="APP预览4" width="200" src="./docs/images/preview/app-04.png"></td>
+  </tr>
+</table>
+
+## 快速开始
+
+**环境要求**：PHP 8.2+ · Composer · MySQL 8.0+ · Redis 7.x+
+
+1. 克隆项目：`git clone https://gitee.com/youlaiorg/youlai-think.git`
+2. 导入数据库：`sql/mysql/youlai_admin.sql`
+3. 修改配置（可选，默认已配置线上只读数据源）：`.env`
+4. 安装依赖：`composer install`
+5. 启动服务：`php think run`，访问 http://localhost:8000
+
+默认账号：`admin` / `123456`
+
+详细指南：[部署文档](https://www.youlai.tech/docs/admin/backend/php/deploy)
+
+## 技术栈
+
+| 技术 | 版本 | 说明 |
+|:-----|:-----|:-----|
+| PHP | 8.2+ | 核心语言 |
+| ThinkPHP | 8 | Web 框架 |
+| MySQL | 5.7+ / 8.x | 数据库 |
+| Redis | 7.x+ | 缓存 · 会话 |
+| Swagger | — | API 文档 |
 
 ## 目录结构
 
-> 遵循 [ThinkPHP 8 官方目录结构](https://doc.thinkphp.cn/v8_0/directory_structure.html) 规范设计。
-
-```text
+```
 youlai-think/
-├─ app/                       # 应用目录
-│  ├─ auth/                   # 认证模块（登录/鉴权）
-│  ├─ system/                 # 系统模块（用户/角色/菜单/部门/字典/通知/日志）
-│  ├─ codegen/                # 代码生成模块
-│  ├─ file/                   # 文件上传模块
-│  ├─ common/                 # 公共模块
-│  │  ├─ constants/           # 常量定义
-│  │  ├─ enums/               # 枚举定义
-│  │  ├─ exception/           # 异常类
-│  │  ├─ middleware/          # 中间件
-│  │  ├─ model/               # 基础模型
-│  │  ├─ traits/              # Trait 复用
-│  │  ├─ util/                # 工具类
-│  │  ├─ validate/            # 验证器
-│  │  └─ web/                 # Web 响应/基类
-│  ├─ controller/             # 控制器基类
-│  ├─ AppService.php          # 应用服务注册
-│  ├─ ExceptionHandle.php     # 全局异常处理
-│  ├─ middleware.php          # 全局中间件
-│  └─ provider.php            # 服务提供者
-├─ config/                    # 配置文件
-├─ extend/                    # 扩展类库（Redis/SSE）
-├─ public/                    # Web 入口
-├─ route/                     # 路由定义（含版本分组）
-├─ sql/                       # 数据库初始化脚本
-├─ runtime/                   # 运行时日志与缓存
-├─ .env                       # 环境变量
-└─ composer.json              # 依赖管理
+├── app/                            # 应用目录
+│   ├── auth/                       # 认证模块（登录/鉴权）
+│   ├── system/                     # 系统模块（用户/角色/菜单/部门/字典/通知/日志）
+│   ├── codegen/                    # 代码生成模块
+│   ├── file/                       # 文件管理模块
+│   ├── message/                    # SSE 消息推送
+│   ├── common/                     # 公共模块（模型/枚举/异常/中间件/事件）
+│   └── BaseController.php          # 基础控制器
+├── config/                         # 应用配置
+├── database/                       # 数据库迁移与填充
+├── public/                         # WEB 目录（入口文件/资源文件）
+├── route/                          # 路由定义
+├── sql/                            # 数据库初始化脚本
+├── vendor/                         # Composer 依赖
+├── composer.json                   # Composer 配置
+└── .env                            # 环境配置
 ```
 
-## 快速启动
+## 生态矩阵
 
-> 本地未配置 MySQL、Redis 不影响启动，项目默认连接线上公共环境，方便快速体验。
+**前端**
 
-```bash
-# 1. 克隆项目
-git clone https://gitee.com/youlaiorg/youlai-think.git
-cd youlai-think
+| 项目 | 技术栈 | 说明 |
+|:-----|:-------|:-----|
+| [vue3-element-admin](https://gitee.com/youlaiorg/vue3-element-admin) | Vue 3 + Element Plus | PC 管理前端（主推） |
+| [youlai-app](https://gitee.com/youlaiorg/youlai-app) | Vue 3 + UniApp | 移动端 App |
 
-# 2. 安装依赖
-composer install
+**后端**
 
-# 3. 启动 API 服务（端口 8000）
-php think run
-```
+| 项目 | 技术栈 | 说明 |
+|:-----|:-------|:-----|
+| [youlai-boot](https://gitee.com/youlaiorg/youlai-boot) | Spring Boot 4 + MyBatis-Plus | Java（主推） |
+| [youlai-nest](https://gitee.com/youlaiorg/youlai-nest) | NestJS + TypeORM | Node.js |
+| [youlai-gin](https://gitee.com/youlaiorg/youlai-gin) | Go + Gorm | Go |
+| [youlai-django](https://gitee.com/youlaiorg/youlai-django) | Django + DRF | Python |
+| [youlai-aspnet](https://gitee.com/youlaiorg/youlai-aspnet) | ASP.NET Core | C# |
+| [youlai-think](https://gitee.com/youlaiorg/youlai-think) | ThinkPHP 8 + MySQL | PHP |
 
-**接口文档**：Swagger UI `http://localhost:8000/swagger-ui/`
+> **youlai-boot** 还提供以下变种和分支版本：[多租户](https://gitee.com/youlaiorg/youlai-boot-tenant)（Spring Boot 4）· [MyBatis-Flex](https://gitee.com/youlaiorg/youlai-boot-flex)（Spring Boot 4）· [Spring Boot 3](https://gitee.com/youlaiorg/youlai-boot/tree/spring-boot-3) · [PostgreSQL](https://gitee.com/youlaiorg/youlai-boot/tree/db-pg) · [多模块](https://gitee.com/youlaiorg/youlai-boot/tree/multi-module)
+>
+> 六种后端共享同一套 **RESTful API 规范** 和 **数据库结构**，前端可无缝切换。
 
-**前端联调**：在 `vue3-element-admin` 的 `.env.development` 中配置 API 地址：
+## 文档资源
 
-```env
-VITE_APP_API_URL=http://localhost:8000
-```
+| 资源 | 地址 |
+|:-----|:-----|
+| 📖 完整文档站 | [www.youlai.tech/docs/admin](https://www.youlai.tech/docs/admin/) |
+| 🖥️ PC 端在线预览 | [vue.youlai.tech](https://vue.youlai.tech) |
+| 📱 移动端在线预览 | [app.youlai.tech](https://app.youlai.tech) |
+| 🔗 Apifox 接口文档 | [apifox.com](https://www.apifox.cn/apidoc/shared-195e783f-4d85-4235-a038-eec696de4ea5) |
+| 🔗 本地接口文档 | [localhost:8000](http://localhost:8000) |
 
-> 更多配置和部署说明请查阅 [快速开始文档](https://www.youlai.tech/docs/admin/backend/php/quick-start.html)。
+## 参与贡献
 
-## 技术交流
+欢迎提交 Issue 和 Pull Request！详见 [贡献指南](https://www.youlai.tech/docs/admin/faq/help)。
 
-关注「有来技术」公众号，点击菜单【交流群】获取微信群二维码：
+## 开源协议
 
-<div align="center">
-  <img src="https://foruda.gitee.com/images/1737108820762592766/3390ed0d_716974.png" width="280">
-</div>
+本项目基于 [Apache License 2.0](LICENSE.txt) 开源，可免费用于商业项目。
 
-> 二维码过期？添加微信 **`haoxianrui`**，备注「前端/后端/全栈」即可拉你入群。
+---
+
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="./docs/images/qr/wechat-offical.png" height="180" alt="公众号「有来技术」"><br>
+      <sub>公众号「有来技术」</sub>
+    </td>
+    <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td align="center">
+      <img src="./docs/images/qr/wechat-mp.jpg" height="180" alt="小程序「有来技术」"><br>
+      <sub>小程序「有来技术」</sub>
+    </td>
+    <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td align="center">
+      <img src="./docs/images/qr/wechat-personal.png" height="180" alt="添加作者微信"><br>
+      <sub>添加作者微信</sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center"><em>技术交流 · 问题反馈 · 商务合作</em></p>

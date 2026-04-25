@@ -342,8 +342,8 @@ final class UserController extends BaseController
     #[Log(actionType: ActionType::CHANGE_PWD)]
     public function changePassword(): \think\response\Json
     {
-        $oldPassword = $this->getParam('oldPassword', '');
-        $newPassword = $this->getParam('newPassword', '');
+        $oldPassword = $this->getParam('old_password', '');
+        $newPassword = $this->getParam('new_password', '');
 
         if (empty($oldPassword) || empty($newPassword)) {
             return $this->fail('A0400', '原密码和新密码不能为空');

@@ -8,15 +8,15 @@ use think\facade\Db;
 /**
  * 角色权限缓存服务
  *
- * 缓存结构: Redis Hash, key=system:role:perms, field=roleCode, value=权限JSON数组
- * Read-Through策略: 缓存未命中时回源DB并回写缓存
+ * 缓存用 Redis Hash，field 是 roleCode，value 是权限 JSON
+ * 缓存未命中时查库并回写
  */
 final class RolePermService
 {
     private const CACHE_KEY = 'system:role:perms';
 
     /**
-     * 获取角色权限集合（Read-Through缓存）
+     * 获取角色权限集合（带缓存）
      */
     public function getRolePermsByRoleCodes(array $roleCodes): array
     {

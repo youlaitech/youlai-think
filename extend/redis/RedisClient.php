@@ -4,6 +4,9 @@ namespace extend\redis;
 
 use Predis\Client;
 
+/**
+ * Redis 客户端单例封装
+ */
 final class RedisClient
 {
     private static ?Client $client = null;

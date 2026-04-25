@@ -9,6 +9,9 @@ use app\system\model\DictItem;
 use extend\sse\SseService;
 use think\facade\Db;
 
+/**
+ * 字典与字典项管理服务
+ */
 final class DictService
 {
     public function getDictPage(array $queryParams): array
@@ -89,7 +92,7 @@ final class DictService
         return [
             'id' => (string) ($d['id'] ?? ''),
             'name' => $d['name'] ?? null,
-            'dictCode' => $d['dict_code'] ?? null,
+            'dict_code' => $d['dict_code'] ?? null,
             'status' => isset($d['status']) ? (int) $d['status'] : null,
             'remark' => $d['remark'] ?? null,
         ];
@@ -98,7 +101,7 @@ final class DictService
     public function saveDict(array $data): bool
     {
         $name = trim((string) ($data['name'] ?? ''));
-        $dictCode = trim((string) ($data['dictCode'] ?? $data['dict_code'] ?? ''));
+        $dictCode = trim((string) ($data['dict_code'] ?? ''));
 
         if ($name === '' || $dictCode === '') {
             throw new BusinessException('字典名称和编码不能为空');
@@ -109,15 +112,12 @@ final class DictService
             throw new BusinessException('字典编码已存在');
         }
 
-        $now = date('Y-m-d H:i:s');
         $dict = new Dict();
         $dict->save([
             'name' => $name,
             'dict_code' => $dictCode,
             'status' => isset($data['status']) ? (int) $data['status'] : 1,
             'remark' => $data['remark'] ?? null,
-            'create_time' => $now,
-            'update_time' => $now,
             'is_deleted' => 0,
         ]);
 
@@ -136,7 +136,7 @@ final class DictService
         }
 
         $name = trim((string) ($data['name'] ?? ''));
-        $dictCode = trim((string) ($data['dictCode'] ?? $data['dict_code'] ?? ''));
+        $dictCode = trim((string) ($data['dict_code'] ?? ''));
 
         if ($name === '' || $dictCode === '') {
             throw new BusinessException('字典名称和编码不能为空');
@@ -159,7 +159,6 @@ final class DictService
                 'dict_code' => $dictCode,
                 'status' => isset($data['status']) ? (int) $data['status'] : 1,
                 'remark' => $data['remark'] ?? null,
-                'update_time' => date('Y-m-d H:i:s'),
             ]);
 
             if ($oldCode !== '' && $oldCode !== $dictCode) {
@@ -273,7 +272,7 @@ final class DictService
             $list[] = [
                 'value' => (string) ($r['value'] ?? ''),
                 'label' => (string) ($r['label'] ?? ''),
-                'tagType' => (string) ($r['tag_type'] ?? ''),
+                'tag_type' => (string) ($r['tag_type'] ?? ''),
             ];
         }
 
@@ -290,12 +289,12 @@ final class DictService
         $i = $item->toArray();
         return [
             'id' => (string) ($i['id'] ?? ''),
-            'dictCode' => $i['dict_code'] ?? null,
+            'dict_code' => $i['dict_code'] ?? null,
             'label' => $i['label'] ?? null,
             'value' => $i['value'] ?? null,
             'status' => isset($i['status']) ? (int) $i['status'] : null,
             'sort' => isset($i['sort']) ? (int) $i['sort'] : null,
-            'tagType' => $i['tag_type'] ?? '',
+            'tag_type' => $i['tag_type'] ?? '',
         ];
     }
 
@@ -308,18 +307,15 @@ final class DictService
             throw new BusinessException('标签和值不能为空');
         }
 
-        $now = date('Y-m-d H:i:s');
         $item = new DictItem();
         $item->save([
             'dict_code' => $dictCode,
             'label' => $label,
             'value' => $value,
-            'tag_type' => $data['tagType'] ?? $data['tag_type'] ?? null,
+            'tag_type' => $data['tag_type'] ?? null,
             'status' => isset($data['status']) ? (int) $data['status'] : 1,
             'sort' => isset($data['sort']) ? (int) $data['sort'] : 0,
             'remark' => $data['remark'] ?? null,
-            'create_time' => $now,
-            'update_time' => $now,
         ]);
 
         // SSE通知字典变更
@@ -347,11 +343,10 @@ final class DictService
             'dict_code' => $dictCode,
             'label' => $label,
             'value' => $value,
-            'tag_type' => $data['tagType'] ?? $data['tag_type'] ?? null,
+            'tag_type' => $data['tag_type'] ?? null,
             'status' => isset($data['status']) ? (int) $data['status'] : 1,
             'sort' => isset($data['sort']) ? (int) $data['sort'] : 0,
             'remark' => $data['remark'] ?? null,
-            'update_time' => date('Y-m-d H:i:s'),
         ]);
 
         // SSE通知字典变更

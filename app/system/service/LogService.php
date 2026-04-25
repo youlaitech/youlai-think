@@ -17,7 +17,7 @@ final class LogService
     {
         [$pageNum, $pageSize] = PageUtil::resolve($queryParams);
 
-        $createTime = $queryParams['createTime'] ?? null;
+        $createTime = $queryParams['create_time'] ?? null;
 
         $q = Db::name('sys_log')->alias('l');
 
@@ -64,22 +64,22 @@ final class LogService
             $list[] = [
                 'id' => (string) ($r['id'] ?? ''),
                 'module' => $moduleLabel,
-                'actionType' => $actionTypeLabel,
+                'action_type' => $actionTypeLabel,
                 'title' => (string) ($r['title'] ?? ''),
                 'content' => (string) ($r['content'] ?? ''),
-                'operatorId' => (string) ($r['operator_id'] ?? ''),
-                'operatorName' => (string) ($r['operator_name'] ?? ''),
+                'operator_id' => (string) ($r['operator_id'] ?? ''),
+                'operator_name' => (string) ($r['operator_name'] ?? ''),
                 'status' => (int) ($r['status'] ?? 0),
-                'requestUri' => (string) ($r['request_uri'] ?? ''),
-                'requestMethod' => (string) ($r['request_method'] ?? ''),
+                'request_uri' => (string) ($r['request_uri'] ?? ''),
+                'request_method' => (string) ($r['request_method'] ?? ''),
                 'ip' => (string) ($r['ip'] ?? ''),
                 'region' => $region ?: null,
                 'device' => (string) ($r['device'] ?? ''),
                 'browser' => (string) ($r['browser'] ?? ''),
                 'os' => (string) ($r['os'] ?? ''),
-                'executionTime' => isset($r['execution_time']) ? (int) $r['execution_time'] : null,
-                'errorMsg' => (string) ($r['error_msg'] ?? ''),
-                'createTime' => $r['create_time'] ?? null,
+                'execution_time' => isset($r['execution_time']) ? (int) $r['execution_time'] : null,
+                'error_msg' => (string) ($r['error_msg'] ?? ''),
+                'create_time' => $r['create_time'] ?? null,
             ];
         }
 
@@ -145,8 +145,8 @@ final class LogService
 
         return [
             'dates' => $dates,
-            'pvList' => $pvList,
-            'uvList' => $uvList,
+            'pv_list' => $pvList,
+            'uv_list' => $uvList,
         ];
     }
 
@@ -181,12 +181,12 @@ final class LogService
         }
 
         return [
-            'todayUvCount' => $uvToday,
-            'totalUvCount' => $uvTotal,
-            'uvGrowthRate' => $uvGrowth,
-            'todayPvCount' => $pvToday,
-            'totalPvCount' => $pvTotal,
-            'pvGrowthRate' => $pvGrowth,
+            'today_uv_count' => $uvToday,
+            'total_uv_count' => $uvTotal,
+            'uv_growth_rate' => $uvGrowth,
+            'today_pv_count' => $pvToday,
+            'total_pv_count' => $pvTotal,
+            'pv_growth_rate' => $pvGrowth,
         ];
     }
 }

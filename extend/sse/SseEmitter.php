@@ -2,6 +2,10 @@
 
 namespace extend\sse;
 
+/**
+ * SSE 事件发射器
+ * 直接向底层连接推送 text/event-stream 数据
+ */
 class SseEmitter
 {
     private $connection;

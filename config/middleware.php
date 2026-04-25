@@ -3,6 +3,7 @@
 return [
     // 全局中间件（按顺序执行）
     'global' => [
+        \app\common\middleware\ConvertCaseMiddleware::class,
         \app\common\middleware\RateLimitMiddleware::class,
         \app\common\middleware\LogMiddleware::class,
         \app\common\middleware\Cors::class,

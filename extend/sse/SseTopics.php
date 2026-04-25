@@ -2,6 +2,9 @@
 
 namespace extend\sse;
 
+/**
+ * SSE 消息主题常量
+ */
 class SseTopics
 {
     public const DICT = 'dict';

@@ -6,6 +6,10 @@ use app\system\enums\ActionType;
 use app\system\enums\LogModule;
 use Attribute;
 
+/**
+ * 操作日志注解
+ * 标记在 Controller 方法上，供 LogMiddleware 自动记录
+ */
 #[Attribute(Attribute::TARGET_METHOD)]
 class Log
 {

@@ -53,7 +53,7 @@ final class FileController extends BaseController
      */
     public function delete(): \think\Response
     {
-        $filePath = (string) $this->request->param('filePath', '');
+        $filePath = (string) $this->getParam('file_path', '');
         if ($filePath === '') {
             throw new BusinessException('文件路径不能为空');
         }

@@ -7,7 +7,7 @@ namespace app\system\validate;
 use app\common\validate\BaseValidate;
 
 /**
- * 用户验证器。
+ * 用户验证器
  */
 class UserValidate extends BaseValidate
 {
@@ -50,7 +50,7 @@ class UserValidate extends BaseValidate
      */
     protected function sceneCreate(): UserValidate
     {
-        return $this->only(['username', 'password', 'nickname', 'mobile', 'email', 'status', 'gender', 'dept_id', 'role_ids']);
+        return $this->only(['username', 'nickname', 'mobile', 'email', 'status', 'gender', 'dept_id', 'role_ids']);
     }
 
     /**

@@ -46,8 +46,8 @@ final class LogController extends BaseController
      */
     public function viewsTrend(): \think\response\Json
     {
-        $startDate = $this->getParam('startDate', '');
-        $endDate = $this->getParam('endDate', '');
+        $startDate = $this->getParam('start_date', '');
+        $endDate = $this->getParam('end_date', '');
 
         $data = $this->service(LogService::class)->getVisitTrend($startDate, $endDate);
 

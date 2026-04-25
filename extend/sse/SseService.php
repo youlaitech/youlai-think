@@ -4,6 +4,10 @@ namespace extend\sse;
 
 use extend\redis\RedisClient;
 
+/**
+ * SSE 业务封装层
+ * 对外提供字典变更、系统消息、广播等快捷方法
+ */
 class SseService
 {
     private const REDIS_ONLINE_KEY = 'sse:online_users';

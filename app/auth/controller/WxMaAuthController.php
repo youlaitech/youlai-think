@@ -50,8 +50,8 @@ final class WxMaAuthController extends BaseController
      */
     public function phoneLogin(): Json
     {
-        $loginCode = $this->getParam('loginCode', '');
-        $phoneCode = $this->getParam('phoneCode', '');
+        $loginCode = $this->getParam('login_code', '');
+        $phoneCode = $this->getParam('phone_code', '');
 
         if (empty($loginCode) || empty($phoneCode)) {
             return $this->fail('A0400', 'loginCode和phoneCode不能为空');
@@ -77,9 +77,9 @@ final class WxMaAuthController extends BaseController
      */
     public function bindMobile(): Json
     {
-        $openId = $this->getParam('openId', '');
+        $openId = $this->getParam('open_id', '');
         $mobile = $this->getParam('mobile', '');
-        $smsCode = $this->getParam('smsCode', '');
+        $smsCode = $this->getParam('sms_code', '');
 
         if (empty($openId) || empty($mobile) || empty($smsCode)) {
             return $this->fail('A0400', 'openId、mobile和smsCode不能为空');

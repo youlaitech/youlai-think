@@ -2,6 +2,7 @@
 
 namespace app;
 
+use app\common\util\CaseConverter;
 use app\common\web\Result;
 use app\common\web\ResultCode;
 use think\db\exception\DataNotFoundException;
@@ -123,7 +124,7 @@ class ExceptionHandle extends Handle
         }
 
         return json(
-            $result->toArray(),
+            CaseConverter::toCamelCase($result->toArray()),
             $httpStatus,
             [],
             ['json_encode_param' => JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES]

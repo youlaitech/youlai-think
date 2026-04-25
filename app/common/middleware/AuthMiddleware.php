@@ -7,8 +7,15 @@ use extend\jwt\TokenManagerResolver;
 use app\common\web\ResultCode;
 use think\Response;
 
+/**
+ * JWT/Token 认证中间件
+ * 解析请求头里的 Token，把用户信息挂到 request 上
+ */
 final class AuthMiddleware
 {
+    /**
+     * 校验 Token 并注入当前用户信息
+     */
     public function handle($request, \Closure $next): Response
     {
         if (strtoupper((string) $request->method()) === 'OPTIONS') {

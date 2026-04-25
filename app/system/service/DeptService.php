@@ -6,6 +6,9 @@ use app\common\exception\BusinessException;
 use app\system\model\Dept;
 use think\facade\Db;
 
+/**
+ * 部门管理服务
+ */
 final class DeptService
 {
     /**
@@ -62,8 +65,6 @@ final class DeptService
      */
     public function create(array $data): int
     {
-        $now = date('Y-m-d H:i:s');
-
         // 计算树路径
         $treePath = $this->buildTreePath((int) ($data['parent_id'] ?? 0));
 
@@ -74,8 +75,6 @@ final class DeptService
             'sort' => $data['sort'] ?? 0,
             'status' => $data['status'] ?? 1,
             'tree_path' => $treePath,
-            'create_time' => $now,
-            'update_time' => $now,
         ]);
     }
 

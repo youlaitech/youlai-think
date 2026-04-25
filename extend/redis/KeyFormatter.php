@@ -2,6 +2,9 @@
 
 namespace extend\redis;
 
+/**
+ * Redis 键格式化工具
+ */
 class KeyFormatter
 {
     public static function format(string $pattern, int|string ...$params): string

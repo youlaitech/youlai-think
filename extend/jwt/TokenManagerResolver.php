@@ -2,6 +2,10 @@
 
 namespace extend\jwt;
 
+/**
+ * TokenManager 单例解析器
+ * 统一管理 JwtTokenManager 实例
+ */
 class TokenManagerResolver
 {
     private static ?TokenManager $instance = null;

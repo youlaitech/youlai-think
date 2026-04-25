@@ -4,7 +4,7 @@ namespace app\common\traits;
 
 /**
  * 认证用户 Trait
- * 提供获取当前认证用户的便捷方法
+ * 获取当前登录用户的 ID、角色、权限等信息
  */
 trait AuthTrait
 {
@@ -26,7 +26,7 @@ trait AuthTrait
             return (int) $authUser['id'];
         }
 
-        return (int) ($authUser['userId'] ?? 0);
+        return (int) ($authUser['user_id'] ?? $authUser['userId'] ?? 0);
     }
 
     /**

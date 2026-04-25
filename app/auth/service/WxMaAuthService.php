@@ -12,6 +12,9 @@ use GuzzleHttp\Client;
 use think\facade\Db;
 use think\facade\Log;
 
+/**
+ * 微信小程序认证服务
+ */
 final class WxMaAuthService
 {
     private const string JS_CODE_2_SESSION_URL = 'https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code';
@@ -53,19 +56,19 @@ final class WxMaAuthService
             // 已绑定用户，直接登录
             $token = $this->generateTokenByUserId((int) $social->user_id);
             return [
-                'needBindMobile' => false,
-                'accessToken' => $token['accessToken'],
-                'refreshToken' => $token['refreshToken'],
-                'tokenType' => $token['tokenType'],
-                'expiresIn' => $token['expiresIn'],
+                'need_bind_mobile' => false,
+                'access_token' => $token['access_token'],
+                'refresh_token' => $token['refresh_token'],
+                'token_type' => $token['token_type'],
+                'expires_in' => $token['expires_in'],
             ];
         }
 
         // 未绑定用户，返回需要绑定手机号
         Log::info("微信小程序静默登录：用户未绑定手机号，openId={$openId}");
         return [
-            'needBindMobile' => true,
-            'openId' => $openId,
+            'need_bind_mobile' => true,
+            'open_id' => $openId,
         ];
     }
 
@@ -319,10 +322,10 @@ final class WxMaAuthService
         $token = $this->jwt->generateToken($userAuthInfo);
 
         return [
-            'accessToken' => $token->accessToken,
-            'refreshToken' => $token->refreshToken,
-            'tokenType' => $token->tokenType,
-            'expiresIn' => $token->expiresIn,
+            'access_token' => $token->accessToken,
+            'refresh_token' => $token->refreshToken,
+            'token_type' => $token->tokenType,
+            'expires_in' => $token->expiresIn,
         ];
     }
 }

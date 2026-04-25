@@ -2,34 +2,32 @@
 
 namespace app\common\util;
 
-use think\Template;
-
 /**
- * 模板渲染器 - 基于 think-template
+ * 简单字符串模板渲染器（支持 {var} 和 {$var}）
  */
 final class TemplateRenderer
 {
-    private Template $template;
-
-    public function __construct()
-    {
-        $this->template = new Template([
-            'view_path'    => '',
-            'cache_path'   => runtime_path() . 'template/',
-            'view_suffix'  => 'tpl',
-            'tpl_begin'    => '{',
-            'tpl_end'      => '}',
-        ]);
-    }
-
     /**
-     * 渲染模板字符串
-     * @param string $content 模板内容
-     * @param array $vars 变量
-     * @return string 渲染结果
+     * 渲染模板，将占位符替换为实际值
      */
     public function render(string $content, array $vars = []): string
     {
-        return $this->template->fetchString($content, $vars);
+        if (empty($vars)) {
+            return $content;
+        }
+
+        $keys = [];
+        $values = [];
+        foreach ($vars as $key => $value) {
+            $keys[] = '{$' . $key . '}';
+            $keys[] = '{' . $key . '}';
+            $val = is_string($value) || is_numeric($value)
+                ? (string) $value
+                : json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            $values[] = $val;
+            $values[] = $val;
+        }
+
+        return str_replace($keys, $values, $content);
     }
 }

@@ -12,6 +12,9 @@ final class PageResult
         public readonly int $total,
     ) {}
 
+    /**
+     * 转成 { list, total } 数组
+     */
     public function toArray(): array
     {
         return [

@@ -25,7 +25,7 @@ final class MenuController extends BaseController
      */
     public function options(): \think\response\Json
     {
-        $onlyParent = (bool) $this->getParam('onlyParent', false);
+        $onlyParent = (bool) $this->getParam('only_parent', false);
         $list = $this->service(MenuService::class)->getOptions($onlyParent);
 
         return $this->success($list);

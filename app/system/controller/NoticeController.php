@@ -32,7 +32,7 @@ final class NoticeController extends BaseController
         // 需要用户身份与数据权限
         $userId = $this->getAuthUserId();
         $authUser = $this->getAuthUser();
-        [$list, $total] = $this->service(NoticeService::class)->getNoticePage($userId, $this->request->param(), $authUser);
+        [$list, $total] = $this->service(NoticeService::class)->getNoticePage($userId, $this->getAllParams(), $authUser);
         return $this->success($list, $total);
     }
 
@@ -230,7 +230,7 @@ final class NoticeController extends BaseController
     {
         $userId = $this->getAuthUserId();
         // 仅查询我的通知列表
-        [$list, $total] = $this->service(NoticeService::class)->getMyNoticePage($userId, $this->request->param());
+        [$list, $total] = $this->service(NoticeService::class)->getMyNoticePage($userId, $this->getAllParams());
         return $this->success($list, $total);
     }
 }

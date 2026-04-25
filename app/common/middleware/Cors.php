@@ -6,8 +6,14 @@ use Closure;
 use think\Request;
 use think\Response;
 
+/**
+ * 跨域中间件，自动加 CORS 响应头
+ */
 final class Cors
 {
+    /**
+     * 处理跨域预检和正常请求
+     */
     public function handle(Request $request, Closure $next): Response
     {
         if (strtoupper($request->method()) === 'OPTIONS') {
@@ -26,6 +32,9 @@ final class Cors
         return $response;
     }
 
+    /**
+     * 返回预检响应
+     */
     private function createCorsResponse(): Response
     {
         return response('', 204)->header([

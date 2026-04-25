@@ -6,6 +6,9 @@ use app\common\exception\BusinessException;
 use app\system\model\Menu;
 use think\facade\Db;
 
+/**
+ * 菜单路由与权限服务
+ */
 final class MenuService
 {
     /**
@@ -136,7 +139,6 @@ final class MenuService
      */
     public function create(array $data): int
     {
-        $now = date('Y-m-d H:i:s');
         $parentId = (int) ($data['parent_id'] ?? 0);
         $treePath = $this->generateMenuTreePath($parentId);
 
@@ -152,8 +154,6 @@ final class MenuService
             'visible' => $data['visible'] ?? 1,
             'tree_path' => $treePath,
             'params' => $this->transformParams($data['params'] ?? null),
-            'create_time' => $now,
-            'update_time' => $now,
         ]);
 
         return $menuId;
@@ -380,8 +380,8 @@ final class MenuService
                 'title' => $menu['name'] ?? '',
                 'icon' => $menu['icon'] ?? null,
                 'hidden' => ($menu['visible'] ?? 1) === 0,
-                'keepAlive' => $menuType === 'M' && ($menu['keep_alive'] ?? 0) === 1,
-                'alwaysShow' => ($menu['always_show'] ?? 0) === 1,
+                'keep_alive' => $menuType === 'M' && ($menu['keep_alive'] ?? 0) === 1,
+                'always_show' => ($menu['always_show'] ?? 0) === 1,
                 'params' => $menu['params'] ?? null,
             ],
         ];
@@ -468,8 +468,6 @@ final class MenuService
             'sort' => $sort,
             'visible' => 1,
             'tree_path' => $treePath,
-            'create_time' => date('Y-m-d H:i:s'),
-            'update_time' => date('Y-m-d H:i:s'),
         ]);
 
         // 生成CURD按钮权限
@@ -484,8 +482,6 @@ final class MenuService
                 'perm' => $permPrefix . $perms[$i],
                 'sort' => $i + 1,
                 'tree_path' => $treePath . ',' . $menuId,
-                'create_time' => date('Y-m-d H:i:s'),
-                'update_time' => date('Y-m-d H:i:s'),
             ]);
         }
     }

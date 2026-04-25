@@ -2,6 +2,9 @@
 
 namespace app\common\web;
 
+/**
+ * 全局业务响应码枚举
+ */
 enum ResultCode: string implements IResultCode
 {
     case SUCCESS = '00000';
@@ -37,11 +40,17 @@ enum ResultCode: string implements IResultCode
     case DATABASE_EXECUTION_SYNTAX_ERROR = 'C0313';
     case INTEGRITY_CONSTRAINT_VIOLATION = 'C0342';
 
+    /**
+     * 返回错误码字符串
+     */
     public function getCode(): string
     {
         return $this->value;
     }
 
+    /**
+     * 返回对应的错误描述
+     */
     public function getMsg(): string
     {
         return match ($this) {
@@ -80,6 +89,9 @@ enum ResultCode: string implements IResultCode
         };
     }
 
+    /**
+     * 根据错误码字符串查找对应的枚举项
+     */
     public static function fromCode(string $code): ?self
     {
         foreach (self::cases() as $case) {
