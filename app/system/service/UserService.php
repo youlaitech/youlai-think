@@ -155,7 +155,7 @@ final class UserService
             throw new BusinessException('用户不存在');
         }
 
-        return Db::transaction(function () use ($user, $data) {
+        return Db::transaction(function () use ($user, $data, $id) {
             // 更新基本信息
             $user->nickname = $data['nickname'] ?? $user->nickname;
             $user->mobile = $data['mobile'] ?? $user->mobile;
@@ -170,7 +170,10 @@ final class UserService
                 $user->password = password_hash($data['password'], PASSWORD_DEFAULT);
             }
 
-            $user->save();
+            $result = $user->save();
+            if ($result === false) {
+                throw new BusinessException('用户更新失败');
+            }
 
             // 更新角色
             if (isset($data['role_ids'])) {
@@ -538,8 +541,8 @@ final class UserService
      */
     private function applyDataScope($query, array $authUser): void
     {
-        // 从 authorities 提取角色编码
-        $authorities = (array) ($authUser['roles'] ?? []);
+        // 从 authorities 提取角色编码（兼容 roles 和 authorities 两种 key）
+        $authorities = (array) ($authUser['roles'] ?? $authUser['authorities'] ?? []);
         $roleCodes = array_map(fn($a) => str_starts_with($a, 'ROLE_') ? substr($a, 5) : $a, $authorities);
 
         // 超级管理员不过滤

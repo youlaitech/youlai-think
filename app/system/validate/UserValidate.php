@@ -58,7 +58,7 @@ class UserValidate extends BaseValidate
      */
     protected function sceneUpdate(): UserValidate
     {
-        return $this->only(['nickname', 'mobile', 'email', 'status', 'gender', 'dept_id', 'role_ids'])
+        return $this->only(['nickname', 'mobile', 'email', 'avatar', 'status', 'gender', 'dept_id', 'role_ids'])
             ->remove('nickname', 'require');
     }
 }

@@ -16,7 +16,9 @@ class RoleValidate extends BaseValidate
         'code' => 'require|alphaDash|length:1,30',
         'status' => 'in:0,1',
         'sort' => 'integer|between:0,999',
+        'data_scope' => 'integer|between:1,5',
         'menu_ids' => 'array',
+        'dept_ids' => 'array',
     ];
 
     protected $message = [
@@ -32,11 +34,11 @@ class RoleValidate extends BaseValidate
 
     protected function sceneCreate(): RoleValidate
     {
-        return $this->only(['name', 'code', 'status', 'sort', 'menu_ids']);
+        return $this->only(['name', 'code', 'status', 'sort', 'data_scope', 'menu_ids', 'dept_ids']);
     }
 
     protected function sceneUpdate(): RoleValidate
     {
-        return $this->only(['name', 'status', 'sort', 'menu_ids']);
+        return $this->only(['name', 'status', 'sort', 'data_scope', 'menu_ids', 'dept_ids']);
     }
 }
