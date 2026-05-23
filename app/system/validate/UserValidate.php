@@ -12,10 +12,10 @@ use app\common\validate\BaseValidate;
 class UserValidate extends BaseValidate
 {
     protected $rule = [
-        'username' => 'require|alphaNum|length:3,20',
+        'username' => 'require|alphaDash|length:3,20',
         'password' => 'require|length:6,20',
         'nickname' => 'require|length:1,30',
-        'mobile' => 'isMobile',
+        'mobile' => 'number|max:20',
         'email' => 'email',
         'status' => 'in:0,1',
         'gender' => 'in:0,1,2',
@@ -31,7 +31,7 @@ class UserValidate extends BaseValidate
         'password.length' => '密码长度为6-20个字符',
         'nickname.require' => '昵称不能为空',
         'nickname.length' => '昵称长度为1-30个字符',
-        'mobile.isMobile' => '手机号格式不正确',
+        'mobile.number' => '手机号必须为数字',
         'email.email' => '邮箱格式不正确',
         'status.in' => '状态值不正确',
         'gender.in' => '性别值不正确',

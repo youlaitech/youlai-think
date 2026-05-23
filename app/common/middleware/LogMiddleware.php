@@ -24,74 +24,82 @@ final class LogMiddleware
         $response = null;
 
         try {
-            $response = $next($request);
+            $result = $next($request);
+            $response = $result instanceof Response ? $result : response($result);
+            return $response;
         } catch (Throwable $e) {
             $exception = $e;
             throw $e;
         } finally {
-            try {
-                $controller = $request->controller();
-                $action = $request->action();
-
-                if (empty($controller) || empty($action)) {
-                    return $response instanceof Response ? $response : response($response);
+            if (!$exception) {
+                // 请求正常完成，尝试记录操作日志
+                try {
+                    $this->recordLog($request, $response, $startTime, false);
+                } catch (Throwable) {
+                    // 日志记录失败不影响主请求
                 }
-
-                $controllerClass = app()->parseClass('controller', $controller);
-                if (!class_exists($controllerClass)) {
-                    return $response instanceof Response ? $response : response($response);
-                }
-
-                $method = new ReflectionMethod($controllerClass, $action);
-                $attributes = $method->getAttributes(Log::class);
-
-                if (empty($attributes)) {
-                    return $response instanceof Response ? $response : response($response);
-                }
-
-                $logAnnotation = $attributes[0]->newInstance();
-                $module = $logAnnotation->module;
-                $actionType = $logAnnotation->actionType;
-
-                // 构建标题
-                $title = $logAnnotation->title;
-                if (empty($title)) {
-                    $title = $module->description() . '-' . $actionType->description();
-                }
-                $content = $logAnnotation->content;
-
-                $executionTime = (int) round((microtime(true) - $startTime) * 1000);
-
-                $authUser = (array) ($request->__authUser ?? []);
-                $operatorId = (int) ($authUser['id'] ?? $authUser['userId'] ?? 0);
-                $operatorName = $authUser['nickname'] ?? $authUser['username'] ?? '';
-
-                $userAgent = $request->header('user-agent', '');
-                $ua = $this->parseUserAgent((string) $userAgent);
-
-                LogModel::create([
-                    'module'         => $module->value,
-                    'action_type'    => $actionType->value,
-                    'title'          => $title,
-                    'content'        => $content,
-                    'operator_id'    => $operatorId,
-                    'operator_name'  => $operatorName,
-                    'request_uri'    => $request->pathinfo(),
-                    'request_method' => $request->method(),
-                    'ip'             => $request->ip(),
-                    'browser'        => $ua['browser'],
-                    'os'             => $ua['os'],
-                    'status'         => $exception === null ? 1 : 0,
-                    'error_msg'      => $exception?->getMessage(),
-                    'execution_time' => $executionTime,
-                    'create_time'    => date('Y-m-d H:i:s'),
-                ]);
-            } catch (Throwable) {
-                // 日志记录失败不影响主请求
             }
         }
+    }
 
-        return $response instanceof Response ? $response : response($response);
+    /**
+     * 记录操作日志
+     */
+    private function recordLog($request, $response, float $startTime, bool $hasException): void
+    {
+        $controller = $request->controller();
+        $action = $request->action();
+        if (empty($controller) || empty($action)) {
+            return;
+        }
+
+        $controllerClass = app()->parseClass('controller', $controller);
+        if (!class_exists($controllerClass)) {
+            return;
+        }
+
+        $method = new ReflectionMethod($controllerClass, $action);
+        $attributes = $method->getAttributes(Log::class);
+        if (empty($attributes)) {
+            return;
+        }
+
+        $logAnnotation = $attributes[0]->newInstance();
+        $module = $logAnnotation->module;
+        $actionType = $logAnnotation->actionType;
+
+        $title = $logAnnotation->title;
+        if (empty($title)) {
+            $title = $module->description() . '-' . $actionType->description();
+        }
+        $content = $logAnnotation->content;
+
+        $executionTime = (int) round((microtime(true) - $startTime) * 1000);
+
+        $authUser = (array) ($request->__authUser ?? []);
+        $operatorId = (int) ($authUser['id'] ?? $authUser['userId'] ?? 0);
+        $operatorName = $authUser['nickname'] ?? $authUser['username'] ?? '';
+
+        $userAgent = $request->header('user-agent', '');
+        $ua = $this->parseUserAgent((string) $userAgent);
+
+        LogModel::create([
+            'module'         => $module->value,
+            'action_type'    => $actionType->value,
+            'title'          => $title,
+            'content'        => $content,
+            'operator_id'    => $operatorId,
+            'operator_name'  => $operatorName,
+            'request_uri'    => $request->pathinfo(),
+            'request_method' => $request->method(),
+            'ip'             => $request->ip(),
+            'browser'        => $ua['browser'],
+            'os'             => $ua['os'],
+            'status'         => $hasException ? 0 : 1,
+            'error_msg'      => null,
+            'execution_time' => $executionTime,
+            'create_time'    => date('Y-m-d H:i:s'),
+        ]);
     }
 
     /**

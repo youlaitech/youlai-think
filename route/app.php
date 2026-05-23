@@ -54,13 +54,13 @@ Route::group('api/v1', function () {
         Route::get('export', [UserController::class, 'export'])->middleware('perm', 'sys:user:export');
         Route::post('import', [UserController::class, 'import'])->middleware('perm', 'sys:user:import');
         Route::get('', [UserController::class, 'page'])->middleware('perm', 'sys:user:list');
-        Route::get(':id/form', [UserController::class, 'form'])->pattern(['id' => '\d+']);
+        Route::get(':id/form', [UserController::class, 'form'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:user:update');
         Route::get(':id', [UserController::class, 'detail'])->pattern(['id' => '\d+']);
         Route::post('', [UserController::class, 'create'])->middleware('perm', 'sys:user:create');
         Route::put(':id', [UserController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:user:update');
         Route::delete(':ids', [UserController::class, 'delete'])->middleware('perm', 'sys:user:delete');
         Route::put(':id/password', [UserController::class, 'resetPassword'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:user:resetPwd');
-        Route::put(':id/status', [UserController::class, 'changeStatus'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:user:update');
+        Route::patch(':id/status', [UserController::class, 'changeStatus'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:user:update');
     });
 
     // 角色管理
@@ -69,9 +69,9 @@ Route::group('api/v1', function () {
         Route::get(':id/menu-ids', [RoleController::class, 'menuIds'])->pattern(['id' => '\d+']);
         Route::put(':id/menus', [RoleController::class, 'assignMenus'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:assign');
         Route::get(':id/dept-ids', [RoleController::class, 'deptIds'])->pattern(['id' => '\d+']);
-        Route::put(':id/status', [RoleController::class, 'status'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:update');
+        Route::patch(':id/status', [RoleController::class, 'status'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:update');
         Route::get('', [RoleController::class, 'page'])->middleware('perm', 'sys:role:list');
-        Route::get(':id/form', [RoleController::class, 'form'])->pattern(['id' => '\d+']);
+        Route::get(':id/form', [RoleController::class, 'form'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:update');
         Route::get(':id', [RoleController::class, 'detail'])->pattern(['id' => '\d+']);
         Route::post('', [RoleController::class, 'create'])->middleware('perm', 'sys:role:create');
         Route::put(':id', [RoleController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:update');

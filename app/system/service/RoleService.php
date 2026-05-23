@@ -110,34 +110,41 @@ final class RoleService
      */
     public function create(array $data): int
     {
-        // 检查编码和名称是否重复
         $name = $data['name'] ?? '';
-        if (Role::where('code', $data['code'])->find() || Role::where('name', $name)->find()) {
+        $code = $data['code'] ?? '';
+
+        $byCode = Role::where('code', $code)->find();
+        $byName = Role::where('name', $name)->find();
+
+        if ($byCode || $byName) {
             throw new BusinessException('角色名称或角色编码已存在');
         }
 
-        return Db::transaction(function () use ($data) {
-            $roleId = Role::insertGetId([
-                'code' => $data['code'],
-                'name' => $data['name'],
-                'status' => $data['status'] ?? 1,
-                'sort' => $data['sort'] ?? 0,
-                'data_scope' => $data['data_scope'] ?? 1,
-                'remark' => $data['remark'] ?? '',
-            ]);
+        try {
+            return Db::transaction(function () use ($data) {
+                $roleId = Role::insertGetId([
+                    'code'       => $data['code'],
+                    'name'       => $data['name'],
+                    'status'     => $data['status'] ?? 1,
+                    'sort'       => $data['sort'] ?? 0,
+                    'data_scope' => $data['data_scope'] ?? 1,
+                    'is_deleted' => 0,
+                ]);
 
-            // 分配菜单
-            if (!empty($data['menu_ids'])) {
-                $this->assignMenus($roleId, $data['menu_ids']);
-            }
+                if (!empty($data['menu_ids'])) {
+                    $this->assignMenus($roleId, $data['menu_ids']);
+                }
+                if (!empty($data['dept_ids'])) {
+                    $this->assignDepts($roleId, $data['dept_ids']);
+                }
 
-            // 分配部门（自定义数据权限）
-            if (!empty($data['dept_ids'])) {
-                $this->assignDepts($roleId, $data['dept_ids']);
-            }
-
-            return (int) $roleId;
-        });
+                return (int) $roleId;
+            });
+        } catch (BusinessException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new BusinessException('角色创建失败: ' . $e->getMessage());
+        }
     }
 
     /**

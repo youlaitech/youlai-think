@@ -2,6 +2,7 @@
 
 namespace app;
 
+use app\common\exception\BusinessException;
 use app\common\util\CaseConverter;
 use app\common\web\Result;
 use app\common\web\ResultCode;
@@ -20,71 +21,62 @@ use Throwable;
  */
 class ExceptionHandle extends Handle
 {
-    /**
-     * 不需要记录日志的异常类
-     */
     protected $ignoreReport = [
         HttpException::class,
         HttpResponseException::class,
         ModelNotFoundException::class,
         DataNotFoundException::class,
         ValidateException::class,
-        BusinessException::class,
     ];
 
-    /**
-     * 记录异常日志
-     */
-    public function report(Throwable $exception): void
+    public function report(Throwable $e): void
     {
-        if ($exception instanceof BusinessException) {
+        $ctx = $this->requestContext();
+
+        if ($e instanceof BusinessException) {
+            Log::debug(sprintf('[business] %s %s', get_class($e), $e->getMessage()), $ctx);
             return;
         }
 
-        $request = request();
-        Log::error('系统异常', [
-            'exception' => get_class($exception),
-            'message' => $exception->getMessage(),
-            'file' => $exception->getFile() . ':' . $exception->getLine(),
-            'url' => $request ? $request->url() : 'unknown',
-            'method' => $request ? $request->method() : 'unknown',
-            'ip' => $request ? $request->ip() : 'unknown',
-        ]);
+        // 系统异常：完整堆栈
+        $log = sprintf(
+            "[%s] %s in %s:%d\nRequest: %s %s | IP: %s\nStack:\n%s",
+            get_class($e),
+            $e->getMessage(),
+            $e->getFile(),
+            $e->getLine(),
+            $ctx['method'] ?? '?',
+            $ctx['url'] ?? '?',
+            $ctx['ip'] ?? '?',
+            $e->getTraceAsString(),
+        );
+
+        Log::error($log);
+        error_log($log);
     }
 
-    /**
-     * 渲染异常响应
-     * 统一返回 HTTP 200 + Result JSON，通过 code 区分业务状态
-     */
     public function render($request, Throwable $e): Response
     {
         if ($e instanceof HttpResponseException) {
             return parent::render($request, $e);
         }
 
-        // 业务异常：返回具体错误信息
         if ($e instanceof BusinessException) {
-            $resultCode = $e->getResultCode();
-            $msg = $e->getMessage() ?: $resultCode->getMsg();
-            return $this->fail($resultCode, $msg);
+            return $this->fail($e->getResultCode(), $e->getMessage() ?: null);
         }
 
-        // 参数校验异常
         if ($e instanceof ValidateException) {
             return $this->fail(ResultCode::USER_REQUEST_PARAMETER_ERROR, $e->getError());
         }
 
-        // 路由不存在
         if ($e instanceof HttpException && $e->getStatusCode() === 404) {
             return $this->fail(ResultCode::INTERFACE_NOT_EXIST, '', 404);
         }
 
-        // 数据不存在
         if ($e instanceof ModelNotFoundException || $e instanceof DataNotFoundException) {
             return $this->fail(ResultCode::INTERFACE_NOT_EXIST, '数据不存在');
         }
 
-        // 其他 HTTP 异常
         if ($e instanceof HttpException) {
             $resultCode = match ((int) $e->getStatusCode()) {
                 401 => ResultCode::ACCESS_TOKEN_INVALID,
@@ -94,20 +86,13 @@ class ExceptionHandle extends Handle
             return $this->fail($resultCode);
         }
 
-        // 系统异常：开发模式显示详情，生产模式隐藏
-        $isDebug = config('app.show_error_msg', false);
-        $msg = $isDebug ? $e->getMessage() : ResultCode::SYSTEM_ERROR->getMsg();
-
+        // 兜底系统异常
+        $msg = $this->app->isDebug() ? $e->getMessage() : ResultCode::SYSTEM_ERROR->getMsg();
         return $this->fail(ResultCode::SYSTEM_ERROR, $msg, 500);
     }
 
     /**
-     * 返回失败响应
-     * 401: 未认证（token无效/过期）
-     * 403: 权限不足
-     * 404: 资源不存在
-     * 500: 服务器错误
-     * 200: 其他业务错误
+     * 失败响应
      */
     private function fail(ResultCode $resultCode, string $msg = '', ?int $httpStatus = null): Response
     {
@@ -129,5 +114,22 @@ class ExceptionHandle extends Handle
             [],
             ['json_encode_param' => JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES]
         );
+    }
+
+    /**
+     * 收集请求上下文
+     */
+    private function requestContext(): array
+    {
+        try {
+            $r = request();
+            return [
+                'url'    => $r ? $r->url(true) : 'unknown',
+                'method' => $r ? $r->method() : '?',
+                'ip'     => $r ? $r->ip() : '?',
+            ];
+        } catch (Throwable) {
+            return ['url' => 'unknown', 'method' => '?', 'ip' => '?'];
+        }
     }
 }

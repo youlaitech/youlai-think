@@ -6,7 +6,7 @@ use app\common\web\IResultCode;
 use app\common\web\ResultCode;
 
 /**
- * 业务异常，字符串参数走 SYSTEM_ERROR，ResultCode 参数走指定错误码
+ * 业务异常，只传字符串时按无效输入处理，传 ResultCode 则走指定错误码
  */
 final class BusinessException extends \RuntimeException
 {
@@ -19,8 +19,8 @@ final class BusinessException extends \RuntimeException
         ?\Throwable $previous = null
     ) {
         if (is_string($resultCodeOrMessage)) {
-            // 第一个参数是字符串，当作 message 处理，默认使用 SYSTEM_ERROR
-            $this->resultCode = ResultCode::SYSTEM_ERROR;
+            // 纯字符串消息，默认按无效输入处理（对应 Spring Assert.isTrue 行为）
+            $this->resultCode = ResultCode::INVALID_USER_INPUT;
             parent::__construct($resultCodeOrMessage !== '' ? $resultCodeOrMessage : $this->resultCode->getMsg(), $code, $previous);
         } else {
             // 第一个参数是 ResultCode

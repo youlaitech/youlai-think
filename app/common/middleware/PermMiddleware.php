@@ -41,8 +41,12 @@ final class PermMiddleware
             return $response instanceof Response ? $response : response($response);
         }
 
-        // 从缓存获取权限
-        $perms = app()->make(RolePermService::class)->getRolePermsByRoleCodes($roleCodes);
+        // 从缓存获取权限，Redis/DB 异常兜底按无权限处理
+        try {
+            $perms = app()->make(RolePermService::class)->getRolePermsByRoleCodes($roleCodes);
+        } catch (\Throwable) {
+            $perms = [];
+        }
 
         if (!in_array($perm, $perms, true)) {
             throw new BusinessException(ResultCode::ACCESS_PERMISSION_EXCEPTION);
