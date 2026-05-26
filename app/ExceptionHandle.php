@@ -38,6 +38,12 @@ class ExceptionHandle extends Handle
             return;
         }
 
+        // 404 路由匹配不到不用堆栈，直接忽略
+        if ($e instanceof HttpException && $e->getStatusCode() === 404) {
+            Log::warning(sprintf('[404] %s %s', $ctx['method'] ?? '?', $ctx['url'] ?? '?'));
+            return;
+        }
+
         // 系统异常：完整堆栈
         $log = sprintf(
             "[%s] %s in %s:%d\nRequest: %s %s | IP: %s\nStack:\n%s",
@@ -52,7 +58,6 @@ class ExceptionHandle extends Handle
         );
 
         Log::error($log);
-        error_log($log);
     }
 
     public function render($request, Throwable $e): Response
