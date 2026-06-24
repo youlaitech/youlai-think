@@ -9,10 +9,11 @@ use app\common\model\BaseModel;
  *
  * @property int    $id          菜单ID
  * @property int    $parentId    父菜单ID
- * @property string $type        类型 C-目录 M-菜单 B-按钮
+ * @property string $type        类型 C-目录 M-菜单 E-外链 B-按钮
  * @property string $name        菜单名称
  * @property string $routePath   路由路径
  * @property string $component   组件路径
+ * @property string $externalUrl 外链地址
  * @property string $perm        权限标识
  * @property string $icon        图标
  * @property int    $sort        排序
