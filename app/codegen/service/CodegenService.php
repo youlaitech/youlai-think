@@ -857,11 +857,11 @@ ORDER BY ORDINAL_POSITION ASC
 
             $lines[] = "        <el-form-item label=\"{$label}\" prop=\"{$fieldName}\">";
             if ($dictType !== '') {
-                $lines[] = "          <DictSelect v-model=\"queryParams.{$fieldName}\" code=\"{$dictType}\" />";
+                $lines[] = "          <DictSelect v-model=\"params.{$fieldName}\" code=\"{$dictType}\" />";
             } elseif ($this->isDateFormType($formType)) {
                 if ($queryType === 4) {
                     $lines[] = "          <el-date-picker";
-                    $lines[] = "            v-model=\"queryParams.{$fieldName}\"";
+                    $lines[] = "            v-model=\"params.{$fieldName}\"";
                     $lines[] = "            type=\"daterange\"";
                     $lines[] = "            range-separator=\"~\"";
                     $lines[] = "            start-placeholder=\"开始时间\"";
@@ -872,18 +872,18 @@ ORDER BY ORDINAL_POSITION ASC
                     $type = $formType === 9 ? 'datetime' : 'date';
                     $format = $formType === 9 ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD';
                     $lines[] = "          <el-date-picker";
-                    $lines[] = "            v-model=\"queryParams.{$fieldName}\"";
+                    $lines[] = "            v-model=\"params.{$fieldName}\"";
                     $lines[] = "            type=\"{$type}\"";
                     $lines[] = "            placeholder=\"{$label}\"";
                     $lines[] = "            value-format=\"{$format}\"";
                     $lines[] = "          />";
                 }
             } elseif ($formType === 5) {
-                $lines[] = "          <el-input-number v-model=\"queryParams.{$fieldName}\" placeholder=\"{$label}\" />";
+                $lines[] = "          <el-input-number v-model=\"params.{$fieldName}\" placeholder=\"{$label}\" />";
             } elseif ($formType === 6) {
-                $lines[] = "          <el-switch v-model=\"queryParams.{$fieldName}\" :active-value=\"1\" :inactive-value=\"0\" />";
+                $lines[] = "          <el-switch v-model=\"params.{$fieldName}\" :active-value=\"1\" :inactive-value=\"0\" />";
             } else {
-                $lines[] = "          <el-input v-model=\"queryParams.{$fieldName}\" placeholder=\"{$label}\" clearable @keyup.enter=\"handleQuery()\" />";
+                $lines[] = "          <el-input v-model=\"params.{$fieldName}\" placeholder=\"{$label}\" clearable @keyup.enter=\"handleQuery()\" />";
             }
             $lines[] = "        </el-form-item>";
         }

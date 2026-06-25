@@ -17,6 +17,8 @@
       @add-click="handleAddClick"
       @export-click="handleExportClick"
       @search-click="handleSearchClick"
+      @toolbar-click="handleToolbarClick"
+      @operate-click="handleOperateClick"
       @filter-change="handleFilterChange"
     >
 {$listSlotsCurd}
@@ -35,11 +37,14 @@
 </template>
 
 <script setup lang="ts">
-defineOptions({ name: "{$entityName}" });
+defineOptions({
+  name: "{$entityName}",
+  inheritAttrs: false,
+});
 
 import {$entityName}API from "@/api/{$moduleName}/{$entityKebab}";
-import type { {$entityName}Form, {$entityName}QueryParams, {$entityName}Item } from "@/api/{$moduleName}/{$entityKebab}";
-import type { IModalConfig, IContentConfig, ISearchConfig } from "@/components/CURD/types";
+import type { {$entityName}Form, {$entityName}QueryParams } from "@/api/{$moduleName}/{$entityKebab}";
+import type { IObject, IOperateData, IModalConfig, IContentConfig, ISearchConfig } from "@/components/CURD/types";
 import usePage from "@/components/CURD/usePage";
 
 const {
@@ -64,7 +69,7 @@ const searchConfig: ISearchConfig = reactive({
   ],
 });
 
-const contentConfig: IContentConfig<{$entityName}QueryParams, {$entityName}Item> = reactive({
+const contentConfig: IContentConfig<{$entityName}QueryParams> = reactive({
   permPrefix: "{$moduleName}:{$entityKebab}",
   table: {
     border: true,
@@ -93,7 +98,7 @@ const contentConfig: IContentConfig<{$entityName}QueryParams, {$entityName}Item>
     {
       label: "操作",
       prop: "operation",
-      width: 220,
+      width: 180,
       templet: "tool",
       operat: ["edit", "delete"],
     },
@@ -114,28 +119,38 @@ const addModalConfig: IModalConfig<{$entityName}Form> = reactive({
   formItems: [
 {$modalFormItemsCurd}
   ],
+  formAction: (data: {$entityName}Form) => {
+    if (data.id) {
+      return {$entityName}API.update(data.id as string, data);
+    } else {
+      return {$entityName}API.create(data);
+    }
+  },
 });
 
 const editModalConfig: IModalConfig<{$entityName}Form> = reactive({
   permPrefix: "{$moduleName}:{$entityKebab}",
-  pk: "id",
-  dialog: {
+  component: "drawer",
+  drawer: {
     title: "编辑{$businessName}",
-    width: 800,
-    draggable: true,
+    size: 500,
   },
-  form: {
-    labelWidth: 100,
+  pk: "id",
+  formAction(data: any) {
+    return {$entityName}API.update(data.id as string, data);
   },
-  formItems: [
-{$modalFormItemsCurd}
-  ],
-  formAction: async (data: {$entityName}Form) => {
-    const id = (data as any).id as string | undefined;
-    if (id) {
-      return {$entityName}API.update(id, data);
-    }
-    return {$entityName}API.create(data);
-  },
+  formItems: addModalConfig.formItems,
 });
+
+const handleOperateClick = (data: IOperateData) => {
+  if (data.name === "edit") {
+    handleEditClick(data.row, async () => {
+      return await {$entityName}API.getFormData(String(data.row.id));
+    });
+  }
+};
+
+const handleToolbarClick = (name: string) => {
+  console.log(name);
+};
 </script>

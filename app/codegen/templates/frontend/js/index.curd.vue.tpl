@@ -17,6 +17,8 @@
       @add-click="handleAddClick"
       @export-click="handleExportClick"
       @search-click="handleSearchClick"
+      @toolbar-click="handleToolbarClick"
+      @operate-click="handleOperateClick"
       @filter-change="handleFilterChange"
     >
 {$listSlotsCurd}
@@ -35,7 +37,10 @@
 </template>
 
 <script setup>
-defineOptions({ name: "{$entityName}" });
+defineOptions({
+  name: "{$entityName}",
+  inheritAttrs: false,
+});
 
 import {$entityName}API from "@/api/{$moduleName}/{$entityKebab}";
 import usePage from "@/components/CURD/usePage";
@@ -91,7 +96,7 @@ const contentConfig = reactive({
     {
       label: "操作",
       prop: "operation",
-      width: 220,
+      width: 180,
       templet: "tool",
       operat: ["edit", "delete"],
     },
@@ -112,28 +117,38 @@ const addModalConfig = reactive({
   formItems: [
 {$modalFormItemsCurd}
   ],
+  formAction(data) {
+    if (data.id) {
+      return {$entityName}API.update(data.id, data);
+    } else {
+      return {$entityName}API.create(data);
+    }
+  },
 });
 
 const editModalConfig = reactive({
   permPrefix: "{$moduleName}:{$entityKebab}",
-  pk: "id",
-  dialog: {
+  component: "drawer",
+  drawer: {
     title: "编辑{$businessName}",
-    width: 800,
-    draggable: true,
+    size: 500,
   },
-  form: {
-    labelWidth: 100,
+  pk: "id",
+  formAction(data) {
+    return {$entityName}API.update(data.id, data);
   },
-  formItems: [
-{$modalFormItemsCurd}
-  ],
-  formAction: async (data) => {
-    const id = data?.id;
-    if (id) {
-      return {$entityName}API.update(id, data);
-    }
-    return {$entityName}API.create(data);
-  },
+  formItems: addModalConfig.formItems,
 });
+
+const handleOperateClick = (data) => {
+  if (data.name === "edit") {
+    handleEditClick(data.row, async () => {
+      return await {$entityName}API.getFormData(String(data.row.id));
+    });
+  }
+};
+
+const handleToolbarClick = (name) => {
+  console.log(name);
+};
 </script>

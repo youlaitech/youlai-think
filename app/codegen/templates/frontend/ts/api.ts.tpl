@@ -7,7 +7,7 @@ const BASE_URL = "/api/v1/{$entityKebab}";
 const {$entityKebab}API = {
   /** 分页 */
   getPage(queryParams: {$entityName}QueryParams) {
-    return request<any, PageResult<{$entityName}Item>>({
+    return request<unknown, PageResult<{$entityName}Item>>({
       url: `${BASE_URL}`,
       method: "get",
       params: queryParams,
@@ -15,8 +15,8 @@ const {$entityKebab}API = {
   },
 
   /** 表单 */
-  getForm(id: string) {
-    return request<any, {$entityName}Form>({
+  getFormData(id: string) {
+    return request<unknown, {$entityName}Form>({
       url: `${BASE_URL}/${id}/form`,
       method: "get",
     });

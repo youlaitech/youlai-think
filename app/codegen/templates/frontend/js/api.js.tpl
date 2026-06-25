@@ -13,7 +13,7 @@ const {$entityKebab}API = {
   },
 
   /** 表单 */
-  getForm(id) {
+  getFormData(id) {
     return request({
       url: `${BASE_URL}/${id}/form`,
       method: "get",
