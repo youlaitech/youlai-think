@@ -14,5 +14,8 @@ Thumbs.db
 # Docker 数据目录
 docker/*/data
 
+# 运行时文件
+/runtime
+
 # 环境变量
 .env
