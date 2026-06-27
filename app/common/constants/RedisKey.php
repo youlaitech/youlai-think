@@ -8,7 +8,7 @@ namespace app\common\constants;
 final class RedisKey
 {
     /** 图片验证码键前缀 */
-    public const string CAPTCHA = 'captcha:';
+    public const string CAPTCHA = 'captcha:image:';
 
     /** 短信登录验证码键前缀 */
     public const string SMS_LOGIN = 'sms:login:';

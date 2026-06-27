@@ -2,6 +2,7 @@
 
 namespace app\auth\controller;
 
+use app\common\constants\RedisKey;
 use app\common\exception\BusinessException;
 use extend\redis\RedisClient;
 use app\common\web\ResultCode;
@@ -62,7 +63,7 @@ final class AuthController extends BaseController
         $builder->build($imageW, $imageH);
 
         $captchaId = uniqid('', true);
-        RedisClient::get()->setex("captcha:{$captchaId}", $expire, strtolower($phrase));
+        RedisClient::get()->setex(RedisKey::captcha($captchaId), $expire, strtolower($phrase));
         $base64 = $builder->inline();
 
         return $this->success([
@@ -201,7 +202,7 @@ final class AuthController extends BaseController
         }
 
         $redis = RedisClient::get();
-        $key = "captcha:{$captchaId}";
+        $key = RedisKey::captcha($captchaId);
         $storedCode = $redis->get($key);
         if (!$storedCode || strtolower((string) $storedCode) !== strtolower($captchaCode)) {
             throw new BusinessException(ResultCode::USER_VERIFICATION_CODE_ERROR);
