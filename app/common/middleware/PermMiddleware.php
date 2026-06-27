@@ -35,8 +35,8 @@ final class PermMiddleware
             throw new BusinessException(ResultCode::ACCESS_PERMISSION_EXCEPTION);
         }
 
-        // ROOT/ADMIN 直接放行
-        if (in_array('ROOT', $roleCodes, true) || in_array('ADMIN', $roleCodes, true)) {
+        // ROOT 超级管理员直接放行
+        if (in_array('ROOT', $roleCodes, true)) {
             $response = $next($request);
             return $response instanceof Response ? $response : response($response);
         }
