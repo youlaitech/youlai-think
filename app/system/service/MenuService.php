@@ -355,35 +355,45 @@ final class MenuService
     private function toRouteVo(array $menu): array
     {
         $routePath = $menu['route_path'] ?? '';
-        $isExternal = str_starts_with($routePath, 'http://') || str_starts_with($routePath, 'https://');
-
+        $externalUrl = $menu['external_url'] ?? null;
         $menuType = (string) ($menu['type'] ?? 'M');
+
+        $isExternal = $menuType === 'E';
+        $isEmbedded = $isExternal && ($menu['component'] ?? '') === 'iframe';
+
+        $path = $isExternal && !$isEmbedded && !empty($externalUrl)
+            ? $externalUrl
+            : $routePath;
 
         // 路由名称
         $routeName = $menu['route_name'] ?? '';
-        if (empty($routeName)) {
-            if ($isExternal) {
-                $routeName = 'ext-' . $menu['id'];
-            } elseif ($menuType === 'C' && !empty($routePath)) {
-                $routeName = $routePath;
+        if (empty($routeName) && !$isExternal) {
+            if ($menuType === 'C' && !empty($path)) {
+                $routeName = $path;
             } else {
-                $routeName = $this->toCamelCase($routePath);
+                $routeName = $this->toCamelCase($path);
             }
         }
 
+        $meta = [
+            'title' => $menu['name'] ?? '',
+            'icon' => $menu['icon'] ?? null,
+            'hidden' => ($menu['visible'] ?? 1) === 0,
+            'keep_alive' => ($menuType === 'M' || $isEmbedded) && ($menu['keep_alive'] ?? 0) === 1,
+            'always_show' => ($menu['always_show'] ?? 0) === 1,
+            'params' => $menu['params'] ?? null,
+        ];
+
+        if ($isEmbedded && !empty($externalUrl)) {
+            $meta['externalUrl'] = $externalUrl;
+        }
+
         return [
-            'path' => $routePath,
-            'component' => $isExternal ? null : ($menu['component'] ?? null),
+            'path' => $path,
+            'component' => $isEmbedded ? 'iframe' : ($isExternal ? null : ($menu['component'] ?? null)),
             'redirect' => $menu['redirect'] ?? null,
             'name' => $routeName,
-            'meta' => [
-                'title' => $menu['name'] ?? '',
-                'icon' => $menu['icon'] ?? null,
-                'hidden' => ($menu['visible'] ?? 1) === 0,
-                'keep_alive' => $menuType === 'M' && ($menu['keep_alive'] ?? 0) === 1,
-                'always_show' => ($menu['always_show'] ?? 0) === 1,
-                'params' => $menu['params'] ?? null,
-            ],
+            'meta' => $meta,
         ];
     }
 
