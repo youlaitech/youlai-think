@@ -1,8 +1,8 @@
 <div align="center">
 
-<img alt="youlai-think" width="80" src="./docs/images/logo/logo.png">
+# <img alt="youlai-think" width="28" src="./docs/images/logo/logo.png" align="center"> youlai-think
 
-# youlai-think
+[English](./README.en.md) · [简体中文](./README.md)
 
 **ThinkPHP 8 企业级权限管理系统后端**
 
@@ -24,7 +24,7 @@
 
 ## 简介
 
-**youlai-think** 是一套基于 ThinkPHP 8 的企业级权限管理系统后端，配套前端 [vue3-element-admin](https://gitee.com/youlaiorg/vue3-element-admin) 和移动端 [youlai-app](https://gitee.com/youlaiorg/youlai-app)，并提供 **6 种语言实现**（Java / Node.js / Go / Python / PHP / C#），共享同一套 API 规范与数据库结构。适用于企业中后台管理系统的学习参考与二次开发。
+**youlai-think** 是一套基于 ThinkPHP 8 的企业级权限管理系统后端，配套前端 [vue3-element-admin](https://gitee.com/youlaiorg/vue3-element-admin) 和移动端 [youlai-app](https://gitee.com/youlaiorg/youlai-app)，并提供 **7 种语言实现**（Java / Node.js / Go / Python / PHP / C# / Rust），共享同一套 API 规范与数据库结构。适用于企业中后台管理系统的学习参考与二次开发。
 
 ## 核心特性
 
@@ -129,10 +129,11 @@ youlai-think/
 | [youlai-django](https://gitee.com/youlaiorg/youlai-django) | Django + DRF | Python |
 | [youlai-aspnet](https://gitee.com/youlaiorg/youlai-aspnet) | ASP.NET Core | C# |
 | [youlai-think](https://gitee.com/youlaiorg/youlai-think) | ThinkPHP 8 + MySQL | PHP |
+| [youlai-rust](https://gitee.com/youlaiorg/youlai-rust) | Axum + SeaORM | Rust |
 
 > **youlai-boot** 还提供以下变种和分支版本：[多租户](https://gitee.com/youlaiorg/youlai-boot-tenant)（Spring Boot 4）· [MyBatis-Flex](https://gitee.com/youlaiorg/youlai-boot-flex)（Spring Boot 4）· [Spring Boot 3](https://gitee.com/youlaiorg/youlai-boot/tree/spring-boot-3) · [PostgreSQL](https://gitee.com/youlaiorg/youlai-boot/tree/db-pg) · [多模块](https://gitee.com/youlaiorg/youlai-boot/tree/multi-module)
 >
-> 六种后端共享同一套 **RESTful API 规范** 和 **数据库结构**，前端可无缝切换。
+> 七种后端共享同一套 **RESTful API 规范** 和 **数据库结构**，前端可无缝切换。
 
 ## 文档资源
 
@@ -157,17 +158,17 @@ youlai-think/
 <table align="center">
   <tr>
     <td align="center">
-      <img src="./docs/images/qr/wechat-offical.png" height="180" alt="公众号「有来技术」"><br>
+      <img src="./docs/images/qrcode/wechat-official.png" height="180" alt="公众号「有来技术」"><br>
       <sub>公众号「有来技术」</sub>
     </td>
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
     <td align="center">
-      <img src="./docs/images/qr/wechat-mp.jpg" height="180" alt="小程序「有来技术」"><br>
+      <img src="./docs/images/qrcode/wechat-mp.jpg" height="180" alt="小程序「有来技术」"><br>
       <sub>小程序「有来技术」</sub>
     </td>
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
     <td align="center">
-      <img src="./docs/images/qr/wechat-personal.png" height="180" alt="添加作者微信"><br>
+      <img src="./docs/images/qrcode/wechat-personal.png" height="180" alt="添加作者微信"><br>
       <sub>添加作者微信</sub>
     </td>
   </tr>
