@@ -1,8 +1,8 @@
 <div align="center">
 
-# <img alt="youlai-think" width="28" src="./docs/images/logo/logo.png" align="center"> youlai-think
+# <img alt="youlai-think" width="28" src="./docs/images/logo/logo.png" valign="middle"> youlai-think
 
-[English](./README.en.md) · [简体中文](./README.md)
+
 
 **ThinkPHP 8 企业级权限管理系统后端**
 
@@ -18,11 +18,14 @@
 
 <div align="center">
 
-[🖥️ 在线预览](https://vue.youlai.tech) | [📲 移动端预览](https://app.youlai.tech) | [📖 文档](https://www.youlai.tech/docs/server/thinkphp/)
+[![在线预览](https://img.shields.io/badge/在线预览-2D8CF0?style=for-the-badge&logo=google-chrome&logoColor=white)](https://vue.youlai.tech)
+[![移动端预览](https://img.shields.io/badge/移动端预览-19BE6B?style=for-the-badge&logo=android&logoColor=white)](https://app.youlai.tech)
+[![阅读文档](https://img.shields.io/badge/阅读文档-8B5CF6?style=for-the-badge&logo=gitbook&logoColor=white)](https://www.youlai.tech/docs/server/thinkphp/)
+[![English](https://img.shields.io/badge/English-00B4D8?style=for-the-badge&logo=google-translate&logoColor=white)](./README.en.md)
 
 </div>
 
-## 简介
+## 项目简介
 
 **youlai-think** 是一套基于 ThinkPHP 8 的企业级权限管理系统后端，配套前端 [vue3-element-admin](https://gitee.com/youlaiorg/vue3-element-admin) 和移动端 [youlai-app](https://gitee.com/youlaiorg/youlai-app)，并提供 **7 种语言实现**（Java / Node.js / Go / Python / PHP / C# / Rust），共享同一套 API 规范与数据库结构。适用于企业中后台管理系统的学习参考与二次开发。
 
@@ -78,16 +81,6 @@
 
 详细指南：[部署文档](https://www.youlai.tech/docs/server/thinkphp/deploy)
 
-## 技术栈
-
-| 技术 | 版本 | 说明 |
-|:-----|:-----|:-----|
-| PHP | 8.2+ | 核心语言 |
-| ThinkPHP | 8 | Web 框架 |
-| MySQL | 5.7+ / 8.x | 数据库 |
-| Redis | 7.x+ | 缓存 · 会话 |
-| Swagger | — | API 文档 |
-
 ## 目录结构
 
 ```
@@ -135,30 +128,15 @@ youlai-think/
 >
 > 七种后端共享同一套 **RESTful API 规范** 和 **数据库结构**，前端可无缝切换。
 
-## 文档资源
+## 交流合作
 
-| 资源 | 地址 |
-|:-----|:-----|
-| 📖 完整文档站 | [www.youlai.tech](https://www.youlai.tech/) |
-| 🖥️ PC 端在线预览 | [vue.youlai.tech](https://vue.youlai.tech) |
-| 📱 移动端在线预览 | [app.youlai.tech](https://app.youlai.tech) |
-| 🔗 Apifox 接口文档 | [apifox.com](https://www.apifox.cn/apidoc/shared-195e783f-4d85-4235-a038-eec696de4ea5) |
-| 🔗 本地接口文档 | [localhost:8000](http://localhost:8000) |
-
-## 参与贡献
-
-欢迎提交 Issue 和 Pull Request！详见 [贡献指南](https://www.youlai.tech/faq/help)。
-
-## 开源协议
-
-本项目基于 [Apache License 2.0](LICENSE.txt) 开源，可免费用于商业项目。
-
----
+欢迎在 [Issue](https://gitee.com/youlaiorg/youlai-think/issues) 提交问题或反馈，也欢迎提交 Pull Request，支持与合作见[支持指南](https://www.youlai.tech/faq/help)。
+本项目基于 [Apache License 2.0](LICENSE.txt) 开源，可免费用于商业项目。如需商务合作、二次开发、项目定制或部署支持，可联系作者微信（见下方二维码）。
 
 <table align="center">
   <tr>
     <td align="center">
-      <img src="./docs/images/qrcode/wechat-official.png" height="180" alt="公众号「有来技术」"><br>
+      <img src="./docs/images/qrcode/wechat-official.jpg" height="180" alt="公众号「有来技术」"><br>
       <sub>公众号「有来技术」</sub>
     </td>
     <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
