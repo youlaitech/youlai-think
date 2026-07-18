@@ -21,6 +21,10 @@ enum ResultCode: string implements IResultCode
     case USER_VERIFICATION_CODE_ERROR = 'A0240';
     case USER_VERIFICATION_CODE_ATTEMPT_LIMIT_EXCEEDED = 'A0241';
     case USER_VERIFICATION_CODE_EXPIRED = 'A0242';
+    case QR_CODE_NOT_FOUND = 'A0250';
+    case QR_CODE_STATUS_ILLEGAL = 'A0251';
+    case QR_CODE_USER_MISMATCH = 'A0252';
+    case QR_CODE_ALREADY_USED = 'A0253';
     case ACCESS_PERMISSION_EXCEPTION = 'A0300';
     case ACCESS_UNAUTHORIZED = 'A0301';
     case USER_REQUEST_PARAMETER_ERROR = 'A0400';
@@ -68,6 +72,10 @@ enum ResultCode: string implements IResultCode
             self::USER_VERIFICATION_CODE_ERROR => '验证码错误',
             self::USER_VERIFICATION_CODE_ATTEMPT_LIMIT_EXCEEDED => '用户验证码尝试次数超限',
             self::USER_VERIFICATION_CODE_EXPIRED => '用户验证码过期',
+            self::QR_CODE_NOT_FOUND => '扫码登录票据不存在或已过期',
+            self::QR_CODE_STATUS_ILLEGAL => '扫码登录状态非法',
+            self::QR_CODE_USER_MISMATCH => '扫码用户与确认用户不一致',
+            self::QR_CODE_ALREADY_USED => '扫码登录票据已使用',
             self::ACCESS_PERMISSION_EXCEPTION => '访问权限异常',
             self::ACCESS_UNAUTHORIZED => '访问未授权',
             self::USER_REQUEST_PARAMETER_ERROR => '用户请求参数错误',

@@ -157,6 +157,14 @@ final class AuthController extends BaseController
             return $this->fail('A0400', '手机号不能为空');
         }
 
+        // 同一手机号 60 秒内仅允许发送一次验证码，防止短信轰炸
+        $smsKey = "rate_limit:api:sms:{$mobile}";
+        $redis = RedisClient::get();
+        if ($redis->exists($smsKey)) {
+            return json(Result::failedWith(ResultCode::REQUEST_CONCURRENCY_LIMIT_EXCEEDED)->toArray(), 429);
+        }
+        $redis->setex($smsKey, 60, '1');
+
         $this->service(AuthService::class)->sendSmsLoginCode($mobile);
 
         return $this->success(null, '验证码发送成功');
@@ -255,5 +263,168 @@ final class AuthController extends BaseController
             'create_by'      => $userId,
             'create_time'    => date('Y-m-d H:i:s'),
         ]);
+    }
+
+    // ======================== 扫码登录 ========================
+
+    private const QR_DEFAULT_EXPIRE = 300;
+    private const QR_MIN_REMAIN = 30;
+    private const QR_WAITING = 'WAITING';
+    private const QR_SCANNED = 'SCANNED';
+    private const QR_CONFIRMED = 'CONFIRMED';
+    private const QR_LOGGED_IN = 'LOGGED_IN';
+    private const QR_CANCELED = 'CANCELED';
+
+    private static function qrKey(string $ticket): string { return 'auth:qr_code:' . $ticket; }
+
+    private function clientIp(): string
+    {
+        $xff = $this->request->header('X-Forwarded-For', '');
+        if ($xff) return trim(explode(',', $xff)[0]);
+        $xrip = $this->request->header('X-Real-IP', '');
+        if ($xrip) return trim($xrip);
+        return $this->request->ip() ?: 'unknown';
+    }
+
+    private function loadCtx(string $ticket): array
+    {
+        if (empty($ticket)) throw new BusinessException(ResultCode::QR_CODE_NOT_FOUND);
+        $raw = RedisClient::get()->get(self::qrKey($ticket));
+        if (empty($raw)) throw new BusinessException(ResultCode::QR_CODE_NOT_FOUND);
+        return json_decode($raw, true) ?: [];
+    }
+
+    private function saveCtx(array $ctx, int $ttl): void
+    {
+        RedisClient::get()->setex(self::qrKey($ctx['ticket']), $ttl, json_encode($ctx, JSON_UNESCAPED_UNICODE));
+    }
+
+    private function remainSeconds(string $ticket): int
+    {
+        $ttl = RedisClient::get()->ttl(self::qrKey($ticket));
+        return ($ttl > 0) ? $ttl : 0;
+    }
+
+    private function refreshTtl(string $ticket): int
+    {
+        $remain = $this->remainSeconds($ticket);
+        return $remain < self::QR_MIN_REMAIN ? self::QR_MIN_REMAIN : $remain;
+    }
+
+    private static function maskNickname(?string $nickname): ?string
+    {
+        if (empty($nickname)) return $nickname;
+        $chars = mb_str_split($nickname);
+        $n = count($chars);
+        if ($n <= 1) return $nickname;
+        if ($n === 2) return $chars[0] . '*';
+        return $chars[0] . str_repeat('*', $n - 2) . $chars[$n - 1];
+    }
+
+    private function toStatusVO(array $ctx, int $expireSec): array
+    {
+        $vo = [
+            'ticket'        => $ctx['ticket'],
+            'status'        => $ctx['status'],
+            'nickname'      => null,
+            'avatar'        => null,
+            'expireSeconds' => $expireSec,
+        ];
+        if (in_array($ctx['status'], [self::QR_SCANNED, self::QR_CONFIRMED])) {
+            $vo['nickname'] = self::maskNickname($ctx['nickname'] ?? null);
+            $vo['avatar'] = $ctx['avatar'] ?? null;
+        }
+        return $vo;
+    }
+
+    public function qrGenerate(): Json
+    {
+        $ticket = bin2hex(random_bytes(16));
+        $ctx = [
+            'ticket'  => $ticket,
+            'status'  => self::QR_WAITING,
+            'userId'  => null,
+            'nickname'=> null,
+            'avatar'  => null,
+            'createdAt'=> null,
+            'scannedAt'=> null,
+            'confirmedAt'=> null,
+            'clientIp' => $this->clientIp(),
+        ];
+        $this->saveCtx($ctx, self::QR_DEFAULT_EXPIRE);
+        return $this->success(['ticket' => $ticket, 'expireSeconds' => self::QR_DEFAULT_EXPIRE]);
+    }
+
+    public function qrStatus(): Json
+    {
+        $ticket = $this->getParam('ticket', '');
+        $ctx = $this->loadCtx($ticket);
+        return $this->success($this->toStatusVO($ctx, $this->remainSeconds($ticket)));
+    }
+
+    public function qrScan(): Json
+    {
+        $userId = $this->getAuthUserId();
+        $ticket = $this->getParam('ticket', '');
+        $ctx = $this->loadCtx($ticket);
+        if ($ctx['status'] !== self::QR_WAITING) {
+            throw new BusinessException(ResultCode::QR_CODE_STATUS_ILLEGAL);
+        }
+        $user = \app\system\model\User::find($userId);
+        if (!$user) throw new BusinessException(ResultCode::ACCOUNT_NOT_FOUND);
+        $ctx['userId'] = $userId;
+        $ctx['nickname'] = $user->nickname;
+        $ctx['avatar'] = $user->avatar;
+        $ctx['status'] = self::QR_SCANNED;
+        $ctx['scannedAt'] = (int)(microtime(true) * 1000);
+        $this->saveCtx($ctx, $this->refreshTtl($ticket));
+        return $this->success($this->toStatusVO($ctx, $this->remainSeconds($ticket)));
+    }
+
+    public function qrConfirm(): Json
+    {
+        $userId = $this->getAuthUserId();
+        $ticket = $this->getParam('ticket', '');
+        $ctx = $this->loadCtx($ticket);
+        if ($ctx['status'] !== self::QR_SCANNED) {
+            throw new BusinessException(ResultCode::QR_CODE_STATUS_ILLEGAL);
+        }
+        if (($ctx['userId'] ?? null) != $userId) {
+            throw new BusinessException(ResultCode::QR_CODE_USER_MISMATCH);
+        }
+        $ctx['status'] = self::QR_CONFIRMED;
+        $ctx['confirmedAt'] = (int)(microtime(true) * 1000);
+        $this->saveCtx($ctx, $this->refreshTtl($ticket));
+        return $this->success($this->toStatusVO($ctx, $this->remainSeconds($ticket)));
+    }
+
+    public function qrCancel(): Json
+    {
+        $userId = $this->getAuthUserId();
+        $ticket = $this->getParam('ticket', '');
+        $ctx = $this->loadCtx($ticket);
+        if (!in_array($ctx['status'], [self::QR_WAITING, self::QR_SCANNED, self::QR_CONFIRMED])) {
+            throw new BusinessException(ResultCode::QR_CODE_STATUS_ILLEGAL);
+        }
+        if ($ctx['status'] !== self::QR_WAITING && ($ctx['userId'] ?? null) != $userId) {
+            throw new BusinessException(ResultCode::QR_CODE_USER_MISMATCH);
+        }
+        $ctx['status'] = self::QR_CANCELED;
+        $this->saveCtx($ctx, $this->refreshTtl($ticket));
+        return $this->success($this->toStatusVO($ctx, $this->remainSeconds($ticket)));
+    }
+
+    public function qrLogin(): Json
+    {
+        $ticket = $this->getParam('ticket', '');
+        $ctx = $this->loadCtx($ticket);
+        if ($ctx['status'] !== self::QR_CONFIRMED) {
+            throw new BusinessException(ResultCode::QR_CODE_STATUS_ILLEGAL);
+        }
+        $token = $this->service(AuthService::class)->loginByQr((int)($ctx['userId'] ?? 0));
+        $ctx['status'] = self::QR_LOGGED_IN;
+        $remain = $this->remainSeconds($ticket);
+        $this->saveCtx($ctx, $remain > self::QR_MIN_REMAIN ? $remain : self::QR_MIN_REMAIN);
+        return $this->success($token);
     }
 }

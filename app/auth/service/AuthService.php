@@ -42,6 +42,18 @@ final class AuthService
     }
 
     /**
+     * 扫码登录换发会话令牌：按用户 ID 查用户并复用既有令牌签发逻辑。
+     */
+    public function loginByQr(int $userId): array
+    {
+        $user = User::find($userId);
+        if (!$user) {
+            throw new BusinessException('用户不存在');
+        }
+        return $this->buildTokenResponse($user);
+    }
+
+    /**
      * 发送登录短信验证码
      */
     public function sendSmsLoginCode(string $mobile): void
@@ -95,6 +107,7 @@ final class AuthService
 
         $token = $this->jwt->generateToken([
             'userId' => (int) $user->id,
+            'username' => $user->username,
             'deptId' => $user->dept_id ?? null,
             'authorities' => $authorities,
         ]);

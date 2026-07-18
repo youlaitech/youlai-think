@@ -23,6 +23,14 @@ Route::group('api/v1/auth', function () {
     Route::post('sms/code', [AuthController::class, 'sendLoginVerifyCode']);
     Route::post('refresh-token', [AuthController::class, 'refresh']);
     Route::delete('logout', [AuthController::class, 'logout']);
+    // 扫码登录（公开）
+    Route::post('qr-code/generate', [AuthController::class, 'qrGenerate']);
+    Route::get('qr-code/status', [AuthController::class, 'qrStatus']);
+    Route::post('qr-code/login', [AuthController::class, 'qrLogin']);
+    // 扫码登录（需 APP 登录）
+    Route::post('qr-code/scan', [AuthController::class, 'qrScan'])->middleware('auth');
+    Route::post('qr-code/confirm', [AuthController::class, 'qrConfirm'])->middleware('auth');
+    Route::post('qr-code/cancel', [AuthController::class, 'qrCancel'])->middleware('auth');
 });
 
 // ==================== 微信小程序认证接口（无需登录） ====================
