@@ -31,13 +31,10 @@ final class LogMiddleware
             $exception = $e;
             throw $e;
         } finally {
-            if (!$exception) {
-                // 请求正常完成，尝试记录操作日志
-                try {
-                    $this->recordLog($request, $response, $startTime, false);
-                } catch (Throwable) {
-                    // 日志记录失败不影响主请求
-                }
+            try {
+                $this->recordLog($request, $response, $startTime, $exception);
+            } catch (Throwable) {
+                // 日志记录失败不影响主请求
             }
         }
     }
@@ -45,7 +42,7 @@ final class LogMiddleware
     /**
      * 记录操作日志
      */
-    private function recordLog($request, $response, float $startTime, bool $hasException): void
+    private function recordLog($request, $response, float $startTime, ?Throwable $exception): void
     {
         $controller = $request->controller();
         $action = $request->action();
@@ -76,7 +73,7 @@ final class LogMiddleware
 
         $executionTime = (int) round((microtime(true) - $startTime) * 1000);
 
-        $authUser = (array) ($request->__authUser ?? []);
+        $authUser = (array) ($request->authUser ?? []);
         $operatorId = (int) ($authUser['id'] ?? $authUser['userId'] ?? 0);
         $operatorName = $authUser['nickname'] ?? $authUser['username'] ?? '';
 
@@ -95,10 +92,9 @@ final class LogMiddleware
             'ip'             => $request->ip(),
             'browser'        => $ua['browser'],
             'os'             => $ua['os'],
-            'status'         => $hasException ? 0 : 1,
-            'error_msg'      => null,
+            'status'         => $exception ? 0 : 1,
+            'error_msg'      => $exception?->getMessage(),
             'execution_time' => $executionTime,
-            'create_time'    => date('Y-m-d H:i:s'),
         ]);
     }
 

@@ -20,7 +20,6 @@ class SysUserSocial extends BaseModel
     protected $name = 'sys_user_social';
 
     protected $type = [
-        'id' => 'integer',
         'user_id' => 'integer',
         'verified' => 'integer',
     ];

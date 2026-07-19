@@ -10,8 +10,7 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
 /**
- * JWT Token 管理器
- * 负责生成和解析 Access/Refresh Token
+ * JWT Token 管理器（签发、校验、刷新、黑名单）
  */
 class JwtTokenManager implements TokenManager
 {

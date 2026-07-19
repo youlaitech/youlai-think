@@ -11,7 +11,6 @@ final class Result
         public string $code,
         public mixed $data,
         public string $msg,
-        public ?string $traceId = null,
     ) {}
 
     /**
@@ -68,29 +67,14 @@ final class Result
     }
 
     /**
-     * 设置追踪ID
-     */
-    public function withTraceId(string $traceId): self
-    {
-        $this->traceId = $traceId;
-        return $this;
-    }
-
-    /**
      * 转换为数组
      */
     public function toArray(): array
     {
-        $result = [
+        return [
             'code' => $this->code,
             'data' => $this->data,
             'msg' => $this->msg,
         ];
-
-        if ($this->traceId !== null) {
-            $result['traceId'] = $this->traceId;
-        }
-
-        return $result;
     }
 }

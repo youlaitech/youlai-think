@@ -32,7 +32,6 @@ class Menu extends BaseModel
     protected $deleteTime = false;
 
     protected $type = [
-        'id' => 'integer',
         'parent_id' => 'integer',
         'sort' => 'integer',
         'visible' => 'integer',
@@ -69,14 +68,6 @@ class Menu extends BaseModel
             'role_id',
             'menu_id'
         );
-    }
-
-    /**
-     * 父ID访问器
-     */
-    public function getParentIdAttr(mixed $value): string
-    {
-        return (string) $value;
     }
 
     /**

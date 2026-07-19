@@ -6,7 +6,6 @@ use app\common\exception\BusinessException;
 use app\common\util\PageUtil;
 use extend\redis\RedisClient;
 use app\system\model\Config;
-use think\facade\Db;
 
 /**
  * 系统参数配置服务
@@ -24,7 +23,7 @@ final class ConfigService
 
         $keywords = trim((string) ($queryParams['keywords'] ?? ''));
 
-        $q = Db::name('sys_config')->where('is_deleted', 0);
+        $q = Config::field('id,config_name,config_key,config_value,remark');
         if ($keywords !== '') {
             $kw = '%' . $keywords . '%';
             $q = $q->whereLike('config_key|config_name', $kw);
@@ -88,25 +87,19 @@ final class ConfigService
         }
 
         // 配置键唯一性校验
-        $exists = Db::name('sys_config')
-            ->where('is_deleted', 0)
-            ->where('config_key', $configKey)
-            ->count();
+        $exists = Config::where('config_key', $configKey)->count();
         if ($exists > 0) {
             throw new BusinessException('配置键已存在');
         }
 
-        $now = date('Y-m-d H:i:s');
-        Db::name('sys_config')->insert([
+        $config = new Config();
+        $config->save([
             'config_name' => $configName,
             'config_key' => $configKey,
             'config_value' => $configValue,
             'remark' => $remark,
-            'create_time' => $now,
             'create_by' => $userId,
-            'update_time' => $now,
             'update_by' => $userId,
-            'is_deleted' => 0,
         ]);
 
         return true;
@@ -117,8 +110,8 @@ final class ConfigService
      */
     public function updateConfig(int $userId, int $id, array $data): bool
     {
-        $row = Db::name('sys_config')->where('id', $id)->where('is_deleted', 0)->find();
-        if (!$row) {
+        $config = Config::find($id);
+        if (!$config) {
             throw new BusinessException('系统配置不存在');
         }
 
@@ -132,21 +125,18 @@ final class ConfigService
         }
 
         // 更新时排除自己
-        $exists = Db::name('sys_config')
-            ->where('is_deleted', 0)
-            ->where('config_key', $configKey)
+        $exists = Config::where('config_key', $configKey)
             ->where('id', '<>', $id)
             ->count();
         if ($exists > 0) {
             throw new BusinessException('配置键已存在');
         }
 
-        Db::name('sys_config')->where('id', $id)->update([
+        $config->save([
             'config_name' => $configName,
             'config_key' => $configKey,
             'config_value' => $configValue,
             'remark' => $remark,
-            'update_time' => date('Y-m-d H:i:s'),
             'update_by' => $userId,
         ]);
 
@@ -158,18 +148,13 @@ final class ConfigService
      */
     public function deleteConfig(int $userId, int $id): bool
     {
-        $row = Db::name('sys_config')->where('id', $id)->where('is_deleted', 0)->find();
-        if (!$row) {
+        $config = Config::find($id);
+        if (!$config) {
             throw new BusinessException('系统配置不存在');
         }
 
-        Db::name('sys_config')->where('id', $id)->update([
-            'is_deleted' => 1,
-            'update_time' => date('Y-m-d H:i:s'),
-            'update_by' => $userId,
-        ]);
-
-        return true;
+        $config->update_by = $userId;
+        return $config->softDelete();
     }
 
     /**
@@ -177,9 +162,7 @@ final class ConfigService
      */
     public function refreshCache(): bool
     {
-        $rows = Db::name('sys_config')
-            ->where('is_deleted', 0)
-            ->field('config_key,config_value')
+        $rows = Config::field('config_key,config_value')
             ->select()
             ->toArray();
 
@@ -219,10 +202,7 @@ final class ConfigService
             return $val;
         }
 
-        $row = Db::name('sys_config')
-            ->where('is_deleted', 0)
-            ->where('config_key', $key)
-            ->value('config_value');
+        $row = Config::where('config_key', $key)->value('config_value');
 
         return $row;
     }

@@ -315,6 +315,7 @@ final class WxMaAuthService
 
         $userAuthInfo = [
             'userId' => $userId,
+            'username' => $user->username,
             'deptId' => $user->dept_id ?? null,
             'authorities' => $authorities,
         ];
@@ -328,4 +329,6 @@ final class WxMaAuthService
             'expires_in' => $token->expiresIn,
         ];
     }
+}
+}
 }

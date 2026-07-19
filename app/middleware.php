@@ -1,7 +1,7 @@
 <?php
-// 应用中间件定义文件
+// 全局中间件
 return [
-    'auth'     => \app\common\middleware\AuthMiddleware::class,
-    'perm'     => \app\common\middleware\PermMiddleware::class,
-    'dataScope' => \app\common\middleware\DataScopeMiddleware::class,
+    \app\common\middleware\ConvertCaseMiddleware::class,
+    \app\common\middleware\LogMiddleware::class,
+    \app\common\middleware\Cors::class,
 ];

@@ -18,9 +18,7 @@ class Config extends BaseModel
 {
     protected $name = 'sys_config';
 
-    protected $type = [
-        'id' => 'integer',
-    ];
+    protected $type = [];
 
     // 无软删除
     protected $deleteTime = false;

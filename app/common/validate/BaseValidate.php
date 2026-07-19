@@ -4,14 +4,8 @@ namespace app\common\validate;
 
 use think\Validate;
 
-/**
- * 验证器基类
- */
 abstract class BaseValidate extends Validate
 {
-    /**
-     * 验证数据，失败时抛 ValidateException
-     */
     public function checkOrFail(array $data): array
     {
         if (!$this->check($data)) {
@@ -21,15 +15,43 @@ abstract class BaseValidate extends Validate
     }
 
     /**
-     * 中国大陆手机号校验（空值通过）
+     * 数据库存在性校验，用法：exist:table,column
      */
-    protected function isMobile(mixed $value, mixed $rule = null, array $data = [], string $field = ''): bool
+    public function exist(mixed $value, string $rule): bool
     {
         if ($value === null || $value === '') {
             return true;
         }
+        [$table, $column] = explode(',', $rule);
+        return app()->db->name($table)->where($column, $value)->where('is_deleted', 0)->find() !== null;
+    }
 
-        $value = (string) $value;
-        return (bool) preg_match('/^1[3-9]\d{9}$/', $value);
+    /**
+     * 字段唯一性校验，用法：unique:table,column,exceptId
+     */
+    public function unique($value, $rule, array $data = [], string $field = ''): bool
+    {
+        if ($value === null || $value === '') {
+            return true;
+        }
+        $parts = explode(',', $rule);
+        $table = $parts[0];
+        $column = $parts[1] ?? $field;
+        $exceptId = $parts[2] ?? null;
+
+        $query = app()->db->name($table)->where($column, $value);
+        if ($exceptId !== null && isset($data[$exceptId])) {
+            $query->where('id', '<>', $data[$exceptId]);
+        }
+        $query->where('is_deleted', 0);
+        return $query->count() === 0;
+    }
+
+    public function isMobile(mixed $value): bool
+    {
+        if ($value === null || $value === '') {
+            return true;
+        }
+        return (bool) preg_match('/^1[3-9]\d{9}$/', (string) $value);
     }
 }

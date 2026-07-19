@@ -97,7 +97,7 @@ class ExceptionHandle extends Handle
     }
 
     /**
-     * 失败响应
+     * 失败响应（异常路径不受 ConvertCaseMiddleware 后置处理，需在此做驼峰转换）
      */
     private function fail(ResultCode $resultCode, string $msg = '', ?int $httpStatus = null): Response
     {
@@ -109,6 +109,7 @@ class ExceptionHandle extends Handle
                 ResultCode::ACCESS_TOKEN_INVALID,
                 ResultCode::REFRESH_TOKEN_INVALID => 401,
                 ResultCode::ACCESS_PERMISSION_EXCEPTION => 403,
+                ResultCode::REQUEST_CONCURRENCY_LIMIT_EXCEEDED => 429,
                 default => 200,
             };
         }

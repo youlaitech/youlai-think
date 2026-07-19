@@ -5,8 +5,7 @@ namespace extend\sse;
 use app\common\constants\NoticeEvents;
 
 /**
- * 通知公告事件监听器
- * 监听发布/撤回事件并广播给在线用户
+ * 通知公告事件监听器，转发为 SSE 广播
  */
 class NoticeListener
 {
@@ -14,12 +13,12 @@ class NoticeListener
 
     public function onPublished(array $notice): void
     {
-        $this->sseService->broadcast('notice', $notice);
+        $this->sseService->broadcast(SseTopics::NOTICE, $notice);
     }
 
     public function onRevoked(int $noticeId): void
     {
-        $this->sseService->broadcast('notice-revoke', ['id' => $noticeId]);
+        $this->sseService->broadcast(SseTopics::NOTICE_REVOKE, ['id' => $noticeId]);
     }
 
     public static function mappings(): array

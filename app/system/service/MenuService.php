@@ -4,6 +4,8 @@ namespace app\system\service;
 
 use app\common\exception\BusinessException;
 use app\system\model\Menu;
+use app\system\model\RoleMenu;
+use app\system\model\UserRole;
 use think\facade\Db;
 
 /**
@@ -20,8 +22,8 @@ final class MenuService
             ->order('id', 'asc');
 
         if ($onlyParent) {
-            // 只返回目录/菜单，不返回按钮
-            $query->whereIn('type', ['C', 'M']);
+            // 排除按钮（包含目录/菜单/外链）
+            $query->where('type', '<>', 'B');
         }
 
         $list = $query->select()->toArray();
@@ -44,8 +46,7 @@ final class MenuService
     }
 
     /**
-     * 获取用户的菜单树（路由用）
-     * 注意：visible=0 的隐藏菜单仍需返回路由，只是前端不显示菜单，但可以通过路由跳转访问
+     * 用户路由菜单树（隐藏菜单 visible=0 仍返回路由，仅不在菜单栏展示）
      */
     public function getUserMenuTree(int $userId, array $roleCodes): array
     {
@@ -57,13 +58,9 @@ final class MenuService
                 ->toArray();
         } else {
             // 根据角色获取菜单
-            $roleIds = Db::name('sys_user_role')
-                ->where('user_id', $userId)
-                ->column('role_id');
+            $roleIds = UserRole::where('user_id', $userId)->column('role_id');
 
-            $menuIds = Db::name('sys_role_menu')
-                ->whereIn('role_id', $roleIds)
-                ->column('menu_id');
+            $menuIds = RoleMenu::whereIn('role_id', $roleIds)->column('menu_id');
 
             // 过滤平台管理目录（/support）及其子菜单
             $supportMenuId = Menu::where('route_path', '/support')
@@ -146,12 +143,15 @@ final class MenuService
             'parent_id' => $parentId,
             'type' => $data['type'] ?? 'M',
             'name' => $data['name'],
+            'route_name' => $data['route_name'] ?? '',
             'route_path' => $data['route_path'] ?? '',
-            'component' => $data['component'] ?? '',
+            'component' => $data['component'] ?? ($data['type'] === 'C' ? 'Layout' : ''),
             'perm' => $data['perm'] ?? '',
             'icon' => $data['icon'] ?? '',
             'sort' => $data['sort'] ?? 0,
             'visible' => $data['visible'] ?? 1,
+            'always_show' => $data['always_show'] ?? 0,
+            'keep_alive' => $data['keep_alive'] ?? 0,
             'tree_path' => $treePath,
             'params' => $this->transformParams($data['params'] ?? null),
         ]);
@@ -180,15 +180,28 @@ final class MenuService
         // 检查父级是否变更
         $parentChanged = isset($data['parent_id']) && (int) $data['parent_id'] !== (int) $menu->parent_id;
 
+        // 非 clearable 字段：?? 语义（null / 未传 → 保留旧值）
         $menu->parent_id = $data['parent_id'] ?? $menu->parent_id;
         $menu->type = $data['type'] ?? $menu->type;
         $menu->name = $data['name'] ?? $menu->name;
         $menu->route_path = $data['route_path'] ?? $menu->route_path;
-        $menu->component = $data['component'] ?? $menu->component;
-        $menu->perm = $newPerm;
-        $menu->icon = $data['icon'] ?? $menu->icon;
+        $menu->perm  = $newPerm;
         $menu->sort = $data['sort'] ?? $menu->sort;
         $menu->visible = $data['visible'] ?? $menu->visible;
+        $menu->always_show = $data['always_show'] ?? $menu->always_show;
+        $menu->keep_alive = $data['keep_alive'] ?? $menu->keep_alive;
+
+        // clearable 字段：array_key_exists 判存在性（null 也写），前端丢 key 才保留旧值
+        foreach (['component', 'icon', 'redirect', 'route_name', 'perm', 'external_url'] as $field) {
+            if (array_key_exists($field, $data)) {
+                $menu->$field = $data[$field];
+            }
+        }
+        // 目录类型且前端未显式传 component → 强制 Layout
+        if (($menu->type) === 'C' && !array_key_exists('component', $data)) {
+            $menu->component = 'Layout';
+        }
+
         $menu->params = $this->transformParams($data['params'] ?? null);
 
         // 父级变更时更新 tree_path
@@ -228,7 +241,7 @@ final class MenuService
         }
 
         // 删除关联
-        Db::name('sys_role_menu')->where('menu_id', $id)->delete();
+        RoleMenu::where('menu_id', $id)->delete();
 
         // 物理删除（sys_menu 表无 is_deleted 字段）
         return $menu->delete();
@@ -416,8 +429,7 @@ final class MenuService
      */
     private function refreshAffectedRolePermsCache(int $menuId): void
     {
-        $roleCodes = Db::name('sys_role_menu')
-            ->alias('rm')
+        $roleCodes = RoleMenu::alias('rm')
             ->join('sys_role r', 'rm.role_id = r.id')
             ->where('rm.menu_id', $menuId)
             ->where('r.is_deleted', 0)

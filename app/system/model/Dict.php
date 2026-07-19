@@ -20,7 +20,6 @@ class Dict extends BaseModel
     protected $name = 'sys_dict';
 
     protected $type = [
-        'id' => 'integer',
         'status' => 'integer',
     ];
 

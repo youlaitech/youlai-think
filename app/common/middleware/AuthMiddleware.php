@@ -18,13 +18,9 @@ final class AuthMiddleware
      */
     public function handle($request, \Closure $next): Response
     {
-        if (strtoupper((string) $request->method()) === 'OPTIONS') {
-            $response = $next($request);
-            return $response instanceof Response ? $response : response($response);
-        }
-
         $path = '/' . ltrim((string) $request->pathinfo(), '/');
-        if (str_starts_with($path, '/api/v1/auth/')) {
+
+        if ($this->isIgnored($path)) {
             $response = $next($request);
             return $response instanceof Response ? $response : response($response);
         }
@@ -46,9 +42,25 @@ final class AuthMiddleware
         $token = trim((string) $token);
         if ($token === '') throw new BusinessException(ResultCode::ACCESS_TOKEN_INVALID);
 
-        $request->__authUser = TokenManagerResolver::resolve()->parseAccessToken($token);
+        $request->authUser = TokenManagerResolver::resolve()->parseAccessToken($token);
 
         $response = $next($request);
         return $response instanceof Response ? $response : response($response);
+    }
+
+    /**
+     * 判断路径是否在认证白名单中（支持 * 通配符）
+     */
+    private function isIgnored(string $path): bool
+    {
+        $patterns = (array) config('security.ignore_urls', []);
+        foreach ($patterns as $pattern) {
+            $pattern = '/' . ltrim((string) $pattern, '/');
+            $regex = '#^' . str_replace('\*', '.*', preg_quote($pattern, '#')) . '$#';
+            if (preg_match($regex, $path)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

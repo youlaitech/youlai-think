@@ -2,8 +2,8 @@
 
 namespace app\system\service;
 
+use app\system\model\RoleMenu;
 use extend\redis\RedisClient;
-use think\facade\Db;
 
 /**
  * 角色权限缓存服务
@@ -98,8 +98,7 @@ final class RolePermService
             return [];
         }
 
-        $rows = Db::name('sys_role_menu')
-            ->alias('rm')
+        $rows = RoleMenu::alias('rm')
             ->join('sys_role r', 'rm.role_id = r.id')
             ->join('sys_menu m', 'rm.menu_id = m.id')
             ->whereIn('r.code', $roleCodes)

@@ -32,7 +32,6 @@ class Log extends BaseModel
     protected $name = 'sys_log';
 
     protected $type = [
-        'id' => 'integer',
         'module' => 'integer',
         'action_type' => 'integer',
         'operator_id' => 'integer',
@@ -41,9 +40,4 @@ class Log extends BaseModel
     ];
 
     protected $deleteTime = false;
-
-    public function getOperatorIdAttr(mixed $value): string
-    {
-        return (string) $value;
-    }
 }

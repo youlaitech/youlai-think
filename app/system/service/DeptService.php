@@ -4,7 +4,7 @@ namespace app\system\service;
 
 use app\common\exception\BusinessException;
 use app\system\model\Dept;
-use think\facade\Db;
+use app\system\model\User;
 
 /**
  * 部门管理服务
@@ -65,6 +65,21 @@ final class DeptService
      */
     public function create(array $data): int
     {
+        $code = $data['code'] ?? '';
+
+        // 检查编码是否重复（含软删除记录，避免唯一索引冲突）
+        if ($code !== '') {
+            $existing = Dept::where('code', $code)->find();
+            if ($existing) {
+                if ((int) $existing->is_deleted === 1) {
+                    // 软删除记录占用编码，硬删除后允许新建
+                    \think\facade\Db::table('sys_dept')->where('id', $existing->id)->delete();
+                } else {
+                    throw new BusinessException('部门编码已存在');
+                }
+            }
+        }
+
         // 计算树路径
         $treePath = $this->buildTreePath((int) ($data['parent_id'] ?? 0));
 
@@ -121,15 +136,17 @@ final class DeptService
         }
 
         // 检查是否有用户
-        $userCount = Db::name('sys_user')->where('dept_id', $id)->where('is_deleted', 0)->count();
+        $userCount = User::where('dept_id', $id)->count();
         if ($userCount > 0) {
             throw new BusinessException('部门下存在用户，无法删除');
         }
 
-        return Db::name('sys_dept')->where('id', $id)->update([
-            'is_deleted' => 1,
-            'update_time' => date('Y-m-d H:i:s'),
-        ]) > 0;
+        $dept = Dept::find($id);
+        if (!$dept) {
+            throw new BusinessException('部门不存在');
+        }
+
+        return $dept->softDelete();
     }
 
     /**

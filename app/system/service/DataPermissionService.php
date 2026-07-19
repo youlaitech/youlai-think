@@ -3,7 +3,7 @@
 namespace app\system\service;
 
 use app\common\enums\DataScopeEnum;
-use think\facade\Db;
+use app\system\model\Dept;
 
 /**
  * 数据权限服务
@@ -174,9 +174,7 @@ class DataPermissionService
     {
         $deptIdStr = (string) $deptId;
 
-        $deptIds = Db::name('sys_dept')
-            ->where('is_deleted', 0)
-            ->where(function ($query) use ($deptId, $deptIdStr) {
+        $deptIds = Dept::where(function ($query) use ($deptId, $deptIdStr) {
                 $query->where('id', $deptId)
                     ->whereOrRaw("FIND_IN_SET(?, tree_path)", [$deptIdStr]);
             })

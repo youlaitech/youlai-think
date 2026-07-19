@@ -13,7 +13,7 @@ trait AuthTrait
      */
     protected function getAuthUser(): array
     {
-        return (array) ($this->request->__authUser ?? []);
+        return (array) ($this->request->authUser ?? []);
     }
 
     /**

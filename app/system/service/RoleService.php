@@ -6,7 +6,9 @@ use app\common\exception\BusinessException;
 use app\common\util\PageUtil;
 use app\system\model\Menu;
 use app\system\model\Role;
+use app\system\model\RoleDept;
 use app\system\model\RoleMenu;
+use app\system\model\UserRole;
 use think\facade\Db;
 
 /**
@@ -38,9 +40,7 @@ final class RoleService
         unset($data['menus']);
 
         // 获取角色关联的部门ID（自定义数据权限用）
-        $data['dept_ids'] = array_map('strval', Db::name('sys_role_dept')
-            ->where('role_id', $id)
-            ->column('dept_id'));
+        $data['dept_ids'] = array_map('strval', RoleDept::where('role_id', $id)->column('dept_id'));
 
         return $data;
     }
@@ -113,11 +113,19 @@ final class RoleService
         $name = $data['name'] ?? '';
         $code = $data['code'] ?? '';
 
-        $byCode = Role::where('code', $code)->find();
-        $byName = Role::where('name', $name)->find();
+        $byCode = Role::where('code', $code)->where('is_deleted', 0)->find();
+        $byName = Role::where('name', $name)->where('is_deleted', 0)->find();
 
         if ($byCode || $byName) {
             throw new BusinessException('角色名称或角色编码已存在');
+        }
+
+        // 清理同编码的软删除记录，避免唯一索引冲突
+        if ($code !== '') {
+            $trashed = Role::where('code', $code)->where('is_deleted', 1)->find();
+            if ($trashed) {
+                \think\facade\Db::table('sys_role')->where('id', $trashed->id)->delete();
+            }
         }
 
         try {
@@ -199,14 +207,12 @@ final class RoleService
         }
 
         return Db::transaction(function () use ($ids) {
-            // 删除角色菜单关联
             RoleMenu::whereIn('role_id', $ids)->delete();
 
-            // 软删除角色
-            Db::name('sys_role')->whereIn('id', $ids)->update([
-                'is_deleted' => 1,
-                'update_time' => date('Y-m-d H:i:s'),
-            ]);
+            $roles = Role::whereIn('id', $ids)->select();
+            foreach ($roles as $role) {
+                $role->softDelete();
+            }
             return count($ids);
         });
     }
@@ -234,9 +240,7 @@ final class RoleService
     public function getPermissionsByUserId(int $userId): array
     {
         // 获取用户所有角色
-        $roleIds = Db::name('sys_user_role')
-            ->where('user_id', $userId)
-            ->column('role_id');
+        $roleIds = UserRole::where('user_id', $userId)->column('role_id');
 
         if (empty($roleIds)) {
             return [];
@@ -295,9 +299,7 @@ final class RoleService
      */
     public function getDeptIds(int $roleId): array
     {
-        return array_map('strval', Db::name('sys_role_dept')
-            ->where('role_id', $roleId)
-            ->column('dept_id'));
+        return array_map('strval', RoleDept::where('role_id', $roleId)->column('dept_id'));
     }
 
     /**
@@ -323,7 +325,7 @@ final class RoleService
      */
     public function syncDepts(int $roleId, array $deptIds): void
     {
-        Db::name('sys_role_dept')->where('role_id', $roleId)->delete();
+        RoleDept::where('role_id', $roleId)->delete();
 
         if (!empty($deptIds)) {
             $this->assignDepts($roleId, $deptIds);
@@ -362,6 +364,6 @@ final class RoleService
             'dept_id' => $deptId,
         ], $deptIds);
 
-        Db::name('sys_role_dept')->insertAll($data);
+        (new RoleDept())->insertAll($data);
     }
 }

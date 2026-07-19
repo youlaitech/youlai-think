@@ -24,7 +24,6 @@ class DictItem extends BaseModel
     protected $deleteTime = false;
 
     protected $type = [
-        'id' => 'integer',
         'sort' => 'integer',
         'status' => 'integer',
     ];

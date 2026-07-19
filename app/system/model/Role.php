@@ -12,7 +12,6 @@ class Role extends BaseModel
     protected $name = 'sys_role';
 
     protected $type = [
-        'id' => 'integer',
         'status' => 'integer',
         'sort' => 'integer',
     ];
@@ -39,6 +38,19 @@ class Role extends BaseModel
             Menu::class,
             RoleMenu::class,
             'menu_id',
+            'role_id'
+        );
+    }
+
+    /**
+     * 关联部门（自定义数据权限）
+     */
+    public function depts(): \think\model\relation\BelongsToMany
+    {
+        return $this->belongsToMany(
+            Dept::class,
+            RoleDept::class,
+            'dept_id',
             'role_id'
         );
     }

@@ -2,31 +2,31 @@
 
 namespace app\common\traits;
 
-use app\common\util\CaseConverter;
-
 /**
- * 请求参数处理 Trait（兼容 camelCase / snake_case）
+ * 请求参数读取
  */
 trait ParamsTrait
 {
     /**
-     * 获取所有请求参数（已由中间件转为 snake_case）
+     * 获取所有请求参数（已由 ConvertCaseMiddleware 转为 snake_case）
+     *
+     * snakeParams 在全局中间件阶段设置，此时路由尚未匹配，
+     * 不含路由参数（id 等），需补充合并 $request->route()
      */
     protected function getAllParams(): array
     {
-        return (array) ($this->request->__snakeParams ?? $this->request->param());
+        $params = (array) ($this->request->snakeParams ?? $this->request->param());
+
+        $route = $this->request->route();
+        if (is_array($route) && $route) {
+            $params = array_merge($params, $route);
+        }
+
+        return $params;
     }
 
     /**
-     * 驼峰转下划线
-     */
-    private function camelToSnake(string $str): string
-    {
-        return strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $str));
-    }
-
-    /**
-     * 获取路由中的 ID 参数
+     * 获取路由 ID 参数
      */
     protected function getIdParam(): int
     {
@@ -34,7 +34,7 @@ trait ParamsTrait
     }
 
     /**
-     * 获取路由中的 IDs 参数（逗号分隔）
+     * 获取逗号分隔的 IDs 参数
      */
     protected function getIdsParam(): array
     {
@@ -49,86 +49,33 @@ trait ParamsTrait
     }
 
     /**
-     * 合并 URL 参数与 JSON body，同时保留两种命名风格
-     */
-    protected function mergeJsonParams(): array
-    {
-        $params = $this->getAllParams();
-
-        $content = (string) $this->request->getContent();
-        if ($content !== '') {
-            $json = json_decode($content, true);
-            if (is_array($json)) {
-                $params = array_merge($params, CaseConverter::toSnakeCase($json), $json);
-            }
-        }
-
-        return $params;
-    }
-
-    /**
-     * 获取过滤空值的参数数组
-     */
-    protected function getFilteredParams(array $params): array
-    {
-        return array_filter($params, fn($v) => $v !== '' && $v !== null);
-    }
-
-    /**
-     * 获取参数值，优先读 snake_case，也兼容 camelCase
+     * 获取单个参数值
      */
     protected function getParam(string $key, mixed $default = null): mixed
     {
         $params = $this->getAllParams();
 
-        $snakeKey = preg_match('/[A-Z]/', $key) ? $this->camelToSnake($key) : $key;
-        $camelKey = str_contains($key, '_')
-            ? str_replace('_', '', lcfirst(ucwords($key, '_')))
-            : $key;
-        $altCamelKey = str_contains($snakeKey, '_')
-            ? str_replace('_', '', lcfirst(ucwords($snakeKey, '_')))
-            : $camelKey;
-
-        // 优先读取 snake_case 参数（中间件转换后的）
         if (array_key_exists($key, $params)) {
             $value = $params[$key];
             return $value !== '' && $value !== null ? $value : $default;
         }
-        if ($snakeKey !== $key && array_key_exists($snakeKey, $params)) {
-            $value = $params[$snakeKey];
-            return $value !== '' && $value !== null ? $value : $default;
-        }
-
-        // 如果没找到，尝试读取 camelCase 参数（前端直接传的原始命名）
-        // 把 snake_case key 转成 camelCase 再试
-        if (array_key_exists($camelKey, $params)) {
-            $value = $params[$camelKey];
-            return $value !== '' && $value !== null ? $value : $default;
-        }
-        if ($altCamelKey !== $camelKey && array_key_exists($altCamelKey, $params)) {
-            $value = $params[$altCamelKey];
-            return $value !== '' && $value !== null ? $value : $default;
-        }
-
-        // 再试试原始 param 里是否有（包含 query/form/json）
-        $originalParams = $this->request->param();
-        if (array_key_exists($key, $originalParams)) {
-            $value = $originalParams[$key];
-            return $value !== '' && $value !== null ? $value : $default;
-        }
-        if ($snakeKey !== $key && array_key_exists($snakeKey, $originalParams)) {
-            $value = $originalParams[$snakeKey];
-            return $value !== '' && $value !== null ? $value : $default;
-        }
-        if (array_key_exists($camelKey, $originalParams)) {
-            $value = $originalParams[$camelKey];
-            return $value !== '' && $value !== null ? $value : $default;
-        }
-        if ($altCamelKey !== $camelKey && array_key_exists($altCamelKey, $originalParams)) {
-            $value = $originalParams[$altCamelKey];
-            return $value !== '' && $value !== null ? $value : $default;
-        }
 
         return $default;
+    }
+
+    /**
+     * 获取所有参数（中间件已完成 URL 参数与 JSON body 的合并及 snake_case 转换）
+     */
+    protected function mergeJsonParams(): array
+    {
+        return $this->getAllParams();
+    }
+
+    /**
+     * 过滤空值参数
+     */
+    protected function getFilteredParams(array $params): array
+    {
+        return array_filter($params, fn($v) => $v !== '' && $v !== null);
     }
 }

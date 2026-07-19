@@ -113,7 +113,7 @@ final class UserService
     public function create(array $data): int
     {
         // 检查用户名是否重复
-        if (User::where('username', $data['username'])->find()) {
+        if (User::where('username', $data['username'])->where('is_deleted', 0)->find()) {
             throw new BusinessException('用户名已存在');
         }
 
@@ -158,12 +158,15 @@ final class UserService
         return Db::transaction(function () use ($user, $data, $id) {
             // 更新基本信息
             $user->nickname = $data['nickname'] ?? $user->nickname;
-            $user->mobile = $data['mobile'] ?? $user->mobile;
-            $user->email = $data['email'] ?? $user->email;
-            $user->avatar = $data['avatar'] ?? $user->avatar;
             $user->gender = $data['gender'] ?? $user->gender;
             $user->status = $data['status'] ?? $user->status;
             $user->dept_id = $data['dept_id'] ?? $user->dept_id;
+            // clearable 字段：array_key_exists 判存在性（null 也写）
+            foreach (['avatar', 'mobile', 'email'] as $field) {
+                if (array_key_exists($field, $data)) {
+                    $user->$field = $data[$field];
+                }
+            }
 
             // 更新密码（如果提供了）
             if (!empty($data['password'])) {
@@ -198,14 +201,12 @@ final class UserService
         }
 
         return Db::transaction(function () use ($ids) {
-            // 删除用户角色关联
             UserRole::whereIn('user_id', $ids)->delete();
 
-            // 软删除用户
-            Db::name('sys_user')->whereIn('id', $ids)->update([
-                'is_deleted' => 1,
-                'update_time' => date('Y-m-d H:i:s'),
-            ]);
+            $users = User::whereIn('id', $ids)->select();
+            foreach ($users as $user) {
+                $user->softDelete();
+            }
             return count($ids);
         });
     }

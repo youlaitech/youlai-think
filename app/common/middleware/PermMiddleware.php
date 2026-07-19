@@ -22,7 +22,7 @@ final class PermMiddleware
             return $response instanceof Response ? $response : response($response);
         }
 
-        $authUser = (array) ($request->__authUser ?? []);
+        $authUser = (array) ($request->authUser ?? []);
         $userId = (int) ($authUser['userId'] ?? 0);
         if ($userId <= 0) {
             throw new BusinessException(ResultCode::ACCESS_TOKEN_INVALID);

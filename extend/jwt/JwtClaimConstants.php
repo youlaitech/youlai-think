@@ -2,6 +2,9 @@
 
 namespace extend\jwt;
 
+/**
+ * JWT 载荷（payload）字段名常量
+ */
 class JwtClaimConstants
 {
     public const USER_ID = 'user_id';

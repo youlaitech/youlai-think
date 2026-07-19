@@ -15,10 +15,10 @@ return [
     ],
 
     'redis' => [
-        'host' => env('REDIS_HOST', 'www.youlai.tech'),
+        'host' => env('REDIS_HOST', 'localhost'),
         'port' => (int) env('REDIS_PORT', 6379),
         'password' => env('REDIS_PASSWORD', '123456'),
-        'database' => (int) env('REDIS_DB', 11),
+        'database' => (int) env('REDIS_DB', 1),
         'prefix' => env('REDIS_PREFIX', ''),
 
         'access_ttl' => (int) env('REDIS_TOKEN_ACCESS_TTL', 7200),

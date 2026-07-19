@@ -13,7 +13,6 @@ class User extends BaseModel
 
     // 类型转换
     protected $type = [
-        'id' => 'integer',
         'gender' => 'integer',
         'status' => 'integer',
         'dept_id' => 'integer',
@@ -38,14 +37,6 @@ class User extends BaseModel
             'role_id',
             'user_id'
         );
-    }
-
-    /**
-     * 部门ID访问器
-     */
-    public function getDeptIdAttr(mixed $value): string
-    {
-        return (string) $value;
     }
 
     /**

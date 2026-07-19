@@ -12,29 +12,31 @@ use app\common\validate\BaseValidate;
 class UserValidate extends BaseValidate
 {
     protected $rule = [
-        'username' => 'require|alphaDash|length:3,20',
+        'username' => 'require|alphaDash|length:3,20|unique:sys_user,username',
         'password' => 'require|length:6,20',
         'nickname' => 'require|length:1,30',
-        'mobile' => 'number|max:20',
-        'email' => 'email',
-        'status' => 'in:0,1',
-        'gender' => 'in:0,1,2',
-        'dept_id' => 'integer',
+        'mobile'   => 'isMobile',
+        'email'    => 'email',
+        'status'   => 'in:0,1',
+        'gender'   => 'in:0,1,2',
+        'dept_id'  => 'exist:sys_dept,id',
         'role_ids' => 'array',
     ];
 
     protected $message = [
         'username.require' => '用户名不能为空',
-        'username.alphaNum' => '用户名只能包含字母和数字',
+        'username.alphaDash' => '用户名只能包含字母、数字、下划线和破折号',
         'username.length' => '用户名长度为3-20个字符',
+        'username.unique' => '用户名已存在',
         'password.require' => '密码不能为空',
         'password.length' => '密码长度为6-20个字符',
         'nickname.require' => '昵称不能为空',
         'nickname.length' => '昵称长度为1-30个字符',
-        'mobile.number' => '手机号必须为数字',
-        'email.email' => '邮箱格式不正确',
+        'mobile' => '手机号格式不正确',
+        'email' => '邮箱格式不正确',
         'status.in' => '状态值不正确',
         'gender.in' => '性别值不正确',
+        'dept_id.exist' => '部门不存在',
     ];
 
     /**

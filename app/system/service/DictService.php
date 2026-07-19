@@ -56,9 +56,7 @@ final class DictService
 
     public function getDictList(): array
     {
-        $rows = Db::name('sys_dict')
-            ->where('is_deleted', 0)
-            ->where('status', 1)
+        $rows = Dict::where('status', 1)
             ->order('id', 'asc')
             ->field('dict_code,name')
             ->select()
@@ -162,8 +160,7 @@ final class DictService
             ]);
 
             if ($oldCode !== '' && $oldCode !== $dictCode) {
-                Db::name('sys_dict_item')
-                    ->where('dict_code', $oldCode)
+                DictItem::where('dict_code', $oldCode)
                     ->update(['dict_code' => $dictCode]);
             }
         });
@@ -194,19 +191,16 @@ final class DictService
         // 清理字典项（sys_dict_item 无 is_deleted 字段）
         $dictCodes = [];
         Db::transaction(function () use ($idList, &$dictCodes) {
-            $dictCodes = Db::name('sys_dict')
-                ->whereIn('id', $idList)
-                ->where('is_deleted', 0)
-                ->column('dict_code');
+            $dictCodes = Dict::whereIn('id', $idList)->column('dict_code');
 
-            Db::name('sys_dict')->whereIn('id', $idList)->update([
-                'is_deleted' => 1,
-                'update_time' => date('Y-m-d H:i:s'),
-            ]);
+            $dicts = Dict::whereIn('id', $idList)->select();
+            foreach ($dicts as $dict) {
+                $dict->softDelete();
+            }
 
             $dictCodes = array_values(array_unique(array_filter($dictCodes, fn($v) => $v !== null && $v !== '')));
             if (!empty($dictCodes)) {
-                Db::name('sys_dict_item')->whereIn('dict_code', $dictCodes)->delete();
+                DictItem::whereIn('dict_code', $dictCodes)->delete();
             }
         });
 

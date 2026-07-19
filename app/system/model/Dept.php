@@ -25,7 +25,6 @@ class Dept extends BaseModel
     protected $name = 'sys_dept';
 
     protected $type = [
-        'id' => 'integer',
         'parent_id' => 'integer',
         'sort' => 'integer',
         'status' => 'integer',
@@ -54,14 +53,6 @@ class Dept extends BaseModel
     public function users(): \think\model\relation\HasMany
     {
         return $this->hasMany(User::class, 'dept_id', 'id');
-    }
-
-    /**
-     * 父ID访问器
-     */
-    public function getParentIdAttr(mixed $value): string
-    {
-        return (string) $value;
     }
 
     /**

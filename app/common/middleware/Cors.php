@@ -16,14 +16,16 @@ final class Cors
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $origin = $request->header('origin', '');
+
         if (strtoupper($request->method()) === 'OPTIONS') {
-            return $this->createCorsResponse();
+            return $this->createCorsResponse($origin);
         }
 
         /** @var Response $response */
         $response = $next($request);
         $response->header([
-            'Access-Control-Allow-Origin' => $request->header('origin', '*'),
+            'Access-Control-Allow-Origin' => $origin ?: '*',
             'Access-Control-Allow-Methods' => 'GET,POST,PUT,DELETE,PATCH,OPTIONS',
             'Access-Control-Allow-Headers' => 'Content-Type,Authorization,X-Requested-With',
             'Access-Control-Allow-Credentials' => 'true',
@@ -35,12 +37,13 @@ final class Cors
     /**
      * 返回预检响应
      */
-    private function createCorsResponse(): Response
+    private function createCorsResponse(string $origin): Response
     {
         return response('', 204)->header([
-            'Access-Control-Allow-Origin' => '*',
+            'Access-Control-Allow-Origin' => $origin ?: '*',
             'Access-Control-Allow-Methods' => 'GET,POST,PUT,DELETE,PATCH,OPTIONS',
             'Access-Control-Allow-Headers' => 'Content-Type,Authorization,X-Requested-With',
+            'Access-Control-Allow-Credentials' => 'true',
             'Access-Control-Max-Age' => '86400',
         ]);
     }

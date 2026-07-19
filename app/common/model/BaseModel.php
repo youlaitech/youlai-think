@@ -7,7 +7,7 @@ namespace app\common\model;
  *
  * 提供通用功能：
  * - 自动时间戳
- * - ID 访问器（解决 JS 精度问题）
+ * - ID 字段自动转字符串（解决 JS 精度问题）
  * - 全局软删除过滤（is_deleted = 0）
  */
 abstract class BaseModel extends \think\Model
@@ -38,11 +38,22 @@ abstract class BaseModel extends \think\Model
     }
 
     /**
-     * ID 字段访问器 - 转为字符串避免 JS 精度丢失
+     * 序列化时将 ID 字段转为字符串，避免前端 JS 精度丢失
+     * 匹配规则：字段名为 id、*_id、*_by 且值为整数
      */
-    public function getIdAttr(mixed $value): string
+    public function toArray(): array
     {
-        return (string) $value;
+        $array = parent::toArray();
+        array_walk_recursive($array, static function (mixed &$value, mixed $key): void {
+            if (is_int($value) && (
+                $key === 'id'
+                || str_ends_with((string) $key, '_id')
+                || str_ends_with((string) $key, '_by')
+            )) {
+                $value = (string) $value;
+            }
+        });
+        return $array;
     }
 
     /**

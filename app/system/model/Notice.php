@@ -23,7 +23,6 @@ class Notice extends BaseModel
     protected $name = 'sys_notice';
 
     protected $type = [
-        'id' => 'integer',
         'type' => 'integer',
         'publish_status' => 'integer',
         'create_by' => 'integer',

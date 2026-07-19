@@ -35,7 +35,7 @@ CREATE TABLE `sys_dept`  (
                              `update_time` datetime NULL COMMENT '更新时间',
                              `is_deleted` tinyint DEFAULT 0 COMMENT '逻辑删除标识(1-已删除 0-未删除)',
                              PRIMARY KEY (`id`) USING BTREE,
-                             UNIQUE INDEX `uk_code`(`code` ASC) USING BTREE COMMENT '部门编号唯一索引'
+                             KEY `idx_code`(`code` ASC) USING BTREE COMMENT '部门编号索引'
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COMMENT = '部门管理表';
 
 -- ----------------------------
@@ -262,8 +262,8 @@ CREATE TABLE `sys_role`  (
                              `update_time` datetime NULL COMMENT '更新时间',
                              `is_deleted` tinyint(1) DEFAULT 0 COMMENT '逻辑删除标识(0-未删除 1-已删除)',
                              PRIMARY KEY (`id`) USING BTREE,
-                             UNIQUE INDEX `uk_name`(`name` ASC) USING BTREE COMMENT '角色名称唯一索引',
-                             UNIQUE INDEX `uk_code`(`code` ASC) USING BTREE COMMENT '角色编码唯一索引'
+                             KEY `idx_name`(`name` ASC) USING BTREE COMMENT '角色名称索引',
+                             KEY `idx_code`(`code` ASC) USING BTREE COMMENT '角色编码索引'
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COMMENT = '系统角色表';
 
 -- ----------------------------
@@ -451,7 +451,7 @@ CREATE TABLE `gen_table` (
                               `update_time` datetime COMMENT '更新时间',
                               `is_deleted` tinyint(4) DEFAULT 0 COMMENT '是否删除',
                               PRIMARY KEY (`id`),
-                              UNIQUE KEY `uk_tablename` (`table_name`)
+                              KEY `idx_tablename` (`table_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='代码生成配置表';
 
 -- ----------------------------
