@@ -4,23 +4,12 @@ namespace app\middleware;
 
 use app\common\web\Result;
 use app\common\web\ResultCode;
-use think\facade\Cache;
+use extend\redis\RedisClient;
 use Closure;
 
 // IP 滑动窗口限流中间件
 class RateLimitMiddleware
 {
-    private const LUA_SLIDING_WINDOW = <<<'LUA'
-local key = KEYS[1]
-local now = tonumber(ARGV[1])
-local window = tonumber(ARGV[2])
-local member = ARGV[3]
-redis.call('ZREMRANGEBYSCORE', key, 0, now - window)
-redis.call('ZADD', key, now, member)
-redis.call('PEXPIRE', key, window + 1000)
-return redis.call('ZCARD', key)
-LUA;
-
     public function handle($request, Closure $next)
     {
         if (!config('rate-limit.ip.enabled', true)) {
@@ -36,8 +25,12 @@ LUA;
         $member = uniqid('', true);
 
         try {
-            $redis = Cache::store('redis')->handler();
-            $count = $redis->eval(self::LUA_SLIDING_WINDOW, [$key, $now, $windowMs, $member], 1);
+            $redis = RedisClient::get();
+            // 滑动窗口：剔除窗口外的旧请求，写入本次请求，统计窗口内请求数
+            $redis->zremrangebyscore($key, 0, $now - $windowMs);
+            $redis->zadd($key, $now, $member);
+            $redis->pexpire($key, $windowMs + 1000);
+            $count = $redis->zcard($key);
 
             if ($count > $limit) {
                 // 窗口内请求数已超上限，返回 429 并附限流头
@@ -46,7 +39,7 @@ LUA;
                     429,
                     [],
                     ['json_encode_param' => JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES]
-                )->header('Retry-After', (string) $windowSec);
+                )->header(['Retry-After' => (string) $windowSec]);
             }
         } catch (\Throwable) {
             // Redis 不可用时放行
@@ -55,9 +48,11 @@ LUA;
 
         // 正常放行时回写限流状态头（窗口内剩余可用请求数、窗口重置时间）
         $response = $next($request);
-        $response->header('X-RateLimit-Limit', (string) $limit);
-        $response->header('X-RateLimit-Remaining', (string) max(0, $limit - (int) $count));
-        $response->header('X-RateLimit-Reset', (string) (time() + $windowSec));
+        $response->header([
+            'X-RateLimit-Limit' => (string) $limit,
+            'X-RateLimit-Remaining' => (string) max(0, $limit - (int) $count),
+            'X-RateLimit-Reset' => (string) (time() + $windowSec),
+        ]);
 
         return $response;
     }

@@ -7,6 +7,7 @@ use app\common\util\VerifyCodeHelper;
 use extend\jwt\JwtTokenManager;
 use app\common\web\ResultCode;
 use app\system\model\User;
+use app\system\service\RoleService;
 use think\facade\Db;
 
 /**
@@ -105,11 +106,23 @@ final class AuthService
             ->column('r.code');
         $authorities = array_map(fn(string $code) => 'ROLE_' . $code, $roles);
 
+        // 数据权限范围：写入 JWT，接口层 DataPermissionService 据此做数据过滤（多角色并集）
+        // 注意：数据权限计算失败绝不能阻断登录，否则整个登录接口会 500（B0001）。
+        // 降级为无作用域后，DataPermissionService::apply 会按“无配置”处理（不附加过滤条件），
+        // 业务侧由具体接口（如用户列表）自行兜底，避免登录链路被拖垮。
+        try {
+            $dataScopes = empty($roles) ? [] : app(RoleService::class)->getRoleDataScopes($roles);
+        } catch (\Throwable $e) {
+            $dataScopes = [];
+            \think\facade\Log::warning('getRoleDataScopes failed, fallback to empty: ' . $e->getMessage());
+        }
+
         $token = $this->jwt->generateToken([
             'userId' => (int) $user->id,
             'username' => $user->username,
             'deptId' => $user->dept_id ?? null,
             'authorities' => $authorities,
+            'dataScopes' => $dataScopes,
         ]);
 
         return [

@@ -4,4 +4,5 @@ return [
     \app\common\middleware\ConvertCaseMiddleware::class,
     \app\common\middleware\LogMiddleware::class,
     \app\common\middleware\Cors::class,
+    \app\middleware\RateLimitMiddleware::class,
 ];
