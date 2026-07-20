@@ -86,3 +86,27 @@ services:
   #       condition: service_healthy
   #   networks:
   #     - youlai-think
+
+  # SSE 实时推送服务（方案 A：Workerman 边车，独立端口 8001）
+  # 与 web 服务共享同一份代码与 Redis 配置；生产建议用 supervisord
+  # 在同一容器内同时拉起 API 与 SSE，或独立启用下方 sse 服务。
+  # sse:
+  #   build:
+  #     context: ..
+  #     dockerfile: Dockerfile
+  #   container_name: youlai-think-sse
+  #   restart: unless-stopped
+  #   command: ["php", "bin/sse_server.php", "start", "-d"]
+  #   environment:
+  #     - REDIS_HOST=redis
+  #     - REDIS_PORT=6379
+  #     - REDIS_PASSWORD=123456
+  #     - SSE_HOST=0.0.0.0
+  #     - SSE_PORT=8001
+  #   ports:
+  #     - 8001:8001
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #   networks:
+  #     - youlai-think
