@@ -57,10 +57,17 @@ final class MenuService
                 ->select()
                 ->toArray();
         } else {
-            // 根据角色获取菜单
+            // 根据角色获取菜单（仅统计启用状态的角色，禁用角色不展示其菜单）
             $roleIds = UserRole::where('user_id', $userId)->column('role_id');
 
-            $menuIds = RoleMenu::whereIn('role_id', $roleIds)->column('menu_id');
+            if (empty($roleIds)) {
+                $menuIds = [];
+            } else {
+                $menuIds = RoleMenu::alias('rm')
+                    ->join('sys_role r', 'rm.role_id = r.id AND r.is_deleted = 0 AND r.status = 1')
+                    ->whereIn('rm.role_id', $roleIds)
+                    ->column('rm.menu_id');
+            }
 
             // 过滤平台管理目录（/support）及其子菜单
             $supportMenuId = Menu::where('route_path', '/support')

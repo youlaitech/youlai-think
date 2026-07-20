@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace app\system\service;
 
+use app\common\enums\DataScopeEnum;
 use app\common\exception\BusinessException;
 use app\common\util\PageUtil;
 use app\common\util\VerifyCodeHelper;
@@ -10,6 +11,7 @@ use app\system\model\Dept;
 use app\system\model\Role;
 use app\system\model\User;
 use app\system\model\UserRole;
+use app\system\service\DataPermissionService;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use think\facade\Db;
@@ -546,38 +548,31 @@ final class UserService
         $authorities = (array) ($authUser['roles'] ?? $authUser['authorities'] ?? []);
         $roleCodes = array_map(fn($a) => str_starts_with($a, 'ROLE_') ? substr($a, 5) : $a, $authorities);
 
-        // 超级管理员不过滤
-        if (in_array('ROOT', $roleCodes, true)) {
+        // 超级管理员/系统管理员跳过数据权限过滤
+        if (in_array('ROOT', $roleCodes, true) || in_array('ADMIN', $roleCodes, true)) {
             return;
         }
 
-        // 管理员也跳过数据权限过滤
-        if (in_array('ADMIN', $roleCodes, true)) {
-            return;
-        }
-
-        // 根据数据权限过滤
-        $dataScopes = $authUser['data_scopes'] ?? [];
+        // dataScopes 由 AuthService 写入 JWT（结构：[{dataScope, customDeptIds}, ...]）
+        $dataScopes = $authUser['dataScopes'] ?? [];
         if (empty($dataScopes)) {
             // 无数据权限配置时，仅显示本人数据
-            $userId = (int) ($authUser['user_id'] ?? 0);
+            $userId = (int) ($authUser['userId'] ?? $authUser['user_id'] ?? 0);
             if ($userId > 0) {
                 $query->where('id', $userId);
             }
             return;
         }
 
-        // 合并部门权限
-        $deptIds = [];
+        // 任一角色为全部数据权限则跳过过滤
         foreach ($dataScopes as $scope) {
-            if (!empty($scope['custom_dept_ids'])) {
-                $deptIds = array_merge($deptIds, $scope['custom_dept_ids']);
+            if ((int) ($scope['dataScope'] ?? 0) === DataScopeEnum::ALL->value) {
+                return;
             }
         }
 
-        if (!empty($deptIds)) {
-            $query->whereIn('dept_id', array_unique($deptIds));
-        }
+        // 委托数据权限服务，按多角色并集策略构建过滤条件
+        app(DataPermissionService::class)->apply($query, 'dept_id', 'id', $authUser);
     }
 
     /**

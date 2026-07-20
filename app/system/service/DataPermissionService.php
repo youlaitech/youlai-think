@@ -62,7 +62,9 @@ class DataPermissionService
     {
         foreach ($dataScopes as $scope) {
             $dataScope = (int) ($scope['dataScope'] ?? 0);
-            if ($dataScope === DataScopeEnum::ALL) {
+            // 注意：DataScopeEnum 是 backed enum，必须与 ->value 比较，
+            // 否则 int 与 enum 实例永远不相等（PHP 8.1 不做松散转换）。
+            if ($dataScope === DataScopeEnum::ALL->value) {
                 return true;
             }
         }
@@ -114,25 +116,28 @@ class DataPermissionService
         ?array $customDeptIds,
         array &$bindings
     ): ?string {
+        // 注意：DataScopeEnum 是 backed enum，case 必须用 ->value，
+        // 否则 switch 的 int 与 enum 实例比较全部落空，一律走 default（本人数据），
+        // 导致 CUSTOM/DEPT 等数据权限失效（越权或漏数据）。
         switch ($dataScope) {
-            case DataScopeEnum::ALL:
+            case DataScopeEnum::ALL->value:
                 return null;
 
-            case DataScopeEnum::DEPT:
+            case DataScopeEnum::DEPT->value:
                 if ($deptId === null || $deptId <= 0) {
                     return null;
                 }
                 $bindings[] = $deptId;
                 return "{$deptIdColumn} = ?";
 
-            case DataScopeEnum::SELF:
+            case DataScopeEnum::SELF->value:
                 if ($userId <= 0) {
                     return null;
                 }
                 $bindings[] = $userId;
                 return "{$userIdColumn} = ?";
 
-            case DataScopeEnum::DEPT_AND_SUB:
+            case DataScopeEnum::DEPT_AND_SUB->value:
                 if ($deptId === null || $deptId <= 0) {
                     return null;
                 }
@@ -147,7 +152,7 @@ class DataPermissionService
                 }
                 return "{$deptIdColumn} IN ({$placeholders})";
 
-            case DataScopeEnum::CUSTOM:
+            case DataScopeEnum::CUSTOM->value:
                 if (empty($customDeptIds)) {
                     return '1 = 0';
                 }

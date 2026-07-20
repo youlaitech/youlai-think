@@ -2,6 +2,7 @@
 
 namespace app\system\service;
 
+use app\common\enums\DataScopeEnum;
 use app\common\exception\BusinessException;
 use app\common\util\PageUtil;
 use app\system\model\Menu;
@@ -330,6 +331,48 @@ final class RoleService
         if (!empty($deptIds)) {
             $this->assignDepts($roleId, $deptIds);
         }
+    }
+
+    /**
+     * 获取用户所有角色的数据权限列表（多角色并集策略）
+     *
+     * 返回结构：[{ dataScope: int, customDeptIds: ?array }, ...]
+     * 用于写入 JWT，在接口层做数据权限过滤。
+     */
+    public function getRoleDataScopes(array $roleCodes): array
+    {
+        if (empty($roleCodes)) {
+            return [];
+        }
+
+        $rows = Role::whereIn('code', $roleCodes)
+            ->where('is_deleted', 0)
+            ->where('status', 1)
+            ->field('code, data_scope')
+            ->select()
+            ->toArray();
+
+        $scopes = [];
+        foreach ($rows as $row) {
+            $code = $row['code'];
+            $dataScope = (int) ($row['data_scope'] ?? 0);
+
+            if ($dataScope === DataScopeEnum::CUSTOM->value) {
+                $roleId = Role::where('code', $code)->where('is_deleted', 0)->value('id');
+                $deptIds = [];
+                if ($roleId) {
+                    $deptIds = array_values(array_filter(array_map(
+                        'intval',
+                        RoleDept::where('role_id', $roleId)->column('dept_id')
+                    ), fn($v) => $v > 0));
+                }
+                $scopes[] = ['dataScope' => $dataScope, 'customDeptIds' => $deptIds];
+            } else {
+                $scopes[] = ['dataScope' => $dataScope, 'customDeptIds' => null];
+            }
+        }
+
+        return $scopes;
     }
 
     private function applyFilters($query, array $params): void

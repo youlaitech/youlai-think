@@ -161,7 +161,8 @@ final class AuthController extends BaseController
         $smsKey = "rate_limit:api:sms:{$mobile}";
         $redis = RedisClient::get();
         if ($redis->exists($smsKey)) {
-            return json(Result::failedWith(ResultCode::REQUEST_CONCURRENCY_LIMIT_EXCEEDED)->toArray(), 429);
+            // 触发接口级限流：抛出业务异常，由全局异常处理器统一返回 429
+            throw new BusinessException(ResultCode::REQUEST_CONCURRENCY_LIMIT_EXCEEDED);
         }
         $redis->setex($smsKey, 60, '1');
 
@@ -289,7 +290,12 @@ final class AuthController extends BaseController
     private function loadCtx(string $ticket): array
     {
         if (empty($ticket)) throw new BusinessException(ResultCode::QR_CODE_NOT_FOUND);
-        $raw = RedisClient::get()->get(self::qrKey($ticket));
+        try {
+            $raw = RedisClient::get()->get(self::qrKey($ticket));
+        } catch (\Throwable) {
+            // Redis 连接异常时降级为“票据不存在”，避免把系统异常透传成 B0001
+            $raw = null;
+        }
         if (empty($raw)) throw new BusinessException(ResultCode::QR_CODE_NOT_FOUND);
         return json_decode($raw, true) ?: [];
     }

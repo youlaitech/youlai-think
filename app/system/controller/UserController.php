@@ -91,6 +91,7 @@ final class UserController extends BaseController
     #[Log(actionType: ActionType::USER_CREATE)]
     public function create(): \think\response\Json
     {
+        // getAllParams() 已由全局 ConvertCaseMiddleware 把 camelCase→snake_case
         $data = $this->validate($this->getAllParams(), UserValidate::class, 'create');
 
         $id = $this->service(UserService::class)->create($data);
@@ -114,6 +115,7 @@ final class UserController extends BaseController
     public function update(): \think\response\Json
     {
         $id = $this->getIdParam();
+        // getAllParams() 已由全局 ConvertCaseMiddleware 把 camelCase→snake_case
         $data = $this->validate($this->getAllParams(), UserValidate::class, 'update');
 
         $this->service(UserService::class)->update($id, $data);
