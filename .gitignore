@@ -17,5 +17,8 @@ docker/*/data
 # 运行时文件
 /runtime
 
+# 上传文件目录（用户上传的二进制，不入库）
+/public/storage/
+
 # 环境变量
 .env
