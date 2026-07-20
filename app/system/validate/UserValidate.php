@@ -54,10 +54,9 @@ class UserValidate extends BaseValidate
     protected function sceneCreate(): UserValidate
     {
         return $this->only(['username', 'password', 'nickname', 'mobile', 'email', 'status', 'gender', 'dept_id', 'role_ids'])
-            // 用户名唯一性需忽略软删除记录，避免上一轮测试残留的逻辑删除幽灵
-            // 导致用户重建（section 十七）被误拦截，进而 section 十八 登录报 A0210
-            // 注意：append 的闭包规则必须以数组形式传入，否则 thinkphp 会在
-            // array_merge($rules, $this->append[$field]) 处抛 TypeError（Closure given），导致创建用户 500。
+            // 用户名唯一性需忽略软删除记录，避免逻辑删除的残留记录误拦截用户重建
+            // 注意：append 的闭包规则必须以数组形式传入，否则 thinkphp 在
+            // array_merge($rules, $this->append[$field]) 处抛 TypeError，导致创建用户 500。
             ->append('username', [function ($value) {
                 $exists = User::where('username', $value)->where('is_deleted', 0)->find();
                 return $exists ? '用户名已存在' : true;
