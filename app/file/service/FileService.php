@@ -4,6 +4,7 @@ namespace app\file\service;
 
 use app\common\exception\BusinessException;
 use app\file\storage\MinioStorage;
+use app\file\storage\AliyunStorage;
 
 /**
  * 文件上传与删除服务：按 file.type 走 MinIO 或本地磁盘，统一做扩展名与大小校验
@@ -18,7 +19,8 @@ final class FileService
             $ext = 'bin';
         }
 
-        $cfg = config('file.');
+        $cfg = config('file');
+        // 取整个 file 配置；config('file.') 会被拆成段路径 'file.' 返回 null。
 
         // 扩展名白名单校验（置空表示不限制）
         $allowed = $cfg['upload']['allowed-extensions'] ?? [];
@@ -50,6 +52,19 @@ final class FileService
             }
             $contentType = is_object($file) && method_exists($file, 'getMime') ? $file->getMime() : null;
             $url = $minio->upload($key, $stream, $contentType);
+        } elseif (($cfg['type'] ?? 'local') === 'aliyun') {
+            $oss = new AliyunStorage($cfg['aliyun']);
+            $pathname = is_object($file) && method_exists($file, 'getPathname')
+                ? $file->getPathname() : null;
+            if ($pathname === null || $pathname === '' || !is_file($pathname)) {
+                throw new BusinessException('上传文件读取失败');
+            }
+            $stream = fopen($pathname, 'r');
+            if ($stream === false) {
+                throw new BusinessException('上传文件读取失败');
+            }
+            $contentType = is_object($file) && method_exists($file, 'getMime') ? $file->getMime() : null;
+            $url = $oss->upload($key, $stream, $contentType);
         } else {
             $local = $cfg['local'] ?? [];
             $storageRoot = rtrim((string) ($local['path'] ?? app()->getRootPath() . 'public/storage'), "/\\");
@@ -97,10 +112,16 @@ final class FileService
             throw new BusinessException('文件路径不能为空');
         }
 
-        $cfg = config('file.');
+        $cfg = config('file');
+        // config('file.') 会被解析为段路径 'file.' 返回 null，故取整个配置。
 
         if (($cfg['type'] ?? 'local') === 'minio') {
             (new MinioStorage($cfg['minio']))->delete((new MinioStorage($cfg['minio']))->extractKey($filePath));
+            return true;
+        }
+
+        if (($cfg['type'] ?? 'local') === 'aliyun') {
+            (new AliyunStorage($cfg['aliyun']))->delete((new AliyunStorage($cfg['aliyun']))->extractKey($filePath));
             return true;
         }
 
