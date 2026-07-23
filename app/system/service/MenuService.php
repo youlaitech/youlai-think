@@ -144,21 +144,49 @@ final class MenuService
     public function create(array $data): int
     {
         $parentId = (int) ($data['parent_id'] ?? 0);
+
+        $type = $data['type'] ?? 'M';
+        $isExternal = $type === 'E';
+        $isEmbedded = $isExternal && ($data['component'] ?? '') === 'iframe';
+        $needsRouteName = $type === 'M' || $isEmbedded;
+
+        $routeName = $data['route_name'] ?? '';
+        if ($needsRouteName && !empty($routeName)) {
+            $exists = Menu::where('route_name', $routeName)->find();
+            if ($exists) {
+                throw new BusinessException('路由名称已存在');
+            }
+        } elseif (!$needsRouteName) {
+            $routeName = '';
+        }
+
+        $routePath = $data['route_path'] ?? '';
+        $component = $data['component'] ?? '';
+        if ($type === 'C') {
+            if ($parentId === 0 && !empty($routePath) && !str_starts_with($routePath, '/')) {
+                $routePath = '/' . $routePath;
+            }
+            $component = 'Layout';
+        } elseif ($isExternal && !$isEmbedded) {
+            $component = null;
+        }
+
         $treePath = $this->generateMenuTreePath($parentId);
 
         $menuId = (int) Menu::insertGetId([
             'parent_id' => $parentId,
-            'type' => $data['type'] ?? 'M',
+            'type' => $type,
             'name' => $data['name'],
-            'route_name' => $data['route_name'] ?? '',
-            'route_path' => $data['route_path'] ?? '',
-            'component' => $data['component'] ?? ($data['type'] === 'C' ? 'Layout' : ''),
+            'route_name' => $routeName,
+            'route_path' => $routePath,
+            'component' => $component,
             'perm' => $data['perm'] ?? '',
             'icon' => $data['icon'] ?? '',
             'sort' => $data['sort'] ?? 0,
             'visible' => $data['visible'] ?? 1,
             'always_show' => $data['always_show'] ?? 0,
             'keep_alive' => $data['keep_alive'] ?? 0,
+            'external_url' => $data['external_url'] ?? null,
             'tree_path' => $treePath,
             'params' => $this->transformParams($data['params'] ?? null),
         ]);
@@ -179,6 +207,20 @@ final class MenuService
         // 不能把自己设为父级
         if (isset($data['parent_id']) && (int) $data['parent_id'] === $id) {
             throw new BusinessException('父级菜单不能是自己');
+        }
+
+        $type = $data['type'] ?? $menu->type;
+        $isExternal = $type === 'E';
+        $isEmbedded = $isExternal && ($data['component'] ?? '') === 'iframe';
+        $needsRouteName = $type === 'M' || $isEmbedded;
+
+        if ($needsRouteName && isset($data['route_name']) && !empty($data['route_name'])) {
+            $exists = Menu::where('route_name', $data['route_name'])->where('id', '<>', $id)->find();
+            if ($exists) {
+                throw new BusinessException('路由名称已存在');
+            }
+        } elseif (!$needsRouteName) {
+            $data['route_name'] = '';
         }
 
         $oldPerm = $menu->perm;
@@ -207,6 +249,10 @@ final class MenuService
         // 目录类型且前端未显式传 component → 强制 Layout
         if (($menu->type) === 'C' && !array_key_exists('component', $data)) {
             $menu->component = 'Layout';
+        }
+        // 外链新标签页（type=E 且 component 不是 iframe）→ component 置空
+        if (($menu->type) === 'E' && (!array_key_exists('component', $data) || ($data['component'] ?? '') !== 'iframe')) {
+            $menu->component = null;
         }
 
         $menu->params = $this->transformParams($data['params'] ?? null);
