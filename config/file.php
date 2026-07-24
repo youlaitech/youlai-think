@@ -1,6 +1,6 @@
 <?php
 
-// 文件存储配置（结构参照 youlai-boot 的 file-storage）
+// 文件存储配置
 return [
     // 存储类型：minio | local | aliyun（走环境变量，默认 minio）
     'type' => env('FILE_TYPE', 'minio'),
