@@ -77,7 +77,7 @@ Route::group('api/v1', function () {
         Route::get(':id/menu-ids', [RoleController::class, 'menuIds'])->pattern(['id' => '\d+']);
         Route::put(':id/menus', [RoleController::class, 'assignMenus'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:assign');
         Route::get(':id/dept-ids', [RoleController::class, 'deptIds'])->pattern(['id' => '\d+']);
-        Route::patch(':id/status', [RoleController::class, 'status'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:update');
+        Route::put(':id/status', [RoleController::class, 'status'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:update');
         Route::get('', [RoleController::class, 'page'])->middleware('perm', 'sys:role:list');
         Route::get(':id/form', [RoleController::class, 'form'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:update');
         Route::get(':id', [RoleController::class, 'detail'])->pattern(['id' => '\d+']);
