@@ -21,7 +21,7 @@ final class RoleService
      * 角色字段列表
      */
     private const LIST_FIELDS = [
-        'id', 'code', 'name', 'status', 'sort', 'data_scope', 'create_time',
+        'id', 'code', 'name', 'status', 'sort', 'data_scope', 'create_time', 'update_time',
     ];
 
     /**

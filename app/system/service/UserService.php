@@ -230,7 +230,13 @@ final class UserService
         // 获取权限标识
         $perms = [];
         if (!empty($roleCodes)) {
-            $perms = app()->make(RoleService::class)->getPermissionsByUserId($userId);
+            $permService = app()->make(RolePermService::class);
+            $perms = $permService->getRolePermsByRoleCodes($roleCodes);
+            // 缓存未命中时触发全量刷新（防止 DB 数据已更新但缓存未同步）
+            if (empty($perms)) {
+                $permService->refreshRolePermsCacheBatch($roleCodes);
+                $perms = $permService->getRolePermsByRoleCodes($roleCodes);
+            }
         }
 
         $roleNames = [];

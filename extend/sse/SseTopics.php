@@ -9,7 +9,7 @@ class SseTopics
 {
     // 事件名称
     public const DICT         = 'dict';
-    public const ONLINE_COUNT = 'online-count';
+    public const ONLINE_COUNT = 'online-users';
     public const SYSTEM       = 'system';
     public const NOTICE       = 'notice';
     public const NOTICE_REVOKE = 'notice-revoke';
