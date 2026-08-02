@@ -26,9 +26,7 @@ abstract class BaseModel extends \think\Model
      */
     public function scopeSoftDelete($query)
     {
-        $query->where(function ($q) {
-            $q->where('is_deleted', 0)->whereOr('is_deleted', null);
-        });
+        $query->where('is_deleted', 0);
     }
 
     /**
