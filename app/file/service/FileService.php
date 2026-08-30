@@ -3,11 +3,11 @@
 namespace app\file\service;
 
 use app\common\exception\BusinessException;
-use app\file\storage\MinioStorage;
+use app\file\storage\S3Storage;
 use app\file\storage\AliyunStorage;
 
 /**
- * 文件上传与删除服务：按 file.type 走 MinIO 或本地磁盘，统一做扩展名与大小校验
+ * 文件上传与删除服务：按 file.type 走 S3(RustFS) 或本地磁盘，统一做扩展名与大小校验
  */
 final class FileService
 {
@@ -39,8 +39,8 @@ final class FileService
         $storedName = bin2hex(random_bytes(16)) . '.' . $ext;
         $key = $folder . '/' . $storedName;
 
-        if (($cfg['type'] ?? 'local') === 'minio') {
-            $minio = new MinioStorage($cfg['minio']);
+        if (($cfg['type'] ?? 'local') === 's3') {
+            $s3 = new S3Storage($cfg['s3']);
             $pathname = is_object($file) && method_exists($file, 'getPathname')
                 ? $file->getPathname() : null;
             if ($pathname === null || $pathname === '' || !is_file($pathname)) {
@@ -51,7 +51,7 @@ final class FileService
                 throw new BusinessException('上传文件读取失败');
             }
             $contentType = is_object($file) && method_exists($file, 'getMime') ? $file->getMime() : null;
-            $url = $minio->upload($key, $stream, $contentType);
+            $url = $s3->upload($key, $stream, $contentType);
         } elseif (($cfg['type'] ?? 'local') === 'aliyun') {
             $oss = new AliyunStorage($cfg['aliyun']);
             $pathname = is_object($file) && method_exists($file, 'getPathname')
@@ -115,8 +115,8 @@ final class FileService
         $cfg = config('file');
         // config('file.') 会被解析为段路径 'file.' 返回 null，故取整个配置。
 
-        if (($cfg['type'] ?? 'local') === 'minio') {
-            (new MinioStorage($cfg['minio']))->delete((new MinioStorage($cfg['minio']))->extractKey($filePath));
+        if (($cfg['type'] ?? 'local') === 's3') {
+            (new S3Storage($cfg['s3']))->delete((new S3Storage($cfg['s3']))->extractKey($filePath));
             return true;
         }
 

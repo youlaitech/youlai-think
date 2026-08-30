@@ -2,8 +2,8 @@
 
 // 文件存储配置
 return [
-    // 存储类型：minio | local | aliyun（走环境变量，默认 minio）
-    'type' => env('FILE_TYPE', 'minio'),
+    // 存储类型：s3 | local | aliyun（走环境变量，默认 s3）
+    'type' => env('FILE_TYPE', 's3'),
 
     // 上传限制
     'upload' => [
@@ -13,14 +13,14 @@ return [
         'allowed-extensions' => ['jpg', 'jpeg', 'png', 'gif'],
     ],
 
-    // MinIO 对象存储（S3 兼容）
-    'minio' => [
-        'endpoint'   => env('MINIO_ENDPOINT', 'http://111.229.83.153:9000'),
-        'access-key' => env('MINIO_ACCESS_KEY', 'bybaddp7zyARpgNbEGKf'),
-        'secret-key' => env('MINIO_SECRET_KEY', 'p9rBdQZPBIJcMH23iyFkZkXmmawbmwPlk3JLlaaj'),
-        'bucket'     => env('MINIO_BUCKET', 'public'),
+    // S3（RustFS）对象存储
+    's3' => [
+        'endpoint'   => env('S3_ENDPOINT', 'http://111.229.83.153:9000'),
+        'access-key' => env('S3_ACCESS_KEY', 'rustfs-admin'),
+        'secret-key' => env('S3_SECRET_KEY', 'rustfs-admin'),
+        'bucket'     => env('S3_BUCKET', 'public'),
         // 自定义域名：配置后文件 URL 走域名，留空则用 endpoint（IP）格式
-        'domain'     => env('MINIO_DOMAIN', ''),
+        'domain'     => env('S3_DOMAIN', ''),
     ],
 
     // 阿里云 OSS 对象存储

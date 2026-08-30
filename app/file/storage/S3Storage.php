@@ -7,10 +7,10 @@ use GuzzleHttp\Exception\RequestException;
 use app\common\exception\BusinessException;
 
 /**
- * MinIO / S3 兼容对象存储（参考 youlai-boot 的 MinioFileServiceImpl）。
+ * S3 兼容对象存储（通过 RustFS 等 S3 服务实现，参考 youlai-boot 的 S3FileServiceImpl）。
  * 直接调用 S3 兼容 REST API（AWS Signature V4），无需安装 AWS SDK。
  */
-final class MinioStorage
+final class S3Storage
 {
     private string $endpoint;
     private string $accessKey;
@@ -53,7 +53,7 @@ final class MinioStorage
 
         $resp = $this->http->put($url, ['headers' => $signed, 'body' => $bodyStr]);
         if ($resp->getStatusCode() >= 300) {
-            throw new BusinessException('文件上传到 MinIO 失败: HTTP ' . $resp->getStatusCode());
+            throw new BusinessException('文件上传到 S3 失败: HTTP ' . $resp->getStatusCode());
         }
 
         return $this->buildUrl($key);

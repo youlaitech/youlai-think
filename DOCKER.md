@@ -2,7 +2,7 @@
 
 ## 快速启动
 
-在 docker 目录下执行：
+在项目根目录执行：
 
 ```bash
 docker-compose up -d
@@ -14,6 +14,7 @@ docker-compose up -d
 |------|------|------|
 | MySQL | 3306 | 关系型数据库 |
 | Redis | 6379 | 缓存服务 |
+| rustfs | 9000 / 9001 | S3 协议兼容的对象存储服务（MinIO 停止维护后的开源替代） |
 
 ## 默认账号
 
@@ -24,17 +25,9 @@ docker-compose up -d
 ### Redis
 - 密码：123456
 
-## 目录结构
-
-```
-docker/
-├── docker-compose.yml
-├── README.md
-├── mysql/
-│   └── data/          # MySQL 数据（自动生成）
-└── redis/
-    └── data/          # Redis 数据（自动生成）
-```
+### RustFS
+- Access Key：rustfs-admin
+- Secret Key：rustfs-admin
 
 ## 环境变量配置
 
@@ -51,6 +44,6 @@ DB_NAME=youlai_admin
 
 ## 注意事项
 
-- 数据目录已添加到 .gitignore，不会提交到 Git
+- 数据目录（MySQL / Redis / RustFS）均为容器卷，不会提交到 Git
 - 生产环境请修改默认密码
-- SQL 初始化脚本从 `../sql/mysql` 目录读取
+- SQL 初始化脚本从 `sql/mysql` 目录读取
