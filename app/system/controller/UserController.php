@@ -3,6 +3,7 @@
 namespace app\system\controller;
 
 use app\controller\BaseController;
+use app\common\exception\BusinessException;
 use app\system\annotation\Log;
 use app\system\enums\ActionType;
 use app\system\service\UserService;
@@ -163,7 +164,10 @@ final class UserController extends BaseController
     public function resetPassword(): \think\response\Json
     {
         $id = $this->getIdParam();
-        $password = $this->getParam('password', '123456');
+        $password = $this->getParam('password');
+        if (empty($password)) {
+            throw new BusinessException('新密码不能为空');
+        }
 
         $this->service(UserService::class)->update($id, [
             'password' => $password,
