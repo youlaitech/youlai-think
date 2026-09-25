@@ -20,12 +20,13 @@ class DictItem extends BaseModel
 {
     protected $name = 'sys_dict_item';
 
-    // sys_dict_item 表无 is_deleted 字段，禁用软删除全局作用域
+    // 表无 delete_time 列，禁用框架内置软删除；逻辑删除走 BaseModel 的 is_deleted 全局作用域
     protected $deleteTime = false;
 
     protected $type = [
         'sort' => 'integer',
         'status' => 'integer',
+        'is_deleted' => 'integer',
     ];
 
     /**

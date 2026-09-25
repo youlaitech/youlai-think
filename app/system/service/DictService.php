@@ -200,7 +200,9 @@ final class DictService
 
             $dictCodes = array_values(array_unique(array_filter($dictCodes, fn($v) => $v !== null && $v !== '')));
             if (!empty($dictCodes)) {
-                DictItem::whereIn('dict_code', $dictCodes)->delete();
+                // 级联逻辑删除字典项：父字典删除后子项随之不可见
+                DictItem::whereIn('dict_code', $dictCodes)->where('is_deleted', 0)
+                    ->update(['is_deleted' => 1, 'update_time' => date('Y-m-d H:i:s')]);
             }
         });
 
@@ -301,6 +303,13 @@ final class DictService
             throw new BusinessException('标签和值不能为空');
         }
 
+        // 同一字典下值唯一（已删除项不参与判定）
+        $exists = DictItem::where('dict_code', $dictCode)->where('value', $value)
+            ->where('is_deleted', 0)->count();
+        if ($exists > 0) {
+            throw new BusinessException("字典项值 \"{$value}\" 已存在");
+        }
+
         $item = new DictItem();
         $item->save([
             'dict_code' => $dictCode,
@@ -331,6 +340,13 @@ final class DictService
 
         if ($label === '' || $value === '') {
             throw new BusinessException('标签和值不能为空');
+        }
+
+        // 同一字典下值唯一（排除自身与已删除项）
+        $exists = DictItem::where('dict_code', $dictCode)->where('value', $value)
+            ->where('is_deleted', 0)->where('id', '<>', $itemId)->count();
+        if ($exists > 0) {
+            throw new BusinessException("字典项值 \"{$value}\" 已存在");
         }
 
         $item->save([
@@ -366,7 +382,9 @@ final class DictService
             $idList[] = (int) $p;
         }
 
-        DictItem::where('dict_code', $dictCode)->whereIn('id', $idList)->delete();
+        // 逻辑删除：保留历史数据，查询侧由全局作用域过滤
+        DictItem::where('dict_code', $dictCode)->whereIn('id', $idList)->where('is_deleted', 0)
+            ->update(['is_deleted' => 1, 'update_time' => date('Y-m-d H:i:s')]);
 
         // SSE通知字典变更
         $sseService = SseService::getInstance();

@@ -36,7 +36,6 @@ class Menu extends BaseModel
         'sort' => 'integer',
         'visible' => 'integer',
         'keep_alive' => 'integer',
-        'always_show' => 'integer',
         'params' => 'json',
     ];
 

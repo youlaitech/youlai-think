@@ -16,14 +16,14 @@ final class MenuService
     /**
      * 获取菜单下拉数据
      */
-    public function getOptions(bool $onlyParent = false): array
+    public function getOptions(array $types = []): array
     {
         $query = Menu::order('sort', 'asc')
             ->order('id', 'asc');
 
-        if ($onlyParent) {
-            // 排除按钮（包含目录/菜单/外链）
-            $query->where('type', '<>', 'B');
+        // types 非空时按菜单类型过滤（如 ['C','M']）
+        if (!empty($types)) {
+            $query->whereIn('type', $types);
         }
 
         $list = $query->select()->toArray();
@@ -146,6 +146,14 @@ final class MenuService
         $parentId = (int) ($data['parent_id'] ?? 0);
 
         $type = $data['type'] ?? 'M';
+
+        // 父级层级校验：按钮只能挂在菜单下，其他类型只能挂在顶级或目录下
+        $this->validateMenuParent($type, $parentId);
+
+        // 新增菜单未指定排序时排到同级末尾
+        if (empty($data['sort'])) {
+            $data['sort'] = $this->resolveNextSort($parentId);
+        }
         $isExternal = $type === 'E';
         $isEmbedded = $isExternal && ($data['component'] ?? '') === 'iframe';
         $needsRouteName = $type === 'M' || $isEmbedded;
@@ -184,12 +192,16 @@ final class MenuService
             'icon' => $data['icon'] ?? '',
             'sort' => $data['sort'] ?? 0,
             'visible' => $data['visible'] ?? 1,
-            'always_show' => $data['always_show'] ?? 0,
             'keep_alive' => $data['keep_alive'] ?? 0,
             'external_url' => $data['external_url'] ?? null,
             'tree_path' => $treePath,
             'params' => $this->transformParams($data['params'] ?? null),
         ]);
+
+        // 新增页面菜单时按需生成增删改查按钮
+        if (!empty($data['generate_crud_buttons']) && !empty($data['button_perm_prefix'])) {
+            $this->saveCrudButtons($menuId, $treePath . ',' . $menuId, trim((string) $data['button_perm_prefix']));
+        }
 
         return $menuId;
     }
@@ -237,7 +249,6 @@ final class MenuService
         $menu->perm  = $newPerm;
         $menu->sort = $data['sort'] ?? $menu->sort;
         $menu->visible = $data['visible'] ?? $menu->visible;
-        $menu->always_show = $data['always_show'] ?? $menu->always_show;
         $menu->keep_alive = $data['keep_alive'] ?? $menu->keep_alive;
 
         // clearable 字段：array_key_exists 判存在性（null 也写），前端丢 key 才保留旧值
@@ -312,6 +323,64 @@ final class MenuService
 
         $menu->visible = $visible;
         return $menu->save();
+    }
+
+    /**
+     * 校验上级菜单层级：按钮只能挂在菜单下，其他类型只能挂在顶级或目录下
+     */
+    private function validateMenuParent(string $type, int $parentId): void
+    {
+        $isButton = $type === 'B';
+
+        if ($parentId === 0) {
+            if ($isButton) {
+                throw new BusinessException('按钮权限只能挂在菜单下');
+            }
+            return;
+        }
+
+        $parent = Menu::find($parentId);
+        if (!$parent) {
+            throw new BusinessException('上级菜单不存在');
+        }
+
+        $parentIsMenu = $parent->type === 'M';
+        if ($isButton && !$parentIsMenu) {
+            throw new BusinessException('按钮权限只能挂在菜单下');
+        }
+        if (!$isButton && $parentIsMenu) {
+            throw new BusinessException('菜单下只能挂按钮权限');
+        }
+    }
+
+    /**
+     * 同级菜单的最大排序 + 1
+     */
+    private function resolveNextSort(int $parentId): int
+    {
+        $maxSort = (int) Menu::where('parent_id', $parentId)->max('sort');
+        return $maxSort > 0 ? $maxSort + 1 : 1;
+    }
+
+    /**
+     * 生成增删改查按钮权限
+     */
+    private function saveCrudButtons(int $menuId, string $menuTreePath, string $permPrefix): void
+    {
+        $names = ['查询', '新增', '修改', '删除'];
+        $actions = ['list', 'create', 'update', 'delete'];
+
+        foreach ($names as $index => $name) {
+            Menu::insert([
+                'parent_id' => $menuId,
+                'tree_path' => $menuTreePath,
+                'name' => $name,
+                'type' => 'B',
+                'perm' => $permPrefix . ':' . $actions[$index],
+                'visible' => 1,
+                'sort' => $index + 1,
+            ]);
+        }
     }
 
     /**
@@ -446,7 +515,6 @@ final class MenuService
             'icon' => $menu['icon'] ?? null,
             'hidden' => ($menu['visible'] ?? 1) === 0,
             'keep_alive' => ($menuType === 'M' || $isEmbedded) && ($menu['keep_alive'] ?? 0) === 1,
-            'always_show' => ($menu['always_show'] ?? 0) === 1,
             'params' => $menu['params'] ?? null,
         ];
 
@@ -545,7 +613,7 @@ final class MenuService
             'tree_path' => $treePath,
         ]);
 
-        // 生成CURD按钮权限
+        // 生成CRUD按钮权限
         $permPrefix = $moduleName . ':' . str_replace('_', '-', $tableName) . ':';
         $actions = ['查询', '新增', '修改', '删除'];
         $perms = ['list', 'create', 'update', 'delete'];

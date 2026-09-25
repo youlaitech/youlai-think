@@ -25,8 +25,9 @@ final class MenuController extends BaseController
      */
     public function options(): \think\response\Json
     {
-        $onlyParent = (bool) $this->getParam('only_parent', false);
-        $list = $this->service(MenuService::class)->getOptions($onlyParent);
+        // 前端可传 types=C,M（逗号分隔）；不传返回全部类型
+        $types = array_values(array_filter(array_map('trim', explode(',', (string) $this->getParam('types', '')))));
+        $list = $this->service(MenuService::class)->getOptions($types);
 
         return $this->success($list);
     }

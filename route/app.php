@@ -10,6 +10,7 @@ use app\system\controller\DeptController;
 use app\system\controller\NoticeController;
 use app\system\controller\ConfigController;
 use app\system\controller\DictController;
+use app\form\controller\FormController;
 use app\file\controller\FileController;
 use app\system\controller\LogController;
 use think\facade\Route;
@@ -144,6 +145,32 @@ Route::group('api/v1', function () {
         Route::get(':dictCode/items/:itemId/form', [DictController::class, 'itemForm'])->pattern(['dictCode' => '\w+', 'itemId' => '\d+']);
         Route::get(':dictCode/items', [DictController::class, 'itemPage'])->pattern(['dictCode' => '\w+']);
         Route::post(':dictCode/items', [DictController::class, 'createItem'])->pattern(['dictCode' => '\w+'])->middleware('perm', 'sys:dict-item:create');
+
+    // 动态表单
+    Route::group('forms', function () {
+        Route::get('', [FormController::class, 'page'])->middleware('perm', 'form:definition:list');
+        Route::post('', [FormController::class, 'create'])->middleware('perm', 'form:definition:create');
+        Route::get('options', [FormController::class, 'workflowOptions']);
+        Route::post('ai-generate', [FormController::class, 'aiGenerate'])->middleware('perm', 'form:definition:create');
+
+        // 公开接口：匿名访问
+        Route::get('public/:form_key/render', [FormController::class, 'publicRender']);
+        Route::post('public/:form_key/data', [FormController::class, 'publicSubmit']);
+
+        Route::get(':id/form', [FormController::class, 'getForm'])->middleware('perm', 'form:definition:list');
+        Route::put(':id/publish', [FormController::class, 'publish'])->middleware('perm', 'form:definition:update');
+        Route::put(':id/disable', [FormController::class, 'disable'])->middleware('perm', 'form:definition:update');
+        Route::get(':id/menu', [FormController::class, 'getMenu'])->middleware('perm', 'form:definition:list');
+        Route::post(':id/menu', [FormController::class, 'saveMenu'])->middleware('perm', 'form:definition:update');
+        Route::put(':id', [FormController::class, 'update'])->middleware('perm', 'form:definition:update');
+        Route::delete(':id', [FormController::class, 'remove'])->middleware('perm', 'form:definition:delete');
+
+        Route::get(':form_key/render', [FormController::class, 'render'])->middleware('perm', 'form:definition:list');
+        Route::get(':form_key/data', [FormController::class, 'dataPage'])->middleware('perm', 'form:data:list');
+        Route::post(':form_key/data', [FormController::class, 'submitData']);
+        Route::get(':form_key/data/:data_id', [FormController::class, 'dataDetail'])->middleware('perm', 'form:data:list');
+        Route::delete(':form_key/data/:ids', [FormController::class, 'deleteData'])->middleware('perm', 'form:data:delete');
+    });
         Route::put(':dictCode/items/:itemId', [DictController::class, 'updateItem'])->pattern(['dictCode' => '\w+', 'itemId' => '\d+'])->middleware('perm', 'sys:dict-item:update');
         Route::delete(':dictCode/items/:itemIds', [DictController::class, 'deleteItems'])->pattern(['dictCode' => '\w+'])->middleware('perm', 'sys:dict-item:delete');
         Route::get('', [DictController::class, 'page']);
