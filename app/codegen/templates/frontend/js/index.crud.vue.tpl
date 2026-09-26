@@ -1,17 +1,17 @@
 <template>
   <div class="page-container h-full flex flex-1 flex-col">
     <!-- 搜索 -->
-    <PageSearch
+    <CrudSearch
       ref="searchRef"
       :search-config="searchConfig"
       @query-click="handleQueryClick"
       @reset-click="handleResetClick"
     >
 {$searchSlotsCurd}
-    </PageSearch>
+    </CrudSearch>
 
     <!-- 列表 -->
-    <PageContent
+    <CrudTable
       ref="contentRef"
       :content-config="contentConfig"
       @add-click="handleAddClick"
@@ -22,30 +22,28 @@
       @filter-change="handleFilterChange"
     >
 {$listSlotsCurd}
-    </PageContent>
+    </CrudTable>
 
     <!-- 新增 -->
-    <PageModal ref="addModalRef" :modal-config="addModalConfig" @submit-click="handleSubmitClick">
+    <CrudModal ref="addModalRef" :modal-config="addModalConfig" @submit-click="handleSubmitClick">
 {$formSlotsCurd}
-    </PageModal>
+    </CrudModal>
 
     <!-- 编辑 -->
-    <PageModal ref="editModalRef" :modal-config="editModalConfig" @submit-click="handleSubmitClick">
+    <CrudModal ref="editModalRef" :modal-config="editModalConfig" @submit-click="handleSubmitClick">
 {$formSlotsCurd}
-    </PageModal>
+    </CrudModal>
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 defineOptions({
   name: "{$entityName}",
   inheritAttrs: false,
 });
 
 import {$entityName}API from "@/api/{$moduleName}/{$entityKebab}";
-import type { {$entityName}Form, {$entityName}QueryParams } from "@/api/{$moduleName}/{$entityKebab}";
-import type { IObject, IOperateData, IModalConfig, IContentConfig, ISearchConfig } from "@/components/CURD/types";
-import usePage from "@/components/CURD/usePage";
+import useCrudPage from "@/components/Crud/useCrudPage";
 
 const {
   searchRef,
@@ -60,16 +58,16 @@ const {
   handleExportClick,
   handleSearchClick,
   handleFilterChange,
-} = usePage();
+} = useCrudPage();
 
-const searchConfig: ISearchConfig = reactive({
+const searchConfig = reactive({
   permPrefix: "{$moduleName}:{$entityKebab}",
   formItems: [
 {$searchConfigItemsCurd}
   ],
 });
 
-const contentConfig: IContentConfig<{$entityName}QueryParams> = reactive({
+const contentConfig = reactive({
   permPrefix: "{$moduleName}:{$entityKebab}",
   table: {
     border: true,
@@ -78,7 +76,7 @@ const contentConfig: IContentConfig<{$entityName}QueryParams> = reactive({
   pk: "id",
   indexAction: {$entityName}API.getPage,
   deleteAction: {$entityName}API.deleteByIds,
-  parseData(res: any) {
+  parseData(res) {
     return {
       total: res?.total ?? 0,
       list: res?.list ?? [],
@@ -105,7 +103,7 @@ const contentConfig: IContentConfig<{$entityName}QueryParams> = reactive({
   ],
 });
 
-const addModalConfig: IModalConfig<{$entityName}Form> = reactive({
+const addModalConfig = reactive({
   permPrefix: "{$moduleName}:{$entityKebab}",
   pk: "id",
   dialog: {
@@ -119,16 +117,16 @@ const addModalConfig: IModalConfig<{$entityName}Form> = reactive({
   formItems: [
 {$modalFormItemsCurd}
   ],
-  formAction: (data: {$entityName}Form) => {
+  formAction(data) {
     if (data.id) {
-      return {$entityName}API.update(data.id as string, data);
+      return {$entityName}API.update(data.id, data);
     } else {
       return {$entityName}API.create(data);
     }
   },
 });
 
-const editModalConfig: IModalConfig<{$entityName}Form> = reactive({
+const editModalConfig = reactive({
   permPrefix: "{$moduleName}:{$entityKebab}",
   component: "drawer",
   drawer: {
@@ -136,13 +134,13 @@ const editModalConfig: IModalConfig<{$entityName}Form> = reactive({
     size: 500,
   },
   pk: "id",
-  formAction(data: any) {
-    return {$entityName}API.update(data.id as string, data);
+  formAction(data) {
+    return {$entityName}API.update(data.id, data);
   },
   formItems: addModalConfig.formItems,
 });
 
-const handleOperateClick = (data: IOperateData) => {
+const handleOperateClick = (data) => {
   if (data.name === "edit") {
     handleEditClick(data.row, async () => {
       return await {$entityName}API.getFormData(String(data.row.id));
@@ -150,7 +148,7 @@ const handleOperateClick = (data: IOperateData) => {
   }
 };
 
-const handleToolbarClick = (name: string) => {
+const handleToolbarClick = (name) => {
   console.log(name);
 };
 </script>

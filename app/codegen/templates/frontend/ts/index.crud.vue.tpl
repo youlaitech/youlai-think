@@ -1,17 +1,17 @@
 <template>
   <div class="page-container h-full flex flex-1 flex-col">
     <!-- 搜索 -->
-    <PageSearch
+    <CrudSearch
       ref="searchRef"
       :search-config="searchConfig"
       @query-click="handleQueryClick"
       @reset-click="handleResetClick"
     >
 {$searchSlotsCurd}
-    </PageSearch>
+    </CrudSearch>
 
     <!-- 列表 -->
-    <PageContent
+    <CrudTable
       ref="contentRef"
       :content-config="contentConfig"
       @add-click="handleAddClick"
@@ -22,28 +22,30 @@
       @filter-change="handleFilterChange"
     >
 {$listSlotsCurd}
-    </PageContent>
+    </CrudTable>
 
     <!-- 新增 -->
-    <PageModal ref="addModalRef" :modal-config="addModalConfig" @submit-click="handleSubmitClick">
+    <CrudModal ref="addModalRef" :modal-config="addModalConfig" @submit-click="handleSubmitClick">
 {$formSlotsCurd}
-    </PageModal>
+    </CrudModal>
 
     <!-- 编辑 -->
-    <PageModal ref="editModalRef" :modal-config="editModalConfig" @submit-click="handleSubmitClick">
+    <CrudModal ref="editModalRef" :modal-config="editModalConfig" @submit-click="handleSubmitClick">
 {$formSlotsCurd}
-    </PageModal>
+    </CrudModal>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 defineOptions({
   name: "{$entityName}",
   inheritAttrs: false,
 });
 
 import {$entityName}API from "@/api/{$moduleName}/{$entityKebab}";
-import usePage from "@/components/CURD/usePage";
+import type { {$entityName}Form, {$entityName}QueryParams } from "@/api/{$moduleName}/{$entityKebab}";
+import type { IObject, IOperateData, IModalConfig, ICrudTableConfig, ISearchConfig } from "@/components/Crud/types";
+import useCrudPage from "@/components/Crud/useCrudPage";
 
 const {
   searchRef,
@@ -58,16 +60,16 @@ const {
   handleExportClick,
   handleSearchClick,
   handleFilterChange,
-} = usePage();
+} = useCrudPage();
 
-const searchConfig = reactive({
+const searchConfig: ISearchConfig = reactive({
   permPrefix: "{$moduleName}:{$entityKebab}",
   formItems: [
 {$searchConfigItemsCurd}
   ],
 });
 
-const contentConfig = reactive({
+const contentConfig: ICrudTableConfig<{$entityName}QueryParams> = reactive({
   permPrefix: "{$moduleName}:{$entityKebab}",
   table: {
     border: true,
@@ -76,7 +78,7 @@ const contentConfig = reactive({
   pk: "id",
   indexAction: {$entityName}API.getPage,
   deleteAction: {$entityName}API.deleteByIds,
-  parseData(res) {
+  parseData(res: any) {
     return {
       total: res?.total ?? 0,
       list: res?.list ?? [],
@@ -103,7 +105,7 @@ const contentConfig = reactive({
   ],
 });
 
-const addModalConfig = reactive({
+const addModalConfig: IModalConfig<{$entityName}Form> = reactive({
   permPrefix: "{$moduleName}:{$entityKebab}",
   pk: "id",
   dialog: {
@@ -117,16 +119,16 @@ const addModalConfig = reactive({
   formItems: [
 {$modalFormItemsCurd}
   ],
-  formAction(data) {
+  formAction: (data: {$entityName}Form) => {
     if (data.id) {
-      return {$entityName}API.update(data.id, data);
+      return {$entityName}API.update(data.id as string, data);
     } else {
       return {$entityName}API.create(data);
     }
   },
 });
 
-const editModalConfig = reactive({
+const editModalConfig: IModalConfig<{$entityName}Form> = reactive({
   permPrefix: "{$moduleName}:{$entityKebab}",
   component: "drawer",
   drawer: {
@@ -134,13 +136,13 @@ const editModalConfig = reactive({
     size: 500,
   },
   pk: "id",
-  formAction(data) {
-    return {$entityName}API.update(data.id, data);
+  formAction(data: any) {
+    return {$entityName}API.update(data.id as string, data);
   },
   formItems: addModalConfig.formItems,
 });
 
-const handleOperateClick = (data) => {
+const handleOperateClick = (data: IOperateData) => {
   if (data.name === "edit") {
     handleEditClick(data.row, async () => {
       return await {$entityName}API.getFormData(String(data.row.id));
@@ -148,7 +150,7 @@ const handleOperateClick = (data) => {
   }
 };
 
-const handleToolbarClick = (name) => {
+const handleToolbarClick = (name: string) => {
   console.log(name);
 };
 </script>

@@ -272,7 +272,7 @@ ORDER BY ORDINAL_POSITION ASC
 
         $removeTablePrefix = (string) ($formData['remove_table_prefix'] ?? self::DEFAULT_REMOVE_TABLE_PREFIX);
         $pageType = (string) ($formData['page_type'] ?? 'classic');
-        $pageType = $pageType === 'curd' ? 'curd' : 'classic';
+        $pageType = $pageType === 'crud' ? 'crud' : 'classic';
 
         $fieldConfigs = $formData['field_configs'] ?? null;
         if (!is_array($fieldConfigs)) {
@@ -433,7 +433,7 @@ ORDER BY ORDINAL_POSITION ASC
         if ($finalPageType === '') {
             $finalPageType = $pageType;
         }
-        $finalPageType = $finalPageType === 'curd' ? 'curd' : 'classic';
+        $finalPageType = $finalPageType === 'crud' ? 'crud' : 'classic';
         $frontendType = strtolower(trim($type)) === 'js' ? 'js' : 'ts';
 
         $entityName = (string) ($config['entity_name'] ?? $this->toPascalCase($tableName));
@@ -541,11 +541,11 @@ ORDER BY ORDINAL_POSITION ASC
         }
 
         $viewTpl = $this->resolveFrontendTemplatePath('frontend/index.vue.tpl', $frontendType);
-        if ($finalPageType === 'curd') {
+        if ($finalPageType === 'crud') {
             if ($viewTpl === 'frontend/js/index.vue.tpl') {
-                $viewTpl = 'frontend/js/index.curd.vue.tpl';
+                $viewTpl = 'frontend/js/index.crud.vue.tpl';
             } elseif ($viewTpl === 'frontend/ts/index.vue.tpl') {
-                $viewTpl = 'frontend/ts/index.curd.vue.tpl';
+                $viewTpl = 'frontend/ts/index.crud.vue.tpl';
             }
         }
         $previews[] = $this->buildPreviewItem(
@@ -1088,7 +1088,7 @@ ORDER BY ORDINAL_POSITION ASC
                 $lines[] = "      type: \"custom\",";
                 $lines[] = "      slotName: \"{$fieldName}\",";
             } else {
-                $lines[] = "      type: \"{$this->curdSearchType($formType)}\",";
+                $lines[] = "      type: \"{$this->crudSearchType($formType)}\",";
             }
             $lines[] = "      label: \"{$label}\",";
             $lines[] = "      prop: \"{$fieldName}\",";
@@ -1156,7 +1156,7 @@ ORDER BY ORDINAL_POSITION ASC
                 $lines[] = "      type: \"custom\",";
                 $lines[] = "      slotName: \"{$fieldName}\",";
             } else {
-                $lines[] = "      type: \"{$this->curdFormType($formType)}\",";
+                $lines[] = "      type: \"{$this->crudFormType($formType)}\",";
             }
             $lines[] = "      label: \"{$label}\",";
             $lines[] = "      prop: \"{$fieldName}\",";
@@ -1188,7 +1188,7 @@ ORDER BY ORDINAL_POSITION ASC
         return 'select';
     }
 
-    private function curdSearchType(int $formType): string
+    private function crudSearchType(int $formType): string
     {
         if ($formType === 5) {
             return 'input-number';
@@ -1199,7 +1199,7 @@ ORDER BY ORDINAL_POSITION ASC
         return 'input';
     }
 
-    private function curdFormType(int $formType): string
+    private function crudFormType(int $formType): string
     {
         if ($formType === 2) {
             return 'select';
