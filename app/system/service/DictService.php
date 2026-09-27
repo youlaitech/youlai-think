@@ -188,7 +188,7 @@ final class DictService
             $idList[] = (int) $p;
         }
 
-        // 清理字典项（sys_dict_item 无 is_deleted 字段）
+        // 字典逻辑删除，字典项随之级联逻辑删除
         $dictCodes = [];
         Db::transaction(function () use ($idList, &$dictCodes) {
             $dictCodes = Dict::whereIn('id', $idList)->column('dict_code');
@@ -234,7 +234,7 @@ final class DictService
             ->order('sort', 'asc')
             ->order('id', 'asc')
             ->page($pageNum, $pageSize)
-            ->field('id,dict_code,label,value,status,sort')
+            ->field('id,dict_code,label,value,status,sort,tag_type')
             ->select();
 
         $list = [];
@@ -247,6 +247,7 @@ final class DictService
                 'value' => (string) ($r['value'] ?? ''),
                 'status' => isset($r['status']) ? (int) $r['status'] : 0,
                 'sort' => isset($r['sort']) ? (int) $r['sort'] : null,
+                'tag_type' => (string) ($r['tag_type'] ?? ''),
             ];
         }
 

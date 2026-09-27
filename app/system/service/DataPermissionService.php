@@ -62,8 +62,7 @@ class DataPermissionService
     {
         foreach ($dataScopes as $scope) {
             $dataScope = (int) ($scope['dataScope'] ?? 0);
-            // 注意：DataScopeEnum 是 backed enum，必须与 ->value 比较，
-            // 否则 int 与 enum 实例永远不相等（PHP 8.1 不做松散转换）。
+            // DataScopeEnum 是 backed enum，与 ->value 比较
             if ($dataScope === DataScopeEnum::ALL->value) {
                 return true;
             }
@@ -116,9 +115,7 @@ class DataPermissionService
         ?array $customDeptIds,
         array &$bindings
     ): ?string {
-        // 注意：DataScopeEnum 是 backed enum，case 必须用 ->value，
-        // 否则 switch 的 int 与 enum 实例比较全部落空，一律走 default（本人数据），
-        // 导致 CUSTOM/DEPT 等数据权限失效（越权或漏数据）。
+        // DataScopeEnum 是 backed enum，case 用 ->value 比较
         switch ($dataScope) {
             case DataScopeEnum::ALL->value:
                 return null;

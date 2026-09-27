@@ -33,6 +33,31 @@ final class MenuController extends BaseController
     }
 
     /**
+     * AI 推断菜单的访问路径与权限标识
+     *
+     * @OA\Post(
+     *     path="/api/v1/menus/ai-fill",
+     *     summary="AI 推断菜单的访问路径与权限标识",
+     *     tags={"04.菜单接口"},
+     *     @OA\RequestBody(required=true, @OA\JsonContent()),
+     *     @OA\Response(response="200", description="成功")
+     * )
+     */
+    public function aiFill(): \think\response\Json
+    {
+        $data = [
+            'name' => trim((string) $this->getParam('name', '')),
+            'type' => (string) $this->getParam('type', ''),
+            'parent_id' => (int) $this->getParam('parent_id', 0),
+        ];
+        if ($data['name'] === '') {
+            return $this->fail('A0400', '菜单名称不能为空');
+        }
+
+        return $this->success($this->service(MenuService::class)->aiFill($data));
+    }
+
+    /**
      * 获取当前用户路由菜单
      *
      * @OA\Get(

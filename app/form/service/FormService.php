@@ -3,11 +3,11 @@
 namespace app\form\service;
 
 use app\common\exception\BusinessException;
+use app\common\util\AiService;
 use app\form\model\FormData;
 use app\form\model\FormDefinition;
 use app\form\model\FormSnapshot;
 use app\system\model\Menu;
-use GuzzleHttp\Client;
 use think\facade\Cache;
 use think\facade\Db;
 
@@ -23,7 +23,9 @@ final class FormService
     private const FORM_ADMIN_CATALOG_NAME = '动态表单';
     private const PUBLIC_SUBMIT_LIMIT = 10;
     private const RENDER_CACHE_TTL = 1800;
-    private const PROMPT_FILE = 'app/form/prompts/form/system.md';
+    private const PROMPT_FILE = 'form/system.md';
+
+    public function __construct(private readonly AiService $aiService) {}
 
     // ── 规则校验 ────────────────────────────────────────────────
 
@@ -607,43 +609,10 @@ final class FormService
      */
     public function aiGenerateRule(string $description): array
     {
-        $baseUrl = (string) config('ai.base_url', '');
-        $apiKey = (string) config('ai.api_key', '');
-        $model = (string) config('ai.model', 'qwen-plus');
-        $timeout = (int) config('ai.timeout', 60);
-
-        if ($baseUrl === '' || $apiKey === '') {
-            throw new BusinessException('AI 功能未开启，请配置 AI_BASE_URL 与 AI_API_KEY');
-        }
-
-        $promptPath = root_path() . self::PROMPT_FILE;
-        if (!is_file($promptPath)) {
-            throw new BusinessException('AI 提示词文件缺失：' . self::PROMPT_FILE);
-        }
-        $systemPrompt = trim((string) file_get_contents($promptPath));
-
-        $client = new Client(['timeout' => $timeout]);
-        $response = $client->post(rtrim($baseUrl, '/') . '/chat/completions', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $apiKey,
-                'Content-Type' => 'application/json',
-            ],
-            'json' => [
-                'model' => $model,
-                'messages' => [
-                    ['role' => 'system', 'content' => $systemPrompt],
-                    ['role' => 'user', 'content' => "需求描述：\n" . $description],
-                ],
-                'response_format' => ['type' => 'json_object'],
-            ],
-        ]);
-
-        $payload = json_decode((string) $response->getBody(), true);
-        $content = $this->stripCodeFence((string) ($payload['choices'][0]['message']['content'] ?? ''));
-        $rules = json_decode($content, true);
-        if (!is_array($rules)) {
-            throw new BusinessException('AI 返回内容非合法 JSON，请重试');
-        }
+        $rules = $this->aiService->chatArray(
+            $this->aiService->loadPrompt(self::PROMPT_FILE),
+            "需求描述：\n" . $description
+        );
 
         self::validateRule($rules);
         return $rules;
@@ -793,19 +762,5 @@ final class FormService
             }
         }
         return $result;
-    }
-
-    private function stripCodeFence(string $content): string
-    {
-        $text = trim($content);
-        if (!str_starts_with($text, '```')) {
-            return $text;
-        }
-        $start = strpos($text, "\n");
-        $end = strrpos($text, '```');
-        if ($start === false || $end === false || $end <= $start) {
-            return $text;
-        }
-        return trim(substr($text, $start + 1, $end - $start - 1));
     }
 }

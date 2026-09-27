@@ -68,7 +68,7 @@ Route::group('api/v1', function () {
         Route::post('', [UserController::class, 'create'])->middleware('perm', 'sys:user:create');
         Route::put(':id', [UserController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:user:update');
         Route::delete(':ids', [UserController::class, 'delete'])->middleware('perm', 'sys:user:delete');
-        Route::put(':id/password', [UserController::class, 'resetPassword'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:user:resetPwd');
+        Route::put(':id/password/reset', [UserController::class, 'resetPassword'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:user:reset-password');
         Route::patch(':id/status', [UserController::class, 'changeStatus'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:user:update');
     });
 
@@ -90,6 +90,7 @@ Route::group('api/v1', function () {
     // 菜单管理
     Route::group('menus', function () {
         Route::get('options', [MenuController::class, 'options']);
+        Route::post('ai-fill', [MenuController::class, 'aiFill']);
         Route::get('routes', [MenuController::class, 'routes']);
         Route::get('tree', [MenuController::class, 'tree'])->middleware('perm', 'sys:menu:list');
         Route::put(':id/visible', [MenuController::class, 'visible'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:menu:update');

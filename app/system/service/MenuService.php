@@ -3,6 +3,7 @@
 namespace app\system\service;
 
 use app\common\exception\BusinessException;
+use app\common\util\AiService;
 use app\system\model\Menu;
 use app\system\model\RoleMenu;
 use app\system\model\UserRole;
@@ -13,6 +14,12 @@ use think\facade\Db;
  */
 final class MenuService
 {
+    private const MENU_PROMPT_FILE = 'menu/system.md';
+    /** 同级菜单取样条数，样本只用于让模型沿用既有命名风格 */
+    private const SIBLING_SAMPLE_LIMIT = 10;
+
+    public function __construct(private readonly AiService $aiService) {}
+
     /**
      * 获取菜单下拉数据
      */
@@ -150,8 +157,8 @@ final class MenuService
         // 父级层级校验：按钮只能挂在菜单下，其他类型只能挂在顶级或目录下
         $this->validateMenuParent($type, $parentId);
 
-        // 新增菜单未指定排序时排到同级末尾
-        if (empty($data['sort'])) {
+        // 新增菜单未指定排序时排到同级末尾；显式传 0 时保留 0
+        if (!isset($data['sort']) || $data['sort'] === null || $data['sort'] === '') {
             $data['sort'] = $this->resolveNextSort($parentId);
         }
         $isExternal = $type === 'E';
@@ -222,6 +229,12 @@ final class MenuService
         }
 
         $type = $data['type'] ?? $menu->type;
+
+        // 父级层级校验：父级变更时才校验，未变更时放行历史遗留的非法层级
+        if (isset($data['parent_id']) && (int) $data['parent_id'] !== (int) $menu->parent_id) {
+            $this->validateMenuParent((string) $type, (int) $data['parent_id']);
+        }
+
         $isExternal = $type === 'E';
         $isEmbedded = $isExternal && ($data['component'] ?? '') === 'iframe';
         $needsRouteName = $type === 'M' || $isEmbedded;
@@ -298,17 +311,20 @@ final class MenuService
             throw new BusinessException('菜单不存在');
         }
 
-        // 检查是否有子菜单
-        $childCount = Menu::where('parent_id', $id)->count();
-        if ($childCount > 0) {
-            throw new BusinessException('存在子菜单，无法删除');
-        }
+        // 级联范围：自身 + tree_path 祖先链里带上该菜单ID的后代
+        $menuIds = Menu::where('id', $id)
+            ->whereOr('tree_path', 'like', "%,{$id},%")
+            ->whereOr('tree_path', 'like', "{$id},%")
+            ->whereOr('tree_path', 'like', "%,{$id}")
+            ->column('id');
+        $menuIds = array_map('intval', $menuIds ?: [$id]);
 
         // 删除关联
-        RoleMenu::where('menu_id', $id)->delete();
+        RoleMenu::whereIn('menu_id', $menuIds)->delete();
 
         // 物理删除（sys_menu 表无 is_deleted 字段）
-        return $menu->delete();
+        Menu::whereIn('id', $menuIds)->delete();
+        return true;
     }
 
     /**
@@ -381,6 +397,76 @@ final class MenuService
                 'sort' => $index + 1,
             ]);
         }
+    }
+
+    /**
+     * 用 AI 推断菜单的访问路径、权限标识与图标，命名风格参照同级菜单
+     */
+    public function aiFill(array $data): array
+    {
+        $result = $this->aiService->chatArray(
+            $this->aiService->loadPrompt(self::MENU_PROMPT_FILE),
+            $this->buildAiUserPrompt($data)
+        );
+
+        $iconKeywords = $result['iconKeywords'] ?? null;
+        return [
+            'route_path' => $result['routePath'] ?? null,
+            'perm' => $result['perm'] ?? null,
+            'icon_keywords' => is_array($iconKeywords) ? array_map('strval', $iconKeywords) : [],
+        ];
+    }
+
+    /**
+     * 构造用户提示词，附带同级菜单样本供模型沿用既有命名风格
+     */
+    private function buildAiUserPrompt(array $data): string
+    {
+        $parentId = (int) ($data['parent_id'] ?? 0);
+        $parent = $parentId > 0 ? Menu::find($parentId) : null;
+
+        $siblings = Menu::where('parent_id', $parentId)
+            ->order('sort', 'asc')
+            ->limit(self::SIBLING_SAMPLE_LIMIT)
+            ->select()
+            ->toArray();
+
+        $lines = [
+            '菜单名称：' . ($data['name'] ?? ''),
+            '菜单类型：' . self::menuTypeLabel($data['type'] ?? null),
+            '上级菜单：' . ($parent->name ?? '顶级'),
+            '同级菜单示例：',
+        ];
+        if ($siblings === []) {
+            $lines[] = '（无）';
+        } else {
+            foreach ($siblings as $menu) {
+                $lines[] = sprintf(
+                    '- %s（类型 %s，路径片段 %s，权限 %s）',
+                    (string) $menu['name'],
+                    self::menuTypeLabel((string) $menu['type']),
+                    $menu['route_path'] ?: '无',
+                    $menu['perm'] ?: '无'
+                );
+            }
+        }
+
+        return implode("\n", $lines) . "\n";
+    }
+
+    /**
+     * 菜单类型取中文名称，无匹配时沿用原值
+     */
+    private static function menuTypeLabel(?string $type): string
+    {
+        return match ($type) {
+            'C' => '目录',
+            'M' => '菜单',
+            'E' => '外链',
+            'B' => '按钮',
+            null, '' => '未指定',
+            default => $type,
+        };
     }
 
     /**
