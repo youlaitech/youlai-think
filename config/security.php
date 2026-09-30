@@ -7,6 +7,12 @@ return [
     'token_header' => 'Authorization',
     'token_prefix' => 'Bearer ',
 
+    // 认证白名单：命中则跳过 JWT 校验（支持 * 通配符），匿名接口必须在此登记
+    'ignore_urls' => [
+        '/api/v1/forms/public/*/render',
+        '/api/v1/forms/public/*/data',
+    ],
+
     'jwt' => [
         'secret' => env('JWT_SECRET', 'SecretKey012345678901234567890123456789012345678901234567890123456789'),
         'issuer' => env('JWT_ISSUER', 'youlai-think'),

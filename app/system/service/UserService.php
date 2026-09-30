@@ -35,24 +35,6 @@ final class UserService
     private const DEFAULT_PASSWORD = '123456';
 
     /**
-     * 根据ID获取用户详情
-     */
-    public function getById(int $id): ?array
-    {
-        $user = User::with(['dept', 'roles'])->find($id);
-
-        if (!$user) {
-            return null;
-        }
-
-        $data = $user->toArray();
-        $data['role_ids'] = array_column($data['roles'] ?? [], 'id');
-        unset($data['roles']);
-
-        return $data;
-    }
-
-    /**
      * 根据用户名获取用户
      */
     public function getByUsername(string $username): ?array

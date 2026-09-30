@@ -134,4 +134,23 @@ final class CodegenController extends BaseController
                 'Access-Control-Expose-Headers' => 'Content-Disposition',
             ]);
     }
+
+    /**
+     * AI 填充生成配置
+     *
+     * @OA\Post(
+     *     path="/api/v1/codegen/{tableName}/ai-config",
+     *     summary="AI 填充生成配置",
+     *     tags={"11.代码生成"},
+     *     @OA\Parameter(name="tableName", in="path", description="表名", required=true, example="sys_user"),
+     *     @OA\Response(response=200, description="OK")
+     * )
+     */
+    public function aiFill(string $tableName): \think\Response
+    {
+        $requirement = (string) $this->getParam('requirement', '');
+        $data = $this->service(CodegenService::class)->aiFillConfig($tableName, $requirement);
+
+        return $this->success($data);
+    }
 }

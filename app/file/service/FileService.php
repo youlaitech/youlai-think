@@ -116,7 +116,8 @@ final class FileService
         // config('file.') 会被解析为段路径 'file.' 返回 null，故取整个配置。
 
         if (($cfg['type'] ?? 'local') === 's3') {
-            (new S3Storage($cfg['s3']))->delete((new S3Storage($cfg['s3']))->extractKey($filePath));
+            $storage = new S3Storage($cfg['s3']);
+            $storage->delete($storage->extractKey($filePath));
             return true;
         }
 

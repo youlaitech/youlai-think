@@ -106,10 +106,7 @@ final class AuthService
             ->column('r.code');
         $authorities = array_map(fn(string $code) => 'ROLE_' . $code, $roles);
 
-        // 数据权限范围：写入 JWT，接口层 DataPermissionService 据此做数据过滤（多角色并集）
-        // 注意：数据权限计算失败绝不能阻断登录，否则整个登录接口会 500（B0001）。
-        // 降级为无作用域后，DataPermissionService::apply 会按“无配置”处理（不附加过滤条件），
-        // 业务侧由具体接口（如用户列表）自行兜底，避免登录链路被拖垮。
+        // 数据权限范围写入 JWT，计算失败时降级为空作用域
         try {
             $dataScopes = empty($roles) ? [] : app(RoleService::class)->getRoleDataScopes($roles);
         } catch (\Throwable $e) {

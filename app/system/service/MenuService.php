@@ -39,20 +39,6 @@ final class MenuService
     }
 
     /**
-     * 获取菜单树
-     */
-    public function getTree(): array
-    {
-        $list = Menu::where('visible', 1)
-            ->order('sort', 'asc')
-            ->order('id', 'asc')
-            ->select()
-            ->toArray();
-
-        return $this->buildTree($list);
-    }
-
-    /**
      * 用户路由菜单树（隐藏菜单 visible=0 仍返回路由，仅不在菜单栏展示）
      */
     public function getUserMenuTree(int $userId, array $roleCodes): array
@@ -99,14 +85,6 @@ final class MenuService
         }
 
         return $this->buildRoutes(0, $menus);
-    }
-
-    /**
-     * 根据ID获取菜单详情
-     */
-    public function getById(int $id): ?array
-    {
-        return Menu::find($id)?->toArray();
     }
 
     /**
@@ -441,11 +419,13 @@ final class MenuService
             $lines[] = '（无）';
         } else {
             foreach ($siblings as $menu) {
+                // 示例路径只展示当前这一级的路径片段
+                $routePath = ltrim((string) $menu['route_path'], '/');
                 $lines[] = sprintf(
                     '- %s（类型 %s，路径片段 %s，权限 %s）',
                     (string) $menu['name'],
                     self::menuTypeLabel((string) $menu['type']),
-                    $menu['route_path'] ?: '无',
+                    $routePath !== '' ? $routePath : '无',
                     $menu['perm'] ?: '无'
                 );
             }
@@ -604,7 +584,7 @@ final class MenuService
             'params' => $menu['params'] ?? null,
         ];
 
-        if ($isEmbedded && !empty($externalUrl)) {
+        if ($isExternal && !empty($externalUrl)) {
             $meta['externalUrl'] = $externalUrl;
         }
 

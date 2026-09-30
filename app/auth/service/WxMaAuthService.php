@@ -330,5 +330,3 @@ final class WxMaAuthService
         ];
     }
 }
-}
-}

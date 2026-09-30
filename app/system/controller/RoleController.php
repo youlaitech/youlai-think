@@ -51,6 +51,23 @@ final class RoleController extends BaseController
     }
 
     /**
+     * 角色编码下拉列表
+     *
+     * @OA\Get(
+     *     path="/api/v1/roles/code-options",
+     *     summary="角色编码下拉列表",
+     *     tags={"03.角色接口"},
+     *     @OA\Response(response="200", description="成功")
+     * )
+     */
+    public function codeOptions(): \think\response\Json
+    {
+        $list = $this->service(RoleService::class)->getAllCodeOptions();
+
+        return $this->success($list);
+    }
+
+    /**
      * 获取角色表单数据
      *
      * @OA\Get(
@@ -62,29 +79,6 @@ final class RoleController extends BaseController
      * )
      */
     public function form(): \think\response\Json
-    {
-        $id = $this->getIdParam();
-        $data = $this->service(RoleService::class)->getById($id);
-
-        if (!$data) {
-            return $this->fail('A0400', '角色不存在');
-        }
-
-        return $this->success($data);
-    }
-
-    /**
-     * 获取角色详情
-     *
-     * @OA\Get(
-     *     path="/api/v1/roles/{id}",
-     *     summary="获取角色详情",
-     *     tags={"03.角色接口"},
-     *     @OA\Parameter(name="id", in="path", description="角色ID", required=true),
-     *     @OA\Response(response="200", description="成功")
-     * )
-     */
-    public function detail(): \think\response\Json
     {
         $id = $this->getIdParam();
         $data = $this->service(RoleService::class)->getById($id);

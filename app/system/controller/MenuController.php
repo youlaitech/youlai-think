@@ -78,23 +78,6 @@ final class MenuController extends BaseController
     }
 
     /**
-     * 获取菜单树（管理用）
-     *
-     * @OA\Get(
-     *     path="/api/v1/menus/tree",
-     *     summary="菜单树",
-     *     tags={"04.菜单接口"},
-     *     @OA\Response(response="200", description="成功")
-     * )
-     */
-    public function tree(): \think\response\Json
-    {
-        $tree = $this->service(MenuService::class)->getTree();
-
-        return $this->success($tree);
-    }
-
-    /**
      * 获取所有菜单（平铺列表）
      *
      * @OA\Get(
@@ -126,29 +109,6 @@ final class MenuController extends BaseController
     {
         $id = $this->getIdParam();
         $data = $this->service(MenuService::class)->getFormById($id);
-
-        if (!$data) {
-            return $this->fail('A0400', '菜单不存在');
-        }
-
-        return $this->success($data);
-    }
-
-    /**
-     * 获取菜单详情
-     *
-     * @OA\Get(
-     *     path="/api/v1/menus/{id}",
-     *     summary="获取菜单详情",
-     *     tags={"04.菜单接口"},
-     *     @OA\Parameter(name="id", in="path", description="菜单ID", required=true),
-     *     @OA\Response(response="200", description="成功")
-     * )
-     */
-    public function detail(): \think\response\Json
-    {
-        $id = $this->getIdParam();
-        $data = $this->service(MenuService::class)->getById($id);
 
         if (!$data) {
             return $this->fail('A0400', '菜单不存在');
@@ -221,7 +181,7 @@ final class MenuController extends BaseController
      * 修改菜单显示状态
      *
      * @OA\Patch(
-     *     path="/api/v1/menus/{id}/visible",
+     *     path="/api/v1/menus/{id}",
      *     summary="修改菜单显示状态",
      *     tags={"04.菜单接口"},
      *     @OA\Parameter(name="id", in="path", description="菜单ID", required=true),

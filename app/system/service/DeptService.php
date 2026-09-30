@@ -12,20 +12,6 @@ use app\system\model\User;
 final class DeptService
 {
     /**
-     * 获取部门树
-     */
-    public function getTree(): array
-    {
-        $list = Dept::where('status', 1)
-            ->order('sort', 'asc')
-            ->order('id', 'asc')
-            ->select()
-            ->toArray();
-
-        return $this->buildTree($list);
-    }
-
-    /**
      * 获取部门列表（树形结构，管理页面用）
      */
     public function getAll(): array

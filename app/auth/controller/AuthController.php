@@ -175,7 +175,7 @@ final class AuthController extends BaseController
      * 短信验证码登录
      *
      * @OA\Post(
-     *     path="/api/v1/auth/login/sms",
+     *     path="/api/v1/auth/sms/login",
      *     summary="短信验证码登录",
      *     tags={"01.认证中心"},
      *     @OA\Parameter(name="mobile", in="query", description="手机号", required=true),
@@ -196,7 +196,7 @@ final class AuthController extends BaseController
         $result = $this->service(AuthService::class)->loginBySms($mobile, $code);
 
         // 手动记录登录日志（登录接口是公开的，LogMiddleware 无法获取 userId）
-        $this->recordLoginLogByMobile($mobile, '/api/v1/auth/login/sms');
+        $this->recordLoginLogByMobile($mobile, '/api/v1/auth/sms/login');
 
         return $this->success($result, '登录成功');
     }

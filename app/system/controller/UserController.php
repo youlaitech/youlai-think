@@ -56,29 +56,6 @@ final class UserController extends BaseController
     }
 
     /**
-     * 获取用户详情
-     *
-     * @OA\Get(
-     *     path="/api/v1/users/{id}",
-     *     summary="获取用户详情",
-     *     tags={"02.用户接口"},
-     *     @OA\Parameter(name="id", in="path", description="用户ID", required=true),
-     *     @OA\Response(response="200", description="成功")
-     * )
-     */
-    public function detail(): \think\response\Json
-    {
-        $id = $this->getIdParam();
-        $data = $this->service(UserService::class)->getById($id);
-
-        if (!$data) {
-            return $this->fail('A0400', '用户不存在');
-        }
-
-        return $this->success($data);
-    }
-
-    /**
      * 创建用户
      *
      * @OA\Post(

@@ -16,7 +16,7 @@ final class WxMaAuthController extends BaseController
      * 静默登录
      *
      * @OA\Post(
-     *     path="/api/v1/wxma/auth/silent-login",
+     *     path="/api/v1/auth/wxma/silent-login",
      *     summary="静默登录",
      *     tags={"13.微信小程序认证"},
      *     @OA\Parameter(name="code", in="query", required=true, @OA\Schema(type="string")),
@@ -40,7 +40,7 @@ final class WxMaAuthController extends BaseController
      * 手机号快捷登录
      *
      * @OA\Post(
-     *     path="/api/v1/wxma/auth/phone-login",
+     *     path="/api/v1/auth/wxma/phone-login",
      *     summary="手机号快捷登录",
      *     tags={"13.微信小程序认证"},
      *     @OA\Parameter(name="loginCode", in="query", required=true, @OA\Schema(type="string")),
@@ -66,7 +66,7 @@ final class WxMaAuthController extends BaseController
      * 绑定手机号
      *
      * @OA\Post(
-     *     path="/api/v1/wxma/auth/bind-mobile",
+     *     path="/api/v1/auth/wxma/bind-mobile",
      *     summary="绑定手机号",
      *     tags={"13.微信小程序认证"},
      *     @OA\Parameter(name="openId", in="query", required=true, @OA\Schema(type="string")),

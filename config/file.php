@@ -15,7 +15,7 @@ return [
 
     // S3（RustFS）对象存储
     's3' => [
-        'endpoint'   => env('S3_ENDPOINT', 'http://111.229.83.153:9000'),
+        'endpoint'   => env('S3_ENDPOINT', 'http://127.0.0.1:9000'),
         'access-key' => env('S3_ACCESS_KEY', 'rustfs-admin'),
         'secret-key' => env('S3_SECRET_KEY', 'rustfs-admin'),
         'bucket'     => env('S3_BUCKET', 'public'),

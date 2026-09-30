@@ -3,6 +3,7 @@
 namespace app\codegen\service;
 
 use app\common\exception\BusinessException;
+use app\common\util\AiService;
 use app\common\util\TemplateRenderer;
 use app\common\web\ResultCode;
 use app\system\service\MenuService;
@@ -391,6 +392,138 @@ ORDER BY ORDINAL_POSITION ASC
         });
 
         return true;
+    }
+
+    /**
+     * 用 AI 推断代码生成配置，未推断出的字段沿用原有默认值
+     */
+    public function aiFillConfig(string $tableName, ?string $requirement = null): array
+    {
+        $config = $this->getGenConfigFormData($tableName);
+        $aiService = new AiService();
+        $result = $aiService->chatArray(
+            $aiService->loadPrompt('codegen/system.md'),
+            $this->buildAiUserPrompt($config, $requirement)
+        );
+
+        $businessName = trim((string) ($result['businessName'] ?? ''));
+        if ($businessName !== '') {
+            $config['business_name'] = $businessName;
+        }
+        $fieldConfigs = is_array($result['fieldConfigs'] ?? null) ? $result['fieldConfigs'] : [];
+        $config['field_configs'] = $this->applyAiFieldConfigs($config['field_configs'] ?? [], $fieldConfigs);
+
+        return $config;
+    }
+
+    /**
+     * 构造用户提示词，附带表结构与字段清单
+     */
+    private function buildAiUserPrompt(array $config, ?string $requirement): string
+    {
+        $columns = [];
+        foreach ($config['field_configs'] ?? [] as $field) {
+            $columns[] = [
+                'columnName' => $field['column_name'] ?? null,
+                'columnType' => $field['column_type'] ?? null,
+                'fieldComment' => $field['field_comment'] ?? null,
+                'isRequired' => $field['is_required'] ?? 0,
+            ];
+        }
+
+        $requirement = trim((string) $requirement);
+
+        return implode("\n", [
+            '表名：' . (string) ($config['table_name'] ?? ''),
+            '当前业务名：' . (string) ($config['business_name'] ?? ''),
+            '补充说明：' . ($requirement !== '' ? $requirement : '无'),
+            '字段列表：',
+            (string) json_encode($columns, JSON_UNESCAPED_UNICODE),
+        ]);
+    }
+
+    /**
+     * 按列名匹配回填字段配置
+     */
+    private function applyAiFieldConfigs(array $fieldConfigs, array $aiFields): array
+    {
+        if ($fieldConfigs === [] || $aiFields === []) {
+            return $fieldConfigs;
+        }
+
+        $aiFieldMap = [];
+        foreach ($aiFields as $field) {
+            $columnName = trim((string) ($field['columnName'] ?? ''));
+            if ($columnName !== '') {
+                $aiFieldMap[$columnName] = $field;
+            }
+        }
+
+        $intFields = [
+            'isRequired' => 'is_required',
+            'isShowInList' => 'is_show_in_list',
+            'isShowInForm' => 'is_show_in_form',
+            'isShowInQuery' => 'is_show_in_query',
+        ];
+
+        foreach ($fieldConfigs as $index => $field) {
+            $aiField = $aiFieldMap[(string) ($field['column_name'] ?? '')] ?? null;
+            if ($aiField === null) {
+                continue;
+            }
+
+            $comment = trim((string) ($aiField['fieldComment'] ?? ''));
+            if ($comment !== '') {
+                $fieldConfigs[$index]['field_comment'] = $comment;
+            }
+            $dictType = trim((string) ($aiField['dictType'] ?? ''));
+            if ($dictType !== '') {
+                $fieldConfigs[$index]['dict_type'] = $dictType;
+            }
+
+            $formType = self::formTypeValue((string) ($aiField['formType'] ?? ''));
+            if ($formType !== null) {
+                $fieldConfigs[$index]['form_type'] = $formType;
+            }
+            $queryType = self::queryTypeValue((string) ($aiField['queryType'] ?? ''));
+            if ($queryType !== null) {
+                $fieldConfigs[$index]['query_type'] = $queryType;
+            }
+
+            foreach ($intFields as $aiKey => $fieldKey) {
+                if (isset($aiField[$aiKey]) && is_numeric($aiField[$aiKey])) {
+                    $fieldConfigs[$index][$fieldKey] = (int) $aiField[$aiKey];
+                }
+            }
+        }
+
+        return $fieldConfigs;
+    }
+
+    /**
+     * 表单类型枚举名转存储值
+     */
+    private static function formTypeValue(string $name): ?int
+    {
+        $values = [
+            'INPUT' => 1, 'SELECT' => 2, 'RADIO' => 3, 'CHECK_BOX' => 4, 'INPUT_NUMBER' => 5,
+            'SWITCH' => 6, 'TEXT_AREA' => 7, 'DATE' => 8, 'DATE_TIME' => 9, 'HIDDEN' => 10,
+        ];
+
+        return $values[strtoupper(trim($name))] ?? null;
+    }
+
+    /**
+     * 查询类型枚举名转存储值
+     */
+    private static function queryTypeValue(string $name): ?int
+    {
+        $values = [
+            'EQ' => 1, 'LIKE' => 2, 'IN' => 3, 'BETWEEN' => 4, 'GT' => 5,
+            'GE' => 6, 'LT' => 7, 'LE' => 8, 'NE' => 9, 'LIKE_LEFT' => 10,
+        ];
+
+        return $values[strtoupper(trim($name))] ?? null;
     }
 
     /**

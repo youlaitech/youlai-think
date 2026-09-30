@@ -73,8 +73,12 @@ final class S3Storage
 
         try {
             $this->http->delete($url, ['headers' => $signed]);
-        } catch (RequestException) {
-            // 对象不存在等情况忽略
+        } catch (RequestException $e) {
+            // 对象不存在（404）视为删除成功，其余错误向上抛出
+            $response = $e->getResponse();
+            if ($response === null || $response->getStatusCode() !== 404) {
+                throw $e;
+            }
         }
     }
 
@@ -159,7 +163,7 @@ final class S3Storage
                 [
                     'Effect'    => 'Allow',
                     'Principal' => ['AWS' => ['*']],
-                    'Action'    => ['s3:GetObject', 's3:PutObject', 's3:DeleteObject'],
+                    'Action'    => ['s3:GetObject'],
                     'Resource'  => ["arn:aws:s3:::$bucket/*"],
                 ],
             ],

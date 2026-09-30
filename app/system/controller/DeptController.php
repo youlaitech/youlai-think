@@ -31,23 +31,6 @@ final class DeptController extends BaseController
     }
 
     /**
-     * 获取部门树
-     *
-     * @OA\Get(
-     *     path="/api/v1/depts/tree",
-     *     summary="部门树",
-     *     tags={"05.部门管理"},
-     *     @OA\Response(response="200", description="成功")
-     * )
-     */
-    public function tree(): \think\response\Json
-    {
-        $tree = $this->service(DeptService::class)->getTree();
-
-        return $this->success($tree);
-    }
-
-    /**
      * 获取所有部门（平铺列表）
      *
      * @OA\Get(
@@ -62,29 +45,6 @@ final class DeptController extends BaseController
         $list = $this->service(DeptService::class)->getAll();
 
         return $this->success($list);
-    }
-
-    /**
-     * 获取部门详情
-     *
-     * @OA\Get(
-     *     path="/api/v1/depts/{id}",
-     *     summary="获取部门详情",
-     *     tags={"05.部门管理"},
-     *     @OA\Parameter(name="id", in="path", description="部门ID", required=true),
-     *     @OA\Response(response="200", description="成功")
-     * )
-     */
-    public function detail(): \think\response\Json
-    {
-        $id = $this->getIdParam();
-        $data = $this->service(DeptService::class)->getById($id);
-
-        if (!$data) {
-            return $this->fail('A0400', '部门不存在');
-        }
-
-        return $this->success($data);
     }
 
     /**

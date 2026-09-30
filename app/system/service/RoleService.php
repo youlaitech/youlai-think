@@ -107,6 +107,24 @@ final class RoleService
     }
 
     /**
+     * 获取所有启用角色的编码下拉选项
+     */
+    public function getAllCodeOptions(): array
+    {
+        $list = Role::where('status', 1)
+            ->where('code', '<>', 'ROOT')
+            ->field(['code', 'name'])
+            ->order('sort', 'asc')
+            ->select()
+            ->toArray();
+
+        return array_map(static fn ($item) => [
+            'value' => (string) ($item['code'] ?? ''),
+            'label' => (string) ($item['name'] ?? ''),
+        ], $list);
+    }
+
+    /**
      * 创建角色
      */
     public function create(array $data): int

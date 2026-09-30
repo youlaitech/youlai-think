@@ -103,7 +103,7 @@
                 }
             }
         },
-        "/api/v1/auth/login/sms": {
+        "/api/v1/auth/sms/login": {
             "post": {
                 "tags": [
                     "01.认证中心"
@@ -629,21 +629,6 @@
                 }
             }
         },
-        "/api/v1/depts/tree": {
-            "get": {
-                "tags": [
-                    "05.部门管理"
-                ],
-                "summary": "部门树",
-                "description": "获取部门树",
-                "operationId": "ff40430b23f12cc9aa32964beeedc4ad",
-                "responses": {
-                    "200": {
-                        "description": "成功"
-                    }
-                }
-            }
-        },
         "/api/v1/depts": {
             "get": {
                 "tags": [
@@ -673,79 +658,6 @@
                         }
                     }
                 },
-                "responses": {
-                    "200": {
-                        "description": "成功"
-                    }
-                }
-            }
-        },
-        "/api/v1/depts/{id}": {
-            "get": {
-                "tags": [
-                    "05.部门管理"
-                ],
-                "summary": "获取部门详情",
-                "description": "获取部门详情",
-                "operationId": "d0b40d3d5884357825ecd63e251cf8ca",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "部门ID",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功"
-                    }
-                }
-            },
-            "put": {
-                "tags": [
-                    "05.部门管理"
-                ],
-                "summary": "修改部门",
-                "description": "更新部门",
-                "operationId": "6566bac85ad31ab5a2cd0ec3f6328db6",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "部门ID",
-                        "required": true
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": []
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "成功"
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "05.部门管理"
-                ],
-                "summary": "删除部门",
-                "description": "删除部门",
-                "operationId": "bdf6bdb335fba2c77e56231e5ef5a048",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "部门ID",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "成功"
@@ -1159,21 +1071,6 @@
                 }
             }
         },
-        "/api/v1/menus/tree": {
-            "get": {
-                "tags": [
-                    "04.菜单接口"
-                ],
-                "summary": "菜单树",
-                "description": "获取菜单树（管理用）",
-                "operationId": "fce245d03bfd93d2dff12a7f75235237",
-                "responses": {
-                    "200": {
-                        "description": "成功"
-                    }
-                }
-            }
-        },
         "/api/v1/menus": {
             "get": {
                 "tags": [
@@ -1218,79 +1115,6 @@
                 "summary": "获取菜单表单数据",
                 "description": "获取菜单表单数据",
                 "operationId": "86f414b07e6632d9837f487377b12be8",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "菜单ID",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功"
-                    }
-                }
-            }
-        },
-        "/api/v1/menus/{id}": {
-            "get": {
-                "tags": [
-                    "04.菜单接口"
-                ],
-                "summary": "获取菜单详情",
-                "description": "获取菜单详情",
-                "operationId": "01015789380351375bf45f30f3684809",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "菜单ID",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功"
-                    }
-                }
-            },
-            "put": {
-                "tags": [
-                    "04.菜单接口"
-                ],
-                "summary": "修改菜单",
-                "description": "更新菜单",
-                "operationId": "6ea530ab3cb28bd4ff0a4caa47f953d5",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "菜单ID",
-                        "required": true
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": []
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "成功"
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "04.菜单接口"
-                ],
-                "summary": "删除菜单",
-                "description": "删除菜单",
-                "operationId": "f740a1621e39a4a3547c3cad1928074f",
                 "parameters": [
                     {
                         "name": "id",
@@ -1649,58 +1473,6 @@
                 }
             }
         },
-        "/api/v1/roles/{id}": {
-            "get": {
-                "tags": [
-                    "03.角色接口"
-                ],
-                "summary": "获取角色详情",
-                "description": "获取角色详情",
-                "operationId": "50bbe89ef69e37118d2efe976e3bea3d",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "角色ID",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功"
-                    }
-                }
-            },
-            "put": {
-                "tags": [
-                    "03.角色接口"
-                ],
-                "summary": "修改角色",
-                "description": "更新角色",
-                "operationId": "33ac8e8b65d8fc6b67e845dbe5255eae",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "角色ID",
-                        "required": true
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": []
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "成功"
-                    }
-                }
-            }
-        },
         "/api/v1/roles/{ids}": {
             "delete": {
                 "tags": [
@@ -1858,58 +1630,6 @@
                 "summary": "新增用户",
                 "description": "创建用户",
                 "operationId": "f7d7609d84d12f39d1289a0340c86217",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": []
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "成功"
-                    }
-                }
-            }
-        },
-        "/api/v1/users/{id}": {
-            "get": {
-                "tags": [
-                    "02.用户接口"
-                ],
-                "summary": "获取用户详情",
-                "description": "获取用户详情",
-                "operationId": "bcd40e0c3ec14813f3fa0234a6389dab",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "用户ID",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功"
-                    }
-                }
-            },
-            "put": {
-                "tags": [
-                    "02.用户接口"
-                ],
-                "summary": "修改用户",
-                "description": "更新用户",
-                "operationId": "60342e26908dee117c0c76436bd9b052",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "用户ID",
-                        "required": true
-                    }
-                ],
                 "requestBody": {
                     "required": true,
                     "content": {

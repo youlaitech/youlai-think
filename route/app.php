@@ -20,7 +20,7 @@ use think\facade\Route;
 Route::group('api/v1/auth', function () {
     Route::get('captcha', [AuthController::class, 'captcha']);
     Route::post('login', [AuthController::class, 'login']);
-    Route::post('login/sms', [AuthController::class, 'loginBySms']);
+    Route::post('sms/login', [AuthController::class, 'loginBySms']);
     Route::post('sms/code', [AuthController::class, 'sendLoginVerifyCode']);
     Route::post('refresh-token', [AuthController::class, 'refresh']);
     Route::delete('logout', [AuthController::class, 'logout']);
@@ -36,7 +36,7 @@ Route::group('api/v1/auth', function () {
 
 // ==================== 微信小程序认证接口（无需登录） ====================
 
-Route::group('api/v1/wxma/auth', function () {
+Route::group('api/v1/auth/wxma', function () {
     Route::post('silent-login', [WxMaAuthController::class, 'silentLogin']);
     Route::post('phone-login', [WxMaAuthController::class, 'phoneLogin']);
     Route::post('bind-mobile', [WxMaAuthController::class, 'bindMobile']);
@@ -64,7 +64,6 @@ Route::group('api/v1', function () {
         Route::post('import', [UserController::class, 'import'])->middleware('perm', 'sys:user:import');
         Route::get('', [UserController::class, 'page'])->middleware('perm', 'sys:user:list');
         Route::get(':id/form', [UserController::class, 'form'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:user:update');
-        Route::get(':id', [UserController::class, 'detail'])->pattern(['id' => '\d+']);
         Route::post('', [UserController::class, 'create'])->middleware('perm', 'sys:user:create');
         Route::put(':id', [UserController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:user:update');
         Route::delete(':ids', [UserController::class, 'delete'])->middleware('perm', 'sys:user:delete');
@@ -75,13 +74,13 @@ Route::group('api/v1', function () {
     // 角色管理
     Route::group('roles', function () {
         Route::get('options', [RoleController::class, 'options']);
+        Route::get('code-options', [RoleController::class, 'codeOptions']);
         Route::get(':id/menu-ids', [RoleController::class, 'menuIds'])->pattern(['id' => '\d+']);
         Route::put(':id/menus', [RoleController::class, 'assignMenus'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:assign');
         Route::get(':id/dept-ids', [RoleController::class, 'deptIds'])->pattern(['id' => '\d+']);
         Route::put(':id/status', [RoleController::class, 'status'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:update');
         Route::get('', [RoleController::class, 'page'])->middleware('perm', 'sys:role:list');
         Route::get(':id/form', [RoleController::class, 'form'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:update');
-        Route::get(':id', [RoleController::class, 'detail'])->pattern(['id' => '\d+']);
         Route::post('', [RoleController::class, 'create'])->middleware('perm', 'sys:role:create');
         Route::put(':id', [RoleController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:role:update');
         Route::delete(':ids', [RoleController::class, 'delete'])->middleware('perm', 'sys:role:delete');
@@ -92,11 +91,9 @@ Route::group('api/v1', function () {
         Route::get('options', [MenuController::class, 'options']);
         Route::post('ai-fill', [MenuController::class, 'aiFill']);
         Route::get('routes', [MenuController::class, 'routes']);
-        Route::get('tree', [MenuController::class, 'tree'])->middleware('perm', 'sys:menu:list');
-        Route::put(':id/visible', [MenuController::class, 'visible'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:menu:update');
+        Route::patch(':id', [MenuController::class, 'visible'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:menu:update');
         Route::get('', [MenuController::class, 'list'])->middleware('perm', 'sys:menu:list');
         Route::get(':id/form', [MenuController::class, 'form'])->pattern(['id' => '\d+']);
-        Route::get(':id', [MenuController::class, 'detail'])->pattern(['id' => '\d+']);
         Route::post('', [MenuController::class, 'create'])->middleware('perm', 'sys:menu:create');
         Route::put(':id', [MenuController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:menu:update');
         Route::delete(':id', [MenuController::class, 'delete'])->middleware('perm', 'sys:menu:delete');
@@ -105,10 +102,8 @@ Route::group('api/v1', function () {
     // 部门管理
     Route::group('depts', function () {
         Route::get('options', [DeptController::class, 'options']);
-        Route::get('tree', [DeptController::class, 'tree']);
         Route::get('', [DeptController::class, 'list'])->middleware('perm', 'sys:dept:list');
         Route::get(':id/form', [DeptController::class, 'form'])->pattern(['id' => '\d+']);
-        Route::get(':id', [DeptController::class, 'detail'])->pattern(['id' => '\d+']);
         Route::post('', [DeptController::class, 'create'])->middleware('perm', 'sys:dept:create');
         Route::put(':id', [DeptController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:dept:update');
         Route::delete(':id', [DeptController::class, 'delete'])->middleware('perm', 'sys:dept:delete');
@@ -144,7 +139,7 @@ Route::group('api/v1', function () {
         Route::get(':id/form', [DictController::class, 'form'])->pattern(['id' => '\d+']);
         Route::get(':dictCode/items/options', [DictController::class, 'items'])->pattern(['dictCode' => '\w+']);
         Route::get(':dictCode/items/:itemId/form', [DictController::class, 'itemForm'])->pattern(['dictCode' => '\w+', 'itemId' => '\d+']);
-        Route::get(':dictCode/items', [DictController::class, 'itemPage'])->pattern(['dictCode' => '\w+']);
+        Route::get(':dictCode/items', [DictController::class, 'itemPage'])->pattern(['dictCode' => '\w+'])->middleware('perm', 'sys:dict-item:list');
         Route::post(':dictCode/items', [DictController::class, 'createItem'])->pattern(['dictCode' => '\w+'])->middleware('perm', 'sys:dict-item:create');
 
     // 动态表单
@@ -174,7 +169,7 @@ Route::group('api/v1', function () {
     });
         Route::put(':dictCode/items/:itemId', [DictController::class, 'updateItem'])->pattern(['dictCode' => '\w+', 'itemId' => '\d+'])->middleware('perm', 'sys:dict-item:update');
         Route::delete(':dictCode/items/:itemIds', [DictController::class, 'deleteItems'])->pattern(['dictCode' => '\w+'])->middleware('perm', 'sys:dict-item:delete');
-        Route::get('', [DictController::class, 'page']);
+        Route::get('', [DictController::class, 'page'])->middleware('perm', 'sys:dict:list');
         Route::post('', [DictController::class, 'create'])->middleware('perm', 'sys:dict:create');
         Route::put(':id', [DictController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:dict:update');
         Route::delete(':ids', [DictController::class, 'delete'])->middleware('perm', 'sys:dict:delete');
@@ -188,9 +183,9 @@ Route::group('api/v1', function () {
 
     // 日志管理
     Route::group('logs', function () {
-        Route::get('', [LogController::class, 'page']);
-        Route::get('analytics/trend', [LogController::class, 'viewsTrend']);
-        Route::get('analytics/overview', [LogController::class, 'views']);
+        Route::get('', [LogController::class, 'page'])->middleware('perm', 'sys:log:list');
+        Route::get('analytics/trend', [LogController::class, 'viewsTrend'])->middleware('perm', 'sys:log:list');
+        Route::get('analytics/overview', [LogController::class, 'views'])->middleware('perm', 'sys:log:list');
     });
 
     // 代码生成
@@ -201,6 +196,7 @@ Route::group('api/v1', function () {
         Route::delete(':tableName/config', [CodegenController::class, 'deleteConfig']);
         Route::get(':tableName/preview', [CodegenController::class, 'preview']);
         Route::get(':tableName/download', [CodegenController::class, 'download']);
+        Route::post(':tableName/ai-config', [CodegenController::class, 'aiFill']);
     });
 
 })->middleware([
