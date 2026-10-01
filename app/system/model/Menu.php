@@ -28,7 +28,9 @@ class Menu extends BaseModel
 {
     protected $name = 'sys_menu';
 
-    // sys_menu 表无 is_deleted 字段，禁用软删除全局作用域
+    // sys_menu 无 is_deleted 字段，不启用软删除全局作用域
+    protected $globalScope = [];
+
     protected $deleteTime = false;
 
     protected $type = [

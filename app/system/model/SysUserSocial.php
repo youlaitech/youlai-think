@@ -19,6 +19,9 @@ class SysUserSocial extends BaseModel
 {
     protected $name = 'sys_user_social';
 
+    // sys_user_social 无 is_deleted 字段，不启用软删除全局作用域
+    protected $globalScope = [];
+
     protected $type = [
         'user_id' => 'integer',
         'verified' => 'integer',

@@ -31,6 +31,9 @@ class Log extends BaseModel
 {
     protected $name = 'sys_log';
 
+    // sys_log 无 is_deleted 字段，不启用软删除全局作用域
+    protected $globalScope = [];
+
     protected $type = [
         'module' => 'integer',
         'action_type' => 'integer',

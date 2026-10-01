@@ -18,8 +18,8 @@ abstract class BaseModel extends \think\Model
     // 隐藏的字段
     protected $hidden = ['is_deleted'];
 
-    // 全局查询作用域
-    protected $globalScope = ['soft_delete'];
+    // 全局查询作用域：think-orm 4 以 'scope' 加名称原样拼接方法名，名称须对应 scopeSoftDelete
+    protected $globalScope = ['SoftDelete'];
 
     /**
      * 软删除全局作用域
@@ -59,19 +59,17 @@ abstract class BaseModel extends \think\Model
     /**
      * 包含已删除记录的查询（绕过全局作用域）
      */
-    public static function withTrashed(): static
+    public static function withTrashed(): \think\db\Query
     {
-        return (new static())->removeGlobalScope('soft_delete');
+        return static::withoutGlobalScope(['SoftDelete']);
     }
 
     /**
      * 仅查询已删除记录
      */
-    public static function onlyTrashed(): static
+    public static function onlyTrashed(): \think\db\Query
     {
-        return (new static())
-            ->removeGlobalScope('soft_delete')
-            ->where('is_deleted', 1);
+        return static::withoutGlobalScope(['SoftDelete'])->where('is_deleted', 1);
     }
 
     /**
