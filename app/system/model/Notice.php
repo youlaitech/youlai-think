@@ -11,7 +11,7 @@ use app\common\model\BaseModel;
  * @property string $title        标题
  * @property string $content      内容
  * @property int    $type         类型 1通知 2公告
- * @property int    $publishStatus 发布状态 0草稿 1已发布
+ * @property int    $publishStatus 发布状态 0未发布 1已发布 -1已撤回
  * @property string $publishTime  发布时间
  * @property int    $createBy     创建人ID
  * @property string $createTime   创建时间

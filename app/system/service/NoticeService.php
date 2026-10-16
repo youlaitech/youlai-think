@@ -38,10 +38,8 @@ final class NoticeService
             $q = $q->whereLike('n.title', '%' . $title . '%');
         }
 
-        // 前端状态转数据库状态
         if ($publishStatus !== null && $publishStatus !== '') {
-            $dbStatus = $this->toDbPublishStatus((int) $publishStatus);
-            $q = $q->where('n.publish_status', $dbStatus);
+            $q = $q->where('n.publish_status', (int) $publishStatus);
         }
 
         $total = (int) $q->count('n.id');
@@ -59,7 +57,7 @@ final class NoticeService
             $list[] = [
                 'id' => (string) ($r['id'] ?? ''),
                 'title' => (string) ($r['title'] ?? ''),
-                'publish_status' => $this->fromDbPublishStatus((int) ($r['publish_status'] ?? 0)),
+                'publish_status' => (int) ($r['publish_status'] ?? 0),
                 'type' => isset($r['type']) ? (int) $r['type'] : 0,
                 'publisher_name' => $r['publisher_name'] ?? null,
                 'level' => (string) ($r['level'] ?? ''),
@@ -98,7 +96,7 @@ final class NoticeService
             'content' => $n['content'] ?? null,
             'type' => isset($n['type']) ? (int) $n['type'] : null,
             'level' => $n['level'] ?? null,
-            'publish_status' => $this->fromDbPublishStatus((int) ($n['publish_status'] ?? 0)),
+            'publish_status' => (int) ($n['publish_status'] ?? 0),
             'target_type' => isset($n['target_type']) ? (int) ($n['target_type']) : null,
             'target_user_ids' => $targetUserIds,
         ];
@@ -384,7 +382,7 @@ final class NoticeService
             'type' => isset($row['type']) ? (int) $row['type'] : null,
             'publisher_name' => $row['publisher_name'] ?? null,
             'level' => $row['level'] ?? null,
-            'publish_status' => $this->fromDbPublishStatus((int) ($row['publish_status'] ?? 0)),
+            'publish_status' => (int) ($row['publish_status'] ?? 0),
             'publish_time' => $row['publish_time'] ?? null,
         ];
     }
@@ -470,24 +468,6 @@ final class NoticeService
         }
 
         return [];
-    }
-
-    /**
-     * 数据库发布状态 → 前端状态
-     * 数据库: 0未发布 / 1已发布 / -1已撤回
-     * 前端:   0草稿  / 1已发布 /  2已撤回
-     */
-    private function fromDbPublishStatus(int $dbStatus): int
-    {
-        return $dbStatus === -1 ? 2 : $dbStatus;
-    }
-
-    /**
-     * 前端发布状态 → 数据库状态
-     */
-    private function toDbPublishStatus(int $status): int
-    {
-        return $status === 2 ? -1 : $status;
     }
 
     /**
