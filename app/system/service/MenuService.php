@@ -15,7 +15,9 @@ use think\facade\Db;
 final class MenuService
 {
     private const MENU_PROMPT_FILE = 'menu/system.md';
-    /** 同级菜单取样条数，样本只用于让模型沿用既有命名风格 */
+    /**
+     * 同级菜单取样条数，样本只用于让模型沿用既有命名风格
+     */
     private const SIBLING_SAMPLE_LIMIT = 10;
 
     public function __construct(private readonly AiService $aiService) {}

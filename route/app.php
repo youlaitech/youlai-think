@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 
 use app\auth\controller\AuthController;
+use app\auth\controller\RealtimeController;
 use app\auth\controller\WxMaAuthController;
 use app\codegen\controller\CodegenController;
 use app\system\controller\UserController;
@@ -69,6 +70,12 @@ Route::group('api/v1', function () {
         Route::delete(':ids', [UserController::class, 'delete'])->middleware('perm', 'sys:user:delete');
         Route::put(':id/password/reset', [UserController::class, 'resetPassword'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:user:reset-password');
         Route::patch(':id/status', [UserController::class, 'changeStatus'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:user:update');
+    });
+
+    // 实时推送
+    Route::group('realtime', function () {
+        Route::post('tickets', [RealtimeController::class, 'tickets']);
+        Route::get('presence', [RealtimeController::class, 'presence']);
     });
 
     // 角色管理

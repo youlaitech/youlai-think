@@ -7,9 +7,13 @@ namespace app\common\web;
  */
 interface IResultCode
 {
-    /** 获取错误码 */
+    /**
+     * 获取错误码
+     */
     public function getCode(): string;
 
-    /** 获取错误信息 */
+    /**
+     * 获取错误信息
+     */
     public function getMsg(): string;
 }

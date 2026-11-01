@@ -1,156 +1,84 @@
 <template>
-  <div class="page-container h-full flex flex-1 flex-col">
-    <!-- 搜索 -->
-    <CrudSearch
-      ref="searchRef"
-      :search-config="searchConfig"
-      @query-click="handleQueryClick"
-      @reset-click="handleResetClick"
-    >
+  <CrudPage
+    :search-config="searchConfig"
+    :table-config="tableConfig"
+    :form-config="formConfig"
+    :load-form-data="loadFormData"
+  >
 {$searchSlotsCurd}
-    </CrudSearch>
-
-    <!-- 列表 -->
-    <CrudTable
-      ref="contentRef"
-      :content-config="contentConfig"
-      @add-click="handleAddClick"
-      @export-click="handleExportClick"
-      @search-click="handleSearchClick"
-      @toolbar-click="handleToolbarClick"
-      @operate-click="handleOperateClick"
-      @filter-change="handleFilterChange"
-    >
 {$listSlotsCurd}
-    </CrudTable>
-
-    <!-- 新增 -->
-    <CrudModal ref="addModalRef" :modal-config="addModalConfig" @submit-click="handleSubmitClick">
 {$formSlotsCurd}
-    </CrudModal>
-
-    <!-- 编辑 -->
-    <CrudModal ref="editModalRef" :modal-config="editModalConfig" @submit-click="handleSubmitClick">
-{$formSlotsCurd}
-    </CrudModal>
-  </div>
+  </CrudPage>
 </template>
 
 <script setup lang="ts">
-defineOptions({
-  name: "{$entityName}",
-  inheritAttrs: false,
-});
-
 import {$entityName}API from "@/api/{$moduleName}/{$entityKebab}";
-import type { {$entityName}Form, {$entityName}QueryParams } from "@/api/{$moduleName}/{$entityKebab}";
-import type { IObject, IOperateData, IModalConfig, ICrudTableConfig, ISearchConfig } from "@/components/Crud/types";
-import useCrudPage from "@/components/Crud/useCrudPage";
+import type {
+  {$entityName}Form,
+  {$entityName}Item,
+  {$entityName}QueryParams,
+} from "@/api/{$moduleName}/{$entityKebab}";
+import type {
+  CrudRecord,
+  CrudFormConfig,
+  CrudTableConfig,
+  CrudSearchConfig,
+} from "@/components/Crud/types";
 
-const {
-  searchRef,
-  contentRef,
-  addModalRef,
-  editModalRef,
-  handleQueryClick,
-  handleResetClick,
-  handleAddClick,
-  handleEditClick,
-  handleSubmitClick,
-  handleExportClick,
-  handleSearchClick,
-  handleFilterChange,
-} = useCrudPage();
+defineOptions({ name: "{$entityName}", inheritAttrs: false });
 
-const searchConfig: ISearchConfig = reactive({
-  permPrefix: "{$moduleName}:{$entityKebab}",
-  formItems: [
+const searchConfig: CrudSearchConfig = {
+  fields: [
 {$searchConfigItemsCurd}
   ],
-});
+};
 
-const contentConfig: ICrudTableConfig<{$entityName}QueryParams> = reactive({
-  permPrefix: "{$moduleName}:{$entityKebab}",
-  table: {
-    border: true,
-    highlightCurrentRow: true,
-  },
-  pk: "id",
-  indexAction: {$entityName}API.getPage,
-  deleteAction: {$entityName}API.deleteByIds,
-  parseData(res: any) {
-    return {
-      total: res?.total ?? 0,
-      list: res?.list ?? [],
-    };
-  },
-  pagination: {
-    background: true,
-    layout: "total, sizes, prev, pager, next, jumper",
-    pageSize: 20,
-    pageSizes: [10, 20, 30, 50],
-  },
-  toolbar: ["add", "delete"],
-  defaultToolbar: ["refresh", "filter"],
-  cols: [
-    { type: "selection", width: 55, align: "center" },
+const tableConfig: CrudTableConfig<{$entityName}QueryParams, {$entityName}Item> = {
+  permissionPrefix: "{$moduleName}:{$entityKebab}",
+  table: { border: true },
+  fetchData: {$entityName}API.getPage,
+  deleteByIds: {$entityName}API.deleteByIds,
+  toolbarActions: ["create", "delete"],
+  tableTools: ["refresh", "columns", "search"],
+  columns: [
+    { type: "selection", width: 50 },
 {$contentColsCurd}
     {
+      prop: "actions",
       label: "操作",
-      prop: "operation",
-      width: 180,
-      templet: "tool",
-      operat: ["edit", "delete"],
+      cellType: "actions",
+      actions: ["view", "edit", "delete"],
+      fixed: "right",
+      width: 200,
     },
   ],
-});
+};
 
-const addModalConfig: IModalConfig<{$entityName}Form> = reactive({
-  permPrefix: "{$moduleName}:{$entityKebab}",
-  pk: "id",
-  dialog: {
-    title: "新增{$businessName}",
-    width: 800,
-    draggable: true,
+const formConfig: CrudFormConfig<{$entityName}Form> = {
+  title: ({ mode }) => ({
+    create: "新增{$businessName}",
+    edit: "编辑{$businessName}",
+    view: "查看{$businessName}",
+  })[mode],
+  dialog: { width: 560 },
+  /**
+   * 保存记录，更新目标使用打开表单时的主键。
+   */
+  submitForm(data, { mode, id }) {
+    if (mode === "create") return {$entityName}API.create(data);
+    if (id === undefined) throw new Error("缺少记录 ID");
+    return {$entityName}API.update(String(id), data);
   },
-  form: {
-    labelWidth: 100,
-  },
-  formItems: [
+  fields: [
 {$modalFormItemsCurd}
   ],
-  formAction: (data: {$entityName}Form) => {
-    if (data.id) {
-      return {$entityName}API.update(data.id as string, data);
-    } else {
-      return {$entityName}API.create(data);
-    }
-  },
-});
-
-const editModalConfig: IModalConfig<{$entityName}Form> = reactive({
-  permPrefix: "{$moduleName}:{$entityKebab}",
-  component: "drawer",
-  drawer: {
-    title: "编辑{$businessName}",
-    size: 500,
-  },
-  pk: "id",
-  formAction(data: any) {
-    return {$entityName}API.update(data.id as string, data);
-  },
-  formItems: addModalConfig.formItems,
-});
-
-const handleOperateClick = (data: IOperateData) => {
-  if (data.name === "edit") {
-    handleEditClick(data.row, async () => {
-      return await {$entityName}API.getFormData(String(data.row.id));
-    });
-  }
 };
 
-const handleToolbarClick = (name: string) => {
-  console.log(name);
-};
+/**
+ * 加载编辑和查看所需的详情。
+ */
+function loadFormData(row: CrudRecord): Promise<{$entityName}Form> {
+  const rowKey = tableConfig.rowKey ?? "id";
+  return {$entityName}API.getFormData(String(row[rowKey]));
+}
 </script>

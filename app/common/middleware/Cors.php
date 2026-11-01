@@ -22,7 +22,9 @@ final class Cors
             return $this->createCorsResponse($origin);
         }
 
-        /** @var Response $response */
+        /**
+         * @var Response $response
+         */
         $response = $next($request);
         $response->header([
             'Access-Control-Allow-Origin' => $origin ?: '*',

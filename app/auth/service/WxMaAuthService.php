@@ -3,7 +3,7 @@
 namespace app\auth\service;
 
 use app\common\exception\BusinessException;
-use app\system\model\SysUserSocial;
+use app\system\model\SysUserIdentity;
 use extend\redis\RedisClient;
 use extend\jwt\JwtTokenManager;
 use app\common\web\ResultCode;
@@ -48,13 +48,13 @@ final class WxMaAuthService
         }
 
         // 查找是否已绑定用户
-        $social = SysUserSocial::where('platform', 'WECHAT_MINI')
-            ->where('openid', $openId)
+        $identity = SysUserIdentity::where('provider', SysUserIdentity::WECHAT_MINI_PROVIDER)
+            ->where('provider_account_id', $openId)
             ->find();
 
-        if ($social) {
+        if ($identity) {
             // 已绑定用户，直接登录
-            $token = $this->generateTokenByUserId((int) $social->user_id);
+            $token = $this->generateTokenByUserId((int) $identity->user_id);
             return [
                 'need_bind_mobile' => false,
                 'access_token' => $token['access_token'],
@@ -90,7 +90,7 @@ final class WxMaAuthService
         $user = $this->findOrCreateUser($mobile);
 
         // 绑定微信 openid
-        $this->bindWechatOpenId((int) $user->id, $openId, $session['unionid'] ?? null, $session['session_key'] ?? null);
+        $this->bindWechatOpenId((int) $user->id, $openId, $session['session_key'] ?? null);
 
         // 生成认证令牌
         return $this->generateTokenByUserId((int) $user->id);
@@ -108,7 +108,7 @@ final class WxMaAuthService
         $user = $this->findOrCreateUser($mobile);
 
         // 绑定微信 openid
-        $this->bindWechatOpenId((int) $user->id, $openId, null, null);
+        $this->bindWechatOpenId((int) $user->id, $openId, null);
 
         Log::info("微信小程序绑定手机号成功：mobile={$mobile}, openId={$openId}");
 
@@ -239,31 +239,35 @@ final class WxMaAuthService
     }
 
     /**
-     * 绑定微信 openid
+     * 绑定微信 openid，会话密钥写入 Redis
      */
-    private function bindWechatOpenId(int $userId, string $openId, ?string $unionId, ?string $sessionKey): void
+    private function bindWechatOpenId(int $userId, string $openId, ?string $sessionKey): void
     {
         try {
-            $existing = SysUserSocial::where('platform', 'WECHAT_MINI')
-                ->where('openid', $openId)
+            $existing = SysUserIdentity::where('provider', SysUserIdentity::WECHAT_MINI_PROVIDER)
+                ->where('provider_account_id', $openId)
                 ->find();
 
             if ($existing) {
-                // 更新绑定
-                $existing->user_id = $userId;
-                $existing->unionid = $unionId;
-                $existing->session_key = $sessionKey;
+                if ((int) $existing->user_id !== $userId) {
+                    // 账号已归属其他用户，不转移
+                    Log::warning("该微信账号已关联其他用户：userId={$userId}, openId={$openId}");
+                    return;
+                }
+                $existing->last_login_time = date('Y-m-d H:i:s');
                 $existing->save();
             } else {
-                // 新增绑定
-                $social = new SysUserSocial();
-                $social->user_id = $userId;
-                $social->platform = 'WECHAT_MINI';
-                $social->openid = $openId;
-                $social->unionid = $unionId;
-                $social->session_key = $sessionKey;
-                $social->verified = 1;
-                $social->save();
+                $identity = new SysUserIdentity();
+                $identity->user_id = $userId;
+                $identity->provider = SysUserIdentity::WECHAT_MINI_PROVIDER;
+                $identity->provider_account_id = $openId;
+                $identity->last_login_time = date('Y-m-d H:i:s');
+                $identity->save();
+            }
+
+            if ($sessionKey) {
+                $cacheKey = 'auth:wxma:session_key:' . SysUserIdentity::WECHAT_MINI_PROVIDER . ':' . $openId;
+                RedisClient::get()->setex($cacheKey, 3 * 24 * 3600, $sessionKey);
             }
         } catch (\Exception $e) {
             // 绑定失败不影响登录

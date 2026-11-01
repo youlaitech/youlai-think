@@ -5,7 +5,8 @@ namespace app\system\service;
 use app\common\exception\BusinessException;
 use app\common\util\PageUtil;
 use app\system\model\Notice;
-use extend\sse\SseService;
+use extend\realtime\RealtimeService;
+use extend\realtime\RealtimeTopics;
 use think\facade\Db;
 
 final class NoticeService
@@ -284,12 +285,12 @@ final class NoticeService
             Db::name('sys_user_notice')->where('notice_id', $id)->update(['is_deleted' => 1, 'update_time' => $now]);
         });
 
-        // SSE通知前端移除该通知
-        $sseService = SseService::getInstance();
-        $onlineUsers = $sseService->getOnlineUsers();
-        foreach ($onlineUsers as $u) {
-            $sseService->sendToUser($u->username, 'notice-revoke', ['id' => $id]);
-        }
+        // 广播通知撤回，前端据此移除该通知
+        RealtimeService::getInstance()->broadcast(
+            RealtimeTopics::TOPIC_NOTICE,
+            RealtimeTopics::EVENT_NOTICE_CHANGED,
+            ['noticeId' => (string)$id, 'action' => 'revoked']
+        );
 
         return true;
     }
@@ -471,23 +472,14 @@ final class NoticeService
     }
 
     /**
-     * SSE广播通知发布
+     * 广播通知发布
      */
     private function broadcastNoticePublished(int $noticeId, array $notice): void
     {
-        $sseService = SseService::getInstance();
-        $noticeData = [
-            'id' => (string) $noticeId,
-            'title' => $notice['title'] ?? null,
-            'type' => $notice['type'] ?? null,
-            'level' => $notice['level'] ?? null,
-            'publishStatus' => 1,
-            'publishTime' => $notice['publish_time'] ?? null,
-        ];
-
-        $onlineUsers = $sseService->getOnlineUsers();
-        foreach ($onlineUsers as $u) {
-            $sseService->sendToUser($u->username, 'notice', $noticeData);
-        }
+        RealtimeService::getInstance()->broadcast(
+            RealtimeTopics::TOPIC_NOTICE,
+            RealtimeTopics::EVENT_NOTICE_CHANGED,
+            ['noticeId' => (string)$noticeId, 'action' => 'published']
+        );
     }
 }

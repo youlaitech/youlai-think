@@ -10,7 +10,9 @@ use GuzzleHttp\Client;
  */
 final class AiService
 {
-    /** 提示词目录，各模块的 md 提示词集中放在动态表单模块下 */
+    /**
+     * 提示词目录，各模块的 md 提示词集中放在动态表单模块下
+     */
     private const PROMPTS_DIR = 'app/form/prompts';
 
     /**

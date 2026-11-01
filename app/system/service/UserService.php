@@ -14,6 +14,8 @@ use app\system\model\UserRole;
 use app\system\service\DataPermissionService;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use think\facade\Db;
 
 /**
@@ -589,17 +591,20 @@ final class UserService
     }
 
     /**
-     * 生成用户导入模板
+     * 生成用户导入模板，表头与导入解析的列顺序保持一致
      */
     public function generateImportTemplate(): string
     {
-        $templatePath = public_path() . 'static/templates/用户导入模板.xlsx';
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('用户导入');
+        $sheet->fromArray(['用户名', '昵称', '性别', '手机号码', '邮箱', '角色', '部门'], null, 'A1');
 
-        if (!file_exists($templatePath)) {
-            throw new BusinessException('模板文件不存在');
-        }
+        $tempPath = tempnam(sys_get_temp_dir(), 'user_import_') . '.xlsx';
+        (new Xlsx($spreadsheet))->save($tempPath);
+        $spreadsheet->disconnectWorksheets();
 
-        return $templatePath;
+        return $tempPath;
     }
 
     public function exportToExcel(array $params, array $authUser): string

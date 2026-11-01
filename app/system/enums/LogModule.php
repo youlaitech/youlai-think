@@ -9,29 +9,53 @@ use JsonSerializable;
  */
 enum LogModule: int implements JsonSerializable
 {
-    /** 登录 */
+    /**
+     * 登录
+     */
     case LOGIN = 1;
-    /** 用户管理 */
+    /**
+     * 用户管理
+     */
     case USER = 2;
-    /** 角色管理 */
+    /**
+     * 角色管理
+     */
     case ROLE = 3;
-    /** 部门管理 */
+    /**
+     * 部门管理
+     */
     case DEPT = 4;
-    /** 菜单管理 */
+    /**
+     * 菜单管理
+     */
     case MENU = 5;
-    /** 字典管理 */
+    /**
+     * 字典管理
+     */
     case DICT = 6;
-    /** 系统配置 */
+    /**
+     * 系统配置
+     */
     case CONFIG = 7;
-    /** 文件管理 */
+    /**
+     * 文件管理
+     */
     case FILE = 8;
-    /** 通知公告 */
+    /**
+     * 通知公告
+     */
     case NOTICE = 9;
-    /** 日志管理 */
+    /**
+     * 日志管理
+     */
     case LOG = 10;
-    /** 代码生成 */
+    /**
+     * 代码生成
+     */
     case CODEGEN = 11;
-    /** 其他 */
+    /**
+     * 其他
+     */
     case OTHER = 99;
 
     public function description(): string

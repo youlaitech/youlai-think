@@ -261,6 +261,16 @@ youlai-think/
 
 
 
+## Optional Extensions
+
+**AI (off by default)**: fill the key in `.env`; `config/ai.php` reads these variables.
+
+```env
+AI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+AI_API_KEY=sk-xxx
+AI_MODEL=qwen-plus
+```
+
 ## Documentation
 
 

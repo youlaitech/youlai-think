@@ -1137,16 +1137,13 @@ ORDER BY ORDINAL_POSITION ASC
                 continue;
             }
             $dictType = trim((string) ($fc['dict_type'] ?? ''));
-            if ($dictType === '') {
-                continue;
-            }
             $fieldName = (string) ($fc['field_name'] ?? '');
-            if ($fieldName === '') {
+            if ($dictType === '' || $fieldName === '') {
                 continue;
             }
             $type = $this->dictSelectType((int) ($fc['form_type'] ?? 0));
-            $lines[] = "      <template #{$fieldName}=\"scope\">";
-            $lines[] = "        <DictSelect v-model=\"scope.formData[scope.prop]\" code=\"{$dictType}\" type=\"{$type}\" v-bind=\"scope.attrs\" />";
+            $lines[] = "      <template #search-{$fieldName}=\"{ formData, prop, attrs }\">";
+            $lines[] = "        <DictSelect v-model=\"formData[prop]\" code=\"{$dictType}\" type=\"{$type}\" v-bind=\"attrs\" />";
             $lines[] = "      </template>";
         }
 
@@ -1161,15 +1158,12 @@ ORDER BY ORDINAL_POSITION ASC
                 continue;
             }
             $dictType = trim((string) ($fc['dict_type'] ?? ''));
-            if ($dictType === '') {
-                continue;
-            }
             $fieldName = (string) ($fc['field_name'] ?? '');
-            if ($fieldName === '') {
+            if ($dictType === '' || $fieldName === '') {
                 continue;
             }
-            $lines[] = "      <template #{$fieldName}=\"scope\">";
-            $lines[] = "        <DictTag v-model=\"scope.row[scope.prop]\" code=\"{$dictType}\" />";
+            $lines[] = "      <template #table-cell-{$fieldName}=\"{ row }\">";
+            $lines[] = "        <DictTag :model-value=\"row.{$fieldName}\" code=\"{$dictType}\" />";
             $lines[] = "      </template>";
         }
 
@@ -1184,16 +1178,13 @@ ORDER BY ORDINAL_POSITION ASC
                 continue;
             }
             $dictType = trim((string) ($fc['dict_type'] ?? ''));
-            if ($dictType === '') {
-                continue;
-            }
             $fieldName = (string) ($fc['field_name'] ?? '');
-            if ($fieldName === '') {
+            if ($dictType === '' || $fieldName === '') {
                 continue;
             }
             $type = $this->dictSelectType((int) ($fc['form_type'] ?? 0));
-            $lines[] = "      <template #{$fieldName}=\"scope\">";
-            $lines[] = "        <DictSelect v-model=\"scope.formData[scope.prop]\" code=\"{$dictType}\" type=\"{$type}\" v-bind=\"scope.attrs\" />";
+            $lines[] = "      <template #form-{$fieldName}=\"{ formData, prop, attrs }\">";
+            $lines[] = "        <DictSelect v-model=\"formData[prop]\" code=\"{$dictType}\" type=\"{$type}\" v-bind=\"attrs\" />";
             $lines[] = "      </template>";
         }
 
@@ -1215,28 +1206,34 @@ ORDER BY ORDINAL_POSITION ASC
             }
             $dictType = trim((string) ($fc['dict_type'] ?? ''));
             $formType = (int) ($fc['form_type'] ?? 1);
+            $queryType = (int) ($fc['query_type'] ?? 0);
 
             $lines[] = "    {";
+            $lines[] = "      prop: \"{$fieldName}\",";
+            $lines[] = "      label: \"{$label}\",";
             if ($dictType !== '') {
                 $lines[] = "      type: \"custom\",";
-                $lines[] = "      slotName: \"{$fieldName}\",";
+                $lines[] = "      attrs: { clearable: true },";
+            } elseif ($this->isDateFormType($formType)) {
+                $lines[] = "      type: \"date-picker\",";
+                if ($queryType === 4) {
+                    $lines[] = "      initialValue: [],";
+                    $lines[] = "      attrs: {";
+                    $lines[] = "        type: \"daterange\",";
+                    $lines[] = "        valueFormat: \"YYYY-MM-DD\",";
+                    $lines[] = "        startPlaceholder: \"开始日期\",";
+                    $lines[] = "        endPlaceholder: \"结束日期\",";
+                    $lines[] = "      },";
+                } else {
+                    $lines[] = "      attrs: { type: \"date\", valueFormat: \"YYYY-MM-DD\", clearable: true },";
+                }
+            } elseif ($formType === 5) {
+                $lines[] = "      type: \"input-number\",";
+                $lines[] = "      attrs: { clearable: true },";
             } else {
-                $lines[] = "      type: \"{$this->crudSearchType($formType)}\",";
+                $lines[] = "      type: \"input\",";
+                $lines[] = "      attrs: { clearable: true },";
             }
-            $lines[] = "      label: \"{$label}\",";
-            $lines[] = "      prop: \"{$fieldName}\",";
-            $lines[] = "      attrs: {";
-            $lines[] = "        placeholder: \"{$label}\",";
-            if ($this->isDateFormType($formType)) {
-                $lines[] = "        type: \"daterange\",";
-                $lines[] = "        \"range-separator\": \"~\",";
-                $lines[] = "        \"start-placeholder\": \"开始时间\",";
-                $lines[] = "        \"end-placeholder\": \"截止时间\",";
-                $lines[] = "        \"value-format\": \"YYYY-MM-DD\",";
-            }
-            $lines[] = "        clearable: true,";
-            $lines[] = "        style: { width: \"200px\" },";
-            $lines[] = "      },";
             $lines[] = "    },";
         }
 
@@ -1256,12 +1253,7 @@ ORDER BY ORDINAL_POSITION ASC
             if ($fieldName === '') {
                 continue;
             }
-            $dictType = trim((string) ($fc['dict_type'] ?? ''));
-            if ($dictType !== '') {
-                $lines[] = "    { label: \"{$label}\", prop: \"{$fieldName}\", templet: \"custom\", slotName: \"{$fieldName}\" },";
-            } else {
-                $lines[] = "    { label: \"{$label}\", prop: \"{$fieldName}\" },";
-            }
+            $lines[] = "    { prop: \"{$fieldName}\", label: \"{$label}\", minWidth: 120 },";
         }
 
         return implode("\n", $lines);
@@ -1285,24 +1277,39 @@ ORDER BY ORDINAL_POSITION ASC
             $required = ((int) ($fc['is_required'] ?? 0)) === 1;
 
             $lines[] = "    {";
+            $lines[] = "      prop: \"{$fieldName}\",";
+            $lines[] = "      label: \"{$label}\",";
+            if ($required) {
+                $lines[] = "      required: true,";
+            }
             if ($dictType !== '') {
                 $lines[] = "      type: \"custom\",";
-                $lines[] = "      slotName: \"{$fieldName}\",";
+            } elseif ($formType === 2) {
+                $lines[] = "      type: \"select\",";
+                $lines[] = "      options: [],";
+            } elseif ($formType === 3) {
+                $lines[] = "      type: \"radio\",";
+                $lines[] = "      options: [],";
+            } elseif ($formType === 4) {
+                $lines[] = "      type: \"checkbox\",";
+                $lines[] = "      initialValue: [],";
+                $lines[] = "      options: [],";
+            } elseif ($formType === 5) {
+                $lines[] = "      type: \"input-number\",";
+            } elseif ($formType === 6) {
+                $lines[] = "      type: \"switch\",";
+                $lines[] = "      initialValue: 1,";
+                $lines[] = "      attrs: { activeValue: 1, inactiveValue: 0 },";
+            } elseif ($this->isDateFormType($formType)) {
+                $lines[] = "      type: \"date-picker\",";
+                $lines[] = ($formType === 9)
+                    ? "      attrs: { type: \"datetime\", valueFormat: \"YYYY-MM-DD HH:mm:ss\" },"
+                    : "      attrs: { type: \"date\", valueFormat: \"YYYY-MM-DD\" },";
+            } elseif ($formType === 7) {
+                $lines[] = "      type: \"input\",";
+                $lines[] = "      attrs: { type: \"textarea\", rows: 3 },";
             } else {
-                $lines[] = "      type: \"{$this->crudFormType($formType)}\",";
-            }
-            $lines[] = "      label: \"{$label}\",";
-            $lines[] = "      prop: \"{$fieldName}\",";
-            $lines[] = "      attrs: {";
-            if ($this->isDateFormType($formType)) {
-                $lines[] = "        type: \"" . ($formType === 9 ? "datetime" : "date") . "\",";
-                $lines[] = "        \"value-format\": \"" . ($formType === 9 ? "YYYY-MM-DD HH:mm:ss" : "YYYY-MM-DD") . "\",";
-            }
-            $lines[] = "        placeholder: \"{$label}\",";
-            $lines[] = "        style: { width: \"100%\" },";
-            $lines[] = "      },";
-            if ($required) {
-                $lines[] = "      rules: [{ required: true, message: \"{$label}不能为空\", trigger: \"change\" }],";
+                $lines[] = "      type: \"input\",";
             }
             $lines[] = "    },";
         }

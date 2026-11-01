@@ -7,37 +7,59 @@ namespace app\common\constants;
  */
 final class RedisKey
 {
-    /** 图片验证码键前缀 */
+    /**
+     * 图片验证码键前缀
+     */
     public const string CAPTCHA = 'captcha:image:';
 
-    /** 短信登录验证码键前缀 */
+    /**
+     * 短信登录验证码键前缀
+     */
     public const string SMS_LOGIN = 'sms:login:';
 
-    /** 短信绑定手机验证码键前缀 */
+    /**
+     * 短信绑定手机验证码键前缀
+     */
     public const string SMS_BIND_MOBILE = 'sms:bind:mobile:';
 
-    /** 短信绑定邮箱验证码键前缀 */
+    /**
+     * 短信绑定邮箱验证码键前缀
+     */
     public const string SMS_BIND_EMAIL = 'sms:bind:email:';
 
-    /** 用户 Token 键前缀 */
+    /**
+     * 用户 Token 键前缀
+     */
     public const string USER_TOKEN = 'user:token:';
 
-    /** 用户刷新 Token 键前缀 */
+    /**
+     * 用户刷新 Token 键前缀
+     */
     public const string USER_REFRESH_TOKEN = 'user:refresh:token:';
 
-    /** 用户会话键前缀 */
+    /**
+     * 用户会话键前缀
+     */
     public const string USER_SESSION = 'user:session:';
 
-    /** 角色权限缓存键前缀 */
+    /**
+     * 角色权限缓存键前缀
+     */
     public const string ROLE_PERMS = 'role:perms:';
 
-    /** 角色菜单缓存键前缀 */
+    /**
+     * 角色菜单缓存键前缀
+     */
     public const string ROLE_MENUS = 'role:menus:';
 
-    /** 数据权限缓存键前缀 */
+    /**
+     * 数据权限缓存键前缀
+     */
     public const string DATA_SCOPE = 'data:scope:';
 
-    /** IP 限流键前缀 */
+    /**
+     * IP 限流键前缀
+     */
     public const string RATE_LIMIT_IP = 'rate_limiter:ip:';
 
     /**

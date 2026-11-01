@@ -6,7 +6,7 @@ use app\common\exception\BusinessException;
 use app\common\util\PageUtil;
 use app\system\model\Dict;
 use app\system\model\DictItem;
-use extend\sse\SseService;
+use extend\realtime\RealtimeService;
 use think\facade\Db;
 
 /**
@@ -120,8 +120,8 @@ final class DictService
         ]);
 
         // SSE通知字典变更
-        $sseService = SseService::getInstance();
-        $sseService->sendDictChange($dictCode);
+        $realtimeService = RealtimeService::getInstance();
+        $realtimeService->sendDictChange($dictCode);
 
         return true;
     }
@@ -166,8 +166,8 @@ final class DictService
         });
 
         // SSE通知字典变更
-        $sseService = SseService::getInstance();
-        $sseService->sendDictChange($dictCode);
+        $realtimeService = RealtimeService::getInstance();
+        $realtimeService->sendDictChange($dictCode);
 
         return true;
     }
@@ -207,9 +207,9 @@ final class DictService
         });
 
         // SSE通知字典变更
-        $sseService = SseService::getInstance();
+        $realtimeService = RealtimeService::getInstance();
         foreach ($dictCodes as $dictCode) {
-            $sseService->sendDictChange($dictCode);
+            $realtimeService->sendDictChange($dictCode);
         }
 
         return true;
@@ -323,8 +323,8 @@ final class DictService
         ]);
 
         // SSE通知字典变更
-        $sseService = SseService::getInstance();
-        $sseService->sendDictChange($dictCode);
+        $realtimeService = RealtimeService::getInstance();
+        $realtimeService->sendDictChange($dictCode);
 
         return true;
     }
@@ -361,8 +361,8 @@ final class DictService
         ]);
 
         // SSE通知字典变更
-        $sseService = SseService::getInstance();
-        $sseService->sendDictChange($dictCode);
+        $realtimeService = RealtimeService::getInstance();
+        $realtimeService->sendDictChange($dictCode);
 
         return true;
     }
@@ -388,8 +388,8 @@ final class DictService
             ->update(['is_deleted' => 1, 'update_time' => date('Y-m-d H:i:s')]);
 
         // SSE通知字典变更
-        $sseService = SseService::getInstance();
-        $sseService->sendDictChange($dictCode);
+        $realtimeService = RealtimeService::getInstance();
+        $realtimeService->sendDictChange($dictCode);
 
         return true;
     }
