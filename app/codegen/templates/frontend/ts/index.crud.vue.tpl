@@ -34,7 +34,7 @@ const searchConfig: CrudSearchConfig = {
 };
 
 const tableConfig: CrudTableConfig<{$entityName}QueryParams, {$entityName}Item> = {
-  permissionPrefix: "{$moduleName}:{$entityKebab}",
+  permissionPrefix: "{$permPrefix}",
   table: { border: true },
   fetchData: {$entityName}API.getPage,
   deleteByIds: {$entityName}API.deleteByIds,

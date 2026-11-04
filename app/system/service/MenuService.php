@@ -299,7 +299,6 @@ final class MenuService
             ->column('id');
         $menuIds = array_map('intval', $menuIds ?: [$id]);
 
-        // 删除关联
         RoleMenu::whereIn('menu_id', $menuIds)->delete();
 
         // 物理删除（sys_menu 表无 is_deleted 字段）
@@ -650,7 +649,7 @@ final class MenuService
     /**
      *
      */
-    public function addMenuForCodegen(int $parentMenuId, string $tableName, string $moduleName, string $businessName, string $entityName): void
+    public function addMenuForCodegen(int $parentMenuId, string $moduleName, string $businessName, string $entityName): void
     {
         $parent = Menu::find($parentMenuId);
         if (!$parent) {
@@ -682,7 +681,7 @@ final class MenuService
         ]);
 
         // 生成CRUD按钮权限
-        $permPrefix = $moduleName . ':' . str_replace('_', '-', $tableName) . ':';
+        $permPrefix = $moduleName . ':' . $entityKebab . ':';
         $actions = ['查询', '新增', '修改', '删除'];
         $perms = ['list', 'create', 'update', 'delete'];
         foreach ($actions as $i => $action) {

@@ -24,6 +24,9 @@ final class CodegenService
     private const DEFAULT_BACKEND_APP_NAME = 'youlai-think';
     private const DEFAULT_REMOVE_TABLE_PREFIX = 'sys_';
 
+    /** 模块名 → 权限前缀，未配置时用模块名 */
+    private const PERMISSION_NAMESPACES = ['system' => 'sys'];
+
     private TemplateRenderer $renderer;
 
     public function __construct()
@@ -380,7 +383,6 @@ ORDER BY ORDINAL_POSITION ASC
                 try {
                     app()->make(MenuService::class)->addMenuForCodegen(
                         $parentMenuId,
-                        $tableName,
                         $moduleName,
                         $businessName,
                         $entityName
@@ -602,6 +604,8 @@ ORDER BY ORDINAL_POSITION ASC
             'tableName' => $tableNameFinal,
             'entityName' => $entityName,
             'entityKebab' => $entityKebab,
+            'entityKebabPlural' => $this->pluralize($entityKebab),
+            'permPrefix' => $this->resolvePermPrefix($moduleName) . ':' . $entityKebab,
             'businessName' => $businessName,
             'moduleName' => $moduleName,
             'moduleNameStudly' => $moduleNameStudly,
@@ -624,7 +628,7 @@ ORDER BY ORDINAL_POSITION ASC
             'softDeleteWhere' => $this->buildSoftDeleteWhere($fieldConfigs),
             'createDataMerge' => $this->buildCreateDataMerge($fieldConfigs),
             'updateDataMerge' => $this->buildUpdateDataMerge($fieldConfigs),
-            'deleteBody' => $this->buildDeleteBody($fieldConfigs),
+            'deleteBody' => $this->buildDeleteBody($fieldConfigs, $tableNameFinal),
         ];
 
         $previews[] = $this->buildPreviewItem(
@@ -848,10 +852,10 @@ ORDER BY ORDINAL_POSITION ASC
         return "        \$data['update_time'] = date('Y-m-d H:i:s');\n";
     }
 
-    private function buildDeleteBody(array $fieldConfigs): string
+    private function buildDeleteBody(array $fieldConfigs, string $tableName): string
     {
         if (!$this->hasColumn($fieldConfigs, 'is_deleted')) {
-            return "        Db::name('{\$tableName}')->whereIn('id', \$idList)->delete();";
+            return "        Db::name('{$tableName}')->whereIn('id', \$idList)->delete();";
         }
 
         $payload = "        \$payload = ['is_deleted' => 1";
@@ -859,7 +863,7 @@ ORDER BY ORDINAL_POSITION ASC
             $payload .= ", 'update_time' => date('Y-m-d H:i:s')";
         }
         $payload .= "];\n";
-        $payload .= "        Db::name('{\$tableName}')->whereIn('id', \$idList)->update(\$payload);";
+        $payload .= "        Db::name('{$tableName}')->whereIn('id', \$idList)->update(\$payload);";
         return $payload;
     }
 
@@ -1441,6 +1445,24 @@ ORDER BY ORDINAL_POSITION ASC
             return $s;
         }
         return strtolower($s[0]) . substr($s, 1);
+    }
+
+    /** 模块名 → 权限前缀命名空间，未配置时用模块名 */
+    private function resolvePermPrefix(string $moduleName): string
+    {
+        return self::PERMISSION_NAMESPACES[$moduleName] ?? $moduleName;
+    }
+
+    /** 英文复数化：y→ies、s/x/z/ch/sh→es、其余 +s */
+    private function pluralize(string $word): string
+    {
+        if (preg_match('/(s|x|z|ch|sh)$/', $word)) {
+            return $word . 'es';
+        }
+        if (preg_match('/[^aeiou]y$/', $word)) {
+            return substr($word, 0, -1) . 'ies';
+        }
+        return $word . 's';
     }
 
     private function toKebabCase(string $s): string

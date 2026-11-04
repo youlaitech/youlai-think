@@ -197,12 +197,10 @@ final class RoleService
             $role->remark = $data['remark'] ?? $role->remark;
             $role->save();
 
-            // 更新菜单
             if (isset($data['menu_ids'])) {
                 $this->syncMenus($id, $data['menu_ids']);
             }
 
-            // 更新部门
             if (isset($data['dept_ids'])) {
                 $this->syncDepts($id, $data['dept_ids']);
             }
@@ -258,21 +256,18 @@ final class RoleService
      */
     public function getPermissionsByUserId(int $userId): array
     {
-        // 获取用户所有角色
         $roleIds = UserRole::where('user_id', $userId)->column('role_id');
 
         if (empty($roleIds)) {
             return [];
         }
 
-        // 获取所有角色的菜单ID
         $menuIds = RoleMenu::whereIn('role_id', $roleIds)->column('menu_id');
 
         if (empty($menuIds)) {
             return [];
         }
 
-        // 获取权限标识
         return Menu::whereIn('id', $menuIds)
             ->where('type', 'B')
             ->where('visible', 1)

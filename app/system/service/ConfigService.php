@@ -124,7 +124,6 @@ final class ConfigService
             throw new BusinessException('配置名称、键和值不能为空');
         }
 
-        // 更新时排除自己
         $exists = Config::where('config_key', $configKey)
             ->where('id', '<>', $id)
             ->count();

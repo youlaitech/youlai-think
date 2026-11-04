@@ -94,10 +94,8 @@ final class DeptService
             throw new BusinessException('父级部门不能是自己');
         }
 
-        // 更新树路径
         if (isset($data['parent_id']) && (int) $data['parent_id'] !== (int) $dept->parent_id) {
             $dept->tree_path = $this->buildTreePath((int) $data['parent_id']);
-            // 更新子部门的树路径
             $this->updateChildrenTreePath($id, $dept->tree_path . ',' . $id);
         }
 

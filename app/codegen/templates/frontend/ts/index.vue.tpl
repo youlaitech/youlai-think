@@ -16,12 +16,12 @@
       <div class="page-toolbar">
         <div class="page-toolbar__left">
         <el-button
-          v-hasPerm="['{$moduleName}:{$entityKebab}:create']"
+          v-hasPerm="['{$permPrefix}:create']"
           type="primary"
           @click="handleCreateClick()"
         >新增</el-button>
         <el-button
-          v-hasPerm="['{$moduleName}:{$entityKebab}:delete']"
+          v-hasPerm="['{$permPrefix}:delete']"
           type="danger"
           :disabled="!hasSelection"
           @click="handleBatchDelete()"
@@ -57,7 +57,7 @@
         <el-table-column fixed="right" label="操作" width="180">
           <template #default="scope">
             <el-button
-              v-hasPerm="['{$moduleName}:{$entityKebab}:update']"
+              v-hasPerm="['{$permPrefix}:update']"
               type="primary"
               size="small"
               link
@@ -66,7 +66,7 @@
               编辑
             </el-button>
             <el-button
-              v-hasPerm="['{$moduleName}:{$entityKebab}:delete']"
+              v-hasPerm="['{$permPrefix}:delete']"
               type="danger"
               size="small"
               link

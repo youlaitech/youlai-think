@@ -241,12 +241,10 @@ final class UserController extends BaseController
             return $this->fail('A0400', '请上传文件');
         }
 
-        // 保存上传文件
         $saveName = $file->move(runtime_path() . 'temp')->getPathname();
 
         $result = $this->service(UserService::class)->importFromExcel($saveName);
 
-        // 删除临时文件
         @unlink($saveName);
 
         return $this->success($result, "导入完成，成功{$result['validCount']}条，失败{$result['invalidCount']}条");

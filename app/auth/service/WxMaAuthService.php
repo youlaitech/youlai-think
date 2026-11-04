@@ -77,16 +77,13 @@ final class WxMaAuthService
      */
     public function phoneLogin(string $loginCode, string $phoneCode): array
     {
-        // 获取微信会话信息
         $session = $this->getSession($loginCode);
         $openId = $session['openid'] ?? '';
 
-        // 获取手机号
         $mobile = $this->getPhoneNumber($phoneCode);
 
         Log::info("微信小程序手机号快捷登录：openId={$openId}, mobile={$mobile}");
 
-        // 查询或创建用户
         $user = $this->findOrCreateUser($mobile);
 
         // 绑定微信 openid
@@ -104,7 +101,6 @@ final class WxMaAuthService
         // 验证短信验证码
         $this->validateSmsCode($mobile, $smsCode);
 
-        // 查询或创建用户
         $user = $this->findOrCreateUser($mobile);
 
         // 绑定微信 openid
@@ -212,7 +208,6 @@ final class WxMaAuthService
             return $user;
         }
 
-        // 创建新用户
         Db::startTrans();
         try {
             $user = new User();
@@ -307,7 +302,6 @@ final class WxMaAuthService
             throw new BusinessException('用户不存在');
         }
 
-        // 查询用户角色
         $roles = Db::name('sys_user_role')
             ->alias('ur')
             ->join('sys_role r', 'ur.role_id = r.id')

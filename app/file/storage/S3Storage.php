@@ -7,7 +7,7 @@ use GuzzleHttp\Exception\RequestException;
 use app\common\exception\BusinessException;
 
 /**
- * S3 兼容对象存储（通过 RustFS 等 S3 服务实现，参考 youlai-boot 的 S3FileServiceImpl）。
+ * S3 兼容对象存储（通过 RustFS 等 S3 服务实现）。
  * 直接调用 S3 兼容 REST API（AWS Signature V4），无需安装 AWS SDK。
  */
 final class S3Storage
@@ -83,7 +83,7 @@ final class S3Storage
     }
 
     /**
-     * 从完整 URL 中提取对象 key（与 youlai-boot 的 deleteFile 对应）。
+     * 从完整 URL 中提取对象 key。
      */
     public function extractKey(string $filePath): string
     {

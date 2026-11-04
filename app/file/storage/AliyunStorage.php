@@ -7,7 +7,7 @@ use GuzzleHttp\Exception\RequestException;
 use app\common\exception\BusinessException;
 
 /**
- * 阿里云 OSS 对象存储（参考 youlai-boot 的 AliyunFileServiceImpl）。
+ * 阿里云 OSS 对象存储。
  * 直接调用 OSS REST API + 经典 V1 签名（HMAC-SHA1），无需安装官方 SDK。
  */
 final class AliyunStorage

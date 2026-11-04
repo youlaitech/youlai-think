@@ -2,9 +2,9 @@ import request from "@/utils/request";
 import type { {$entityName}QueryParams, {$entityName}Item, {$entityName}Form } from "./types";
 import type { PageResult } from "@/api/common";
 
-const BASE_URL = "/api/v1/{$entityKebab}";
+const BASE_URL = "/api/v1/{$entityKebabPlural}";
 
-const {$entityKebab}API = {
+const {$entityName}API = {
   /** 分页 */
   getPage(queryParams: {$entityName}QueryParams) {
     return request<unknown, PageResult<{$entityName}Item>>({
@@ -49,7 +49,7 @@ const {$entityKebab}API = {
   },
 };
 
-export default {$entityKebab}API;
+export default {$entityName}API;
 
 // 重导出类型
 export * from "./types";

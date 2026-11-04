@@ -109,7 +109,6 @@ final class UserService
                 $password = self::DEFAULT_PASSWORD;
             }
 
-            // 创建用户
             $userId = User::insertGetId([
                 'username' => $data['username'],
                 'password' => password_hash($password, PASSWORD_DEFAULT),
@@ -142,7 +141,6 @@ final class UserService
         }
 
         return Db::transaction(function () use ($user, $data, $id) {
-            // 更新基本信息
             $user->nickname = $data['nickname'] ?? $user->nickname;
             $user->gender = $data['gender'] ?? $user->gender;
             $user->status = $data['status'] ?? $user->status;
@@ -154,7 +152,6 @@ final class UserService
                 }
             }
 
-            // 更新密码（如果提供了）
             if (!empty($data['password'])) {
                 $user->password = password_hash($data['password'], PASSWORD_DEFAULT);
             }
@@ -164,7 +161,6 @@ final class UserService
                 throw new BusinessException('用户更新失败');
             }
 
-            // 更新角色
             if (isset($data['role_ids'])) {
                 $this->syncRoles($id, $data['role_ids']);
             }
@@ -208,10 +204,8 @@ final class UserService
             throw new BusinessException('用户不存在');
         }
 
-        // 获取角色编码
         $roleCodes = array_column($user->roles->toArray() ?? [], 'code');
 
-        // 获取权限标识
         $perms = [];
         if (!empty($roleCodes)) {
             $permService = app()->make(RolePermService::class);
@@ -380,7 +374,6 @@ final class UserService
             throw new BusinessException('手机号已被其他账号绑定');
         }
 
-        // 更新手机号
         $user->mobile = $mobile;
         return $user->save();
     }
@@ -455,7 +448,6 @@ final class UserService
             throw new BusinessException('邮箱已被其他账号绑定');
         }
 
-        // 更新邮箱
         $user->email = $email;
         return $user->save();
     }
@@ -710,7 +702,6 @@ final class UserService
             }
         }
 
-        // 获取已存在的用户名
         $existingUsernames = User::column('username');
 
         $validCount = 0;
@@ -786,7 +777,6 @@ final class UserService
                 }
             }
 
-            // 创建用户
             $userId = User::insertGetId([
                 'username' => $username,
                 'password' => password_hash(self::DEFAULT_PASSWORD, PASSWORD_DEFAULT),

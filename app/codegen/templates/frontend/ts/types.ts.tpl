@@ -1,4 +1,4 @@
-import type { BaseQueryParams } from "@/api/common";
+import type { PageQuery } from "@/api/common";
 
 /** 列表对象 */
 export interface {$entityName}Item {
@@ -13,6 +13,6 @@ export interface {$entityName}Form {
 }
 
 /** 查询参数 */
-export interface {$entityName}QueryParams extends BaseQueryParams {
+export interface {$entityName}QueryParams extends PageQuery {
 {$queryFieldsTs}
 }

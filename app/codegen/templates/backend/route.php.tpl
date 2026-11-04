@@ -2,12 +2,13 @@
 
 // {$businessName} 路由
 
+use app\{$moduleName}\controller\{$entityName}Controller;
 use think\facade\Route;
 
-Route::group('api/v1/{$entityKebab}', function () {
-    Route::get('', [\app\{$moduleName}\controller\{$entityName}Controller::class, 'page']);
-    Route::get(':id/form', [\app\{$moduleName}\controller\{$entityName}Controller::class, 'form'])->pattern(['id' => '\\d+']);
-    Route::post('', [\app\{$moduleName}\controller\{$entityName}Controller::class, 'create']);
-    Route::put(':id', [\app\{$moduleName}\controller\{$entityName}Controller::class, 'update'])->pattern(['id' => '\\d+']);
-    Route::delete(':ids', [\app\{$moduleName}\controller\{$entityName}Controller::class, 'delete']);
-})->middleware(['auth', 'demo']);
+Route::group('api/v1/{$entityKebabPlural}', function () {
+    Route::get('', [{$entityName}Controller::class, 'page'])->middleware('perm', '{$permPrefix}:list');
+    Route::get(':id/form', [{$entityName}Controller::class, 'form'])->pattern(['id' => '\d+'])->middleware('perm', '{$permPrefix}:update');
+    Route::post('', [{$entityName}Controller::class, 'create'])->middleware('perm', '{$permPrefix}:create');
+    Route::put(':id', [{$entityName}Controller::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', '{$permPrefix}:update');
+    Route::delete(':ids', [{$entityName}Controller::class, 'delete'])->middleware('perm', '{$permPrefix}:delete');
+})->middleware([\app\common\middleware\AuthMiddleware::class]);

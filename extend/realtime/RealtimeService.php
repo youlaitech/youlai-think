@@ -3,6 +3,7 @@
 namespace extend\realtime;
 
 use GatewayWorker\Lib\Gateway;
+use think\facade\Log;
 
 /**
  * 实时推送服务，通过 GatewayWorker 分发消息
@@ -25,19 +26,27 @@ class RealtimeService
     }
 
     /**
-     * 按主题广播消息
+     * 按主题广播消息，GatewayWorker 不可用时只记录日志
      */
     public function broadcast(string $topic, string $type, mixed $payload): void
     {
-        Gateway::sendToGroup(self::groupName($topic), self::encode($type, $payload));
+        try {
+            Gateway::sendToGroup(self::groupName($topic), self::encode($type, $payload));
+        } catch (\Throwable $e) {
+            Log::warning('realtime broadcast failed: ' . $e->getMessage());
+        }
     }
 
     /**
-     * 定向推送给指定用户
+     * 定向推送给指定用户，GatewayWorker 不可用时只记录日志
      */
     public function sendToUser(string $username, string $type, mixed $payload): void
     {
-        Gateway::sendToUid($username, self::encode($type, $payload));
+        try {
+            Gateway::sendToUid($username, self::encode($type, $payload));
+        } catch (\Throwable $e) {
+            Log::warning('realtime sendToUser failed: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -66,8 +75,12 @@ class RealtimeService
      */
     public function presenceSnapshot(): array
     {
-        $clientIds = Gateway::getAllClientId();
-        $count = count($clientIds);
+        try {
+            $count = count(Gateway::getAllClientId());
+        } catch (\Throwable $e) {
+            Log::warning('realtime presence failed: ' . $e->getMessage());
+            $count = 0;
+        }
 
         return [
             'onlineUsers' => $count,
