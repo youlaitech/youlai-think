@@ -1,10 +1,10 @@
 <div align="center">
 
-# <img alt="youlai-think" width="28" src="./docs/images/logo/logo.png" valign="middle"> youlai-think
+# <img alt="youlai-think" width="40" height="40" src="./docs/images/logo/logo.png" align="center"> youlai-think
 
+**PHP 8.2 + ThinkPHP 8 企业级权限管理系统后端**
 
-
-**ThinkPHP 企业级权限管理系统后端**
+<br>
 
 [![PHP](https://img.shields.io/badge/PHP-8.2+-8892BF?logo=php)](https://www.php.net/)
 [![ThinkPHP](https://img.shields.io/badge/ThinkPHP-8-00B894)](https://www.thinkphp.cn/)
@@ -14,14 +14,14 @@
 
 </div>
 
-![](./docs/images/rainbow.png "rainbow.png")
+<p align="center"><img src="./docs/images/rainbow.png" alt="rainbow"></p>
 
 <div align="center">
 
-[![在线预览](https://img.shields.io/badge/在线预览-2D8CF0?style=for-the-badge&logo=google-chrome&logoColor=white)](https://vue.youlai.tech)
-[![移动端预览](https://img.shields.io/badge/移动端预览-19BE6B?style=for-the-badge&logo=android&logoColor=white)](https://app.youlai.tech)
-[![阅读文档](https://img.shields.io/badge/阅读文档-8B5CF6?style=for-the-badge&logo=gitbook&logoColor=white)](https://www.youlai.tech/docs/server/thinkphp/)
-[![English](https://img.shields.io/badge/English-00B4D8?style=for-the-badge&logo=google-translate&logoColor=white)](./README.en.md)
+[![在线预览](https://img.shields.io/badge/在线预览-2D8CF0?style=for-the-badge\&logo=google-chrome\&logoColor=white)](https://admin.youlai.tech)
+[![移动端预览](https://img.shields.io/badge/移动端预览-19BE6B?style=for-the-badge\&logo=android\&logoColor=white)](https://app.youlai.tech)
+[![阅读文档](https://img.shields.io/badge/阅读文档-8B5CF6?style=for-the-badge\&logo=gitbook\&logoColor=white)](https://www.youlai.tech/docs/server/spring-boot/)
+[![English](https://img.shields.io/badge/English-00B4D8?style=for-the-badge\&logo=google-translate\&logoColor=white)](./README.en.md)
 
 </div>
 

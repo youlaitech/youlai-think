@@ -1,50 +1,29 @@
 <div align="center">
 
+# <img alt="youlai-think" width="40" height="40" src="./docs/images/logo/logo.png" align="center"> youlai-think
 
+**PHP 8.2 + ThinkPHP 8 Enterprise-Grade Permission Management Backend**
 
-# <img alt="youlai-think" width="28" src="./docs/images/logo/logo.png" align="center"> youlai-think
-
-
-
-[English](./README.en.md) · [简体中文](./README.md)
-
-
-
-**Enterprise-grade permission management backend based on ThinkPHP**
-
-
+<br>
 
 [![PHP](https://img.shields.io/badge/PHP-8.2+-8892BF?logo=php)](https://www.php.net/)
-
 [![ThinkPHP](https://img.shields.io/badge/ThinkPHP-8-00B894)](https://www.thinkphp.cn/)
-
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?logo=apache)](LICENSE.txt)
-
 [![Gitee Star](https://gitee.com/youlaiorg/youlai-think/badge/star.svg)](https://gitee.com/youlaiorg/youlai-think/stargazers)
-
 [![GitHub Star](https://img.shields.io/github/stars/youlaitech/youlai-think?style=social)](https://github.com/youlaitech/youlai-think)
-
-
 
 </div>
 
-
-
-![](./docs/images/rainbow.png "rainbow.png")
-
-
+<p align="center"><img src="./docs/images/rainbow.png" alt="rainbow"></p>
 
 <div align="center">
 
-
-
-[🖥️ Live Preview](https://vue.youlai.tech) | [📱 Mobile Preview](https://app.youlai.tech) | [📖 Documentation](https://www.youlai.tech/docs/server/thinkphp/)
-
-
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-2D8CF0?style=for-the-badge\&logo=google-chrome\&logoColor=white)](https://admin.youlai.tech)
+[![Mobile Demo](https://img.shields.io/badge/Mobile%20Demo-19BE6B?style=for-the-badge\&logo=android\&logoColor=white)](https://app.youlai.tech)
+[![Documentation](https://img.shields.io/badge/Documentation-8B5CF6?style=for-the-badge\&logo=gitbook\&logoColor=white)](https://www.youlai.tech/docs/server/spring-boot/)
+[![简体中文](https://img.shields.io/badge/简体中文-00B4D8?style=for-the-badge\&logo=google-translate\&logoColor=white)](./README.md)
 
 </div>
-
-
 
 ## Introduction
 
@@ -281,7 +260,7 @@ AI_MODEL=qwen-plus
 
 | 📖 Full docs site | [www.youlai.tech](https://www.youlai.tech/) |
 
-| 🖥️ PC live preview | [vue.youlai.tech](https://vue.youlai.tech) |
+| 🖥️ PC live preview | [admin.youlai.tech](https://admin.youlai.tech) |
 
 | 📱 Mobile live preview | [app.youlai.tech](https://app.youlai.tech) |
 
