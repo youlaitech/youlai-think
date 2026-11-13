@@ -22,14 +22,14 @@ class RealtimeEventHandler
     }
 
     /**
-     * 客户端连接，握手只接受一次性票据
+     * WS 握手：从 URL 查询参数取票据并校验，client_id 为 GatewayWorker 的字符串标识
      */
-    public static function onConnect(string $clientId, $request): void
+    public static function onWebSocketConnect(string $clientId, array $data): void
     {
-        $ticket = (string) ($request->get('ticket') ?? '');
+        $ticket = (string) ($data['get']['ticket'] ?? '');
         $grant = RealtimeTicketService::getInstance()->consume($ticket);
         if ($grant === null) {
-            Gateway::closeClient((int) $clientId, 4001, 'invalid ticket');
+            Gateway::closeClient($clientId, 4001, 'invalid ticket');
             return;
         }
 
@@ -40,17 +40,17 @@ class RealtimeEventHandler
             $authUser = null;
         }
         if ($authUser === null) {
-            Gateway::closeClient((int) $clientId, 4001, 'invalid credential');
+            Gateway::closeClient($clientId, 4001, 'invalid credential');
             return;
         }
 
         $username = (string) ($grant['username'] ?? '');
         $topics = is_array($grant['topics'] ?? null) ? $grant['topics'] : [];
         foreach ($topics as $topic) {
-            Gateway::joinGroup((int) $clientId, RealtimeService::groupName((string) $topic));
+            Gateway::joinGroup($clientId, RealtimeService::groupName((string) $topic));
         }
-        Gateway::bindUid((int) $clientId, $username);
-        Gateway::updateClient((int) $clientId, ['username' => $username]);
+        Gateway::bindUid($clientId, $username);
+        Gateway::updateClient($clientId, ['username' => $username]);
 
         self::$sessions[$clientId] = [
             'username' => $username,
@@ -59,7 +59,7 @@ class RealtimeEventHandler
         ];
 
         Gateway::sendToClient(
-            (int) $clientId,
+            $clientId,
             RealtimeService::encode(RealtimeTopics::EVENT_CONNECTION_READY, [
                 'heartbeatTimeoutMs' => RealtimeTopics::PONG_TIMEOUT * 1000,
             ])

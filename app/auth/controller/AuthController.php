@@ -212,12 +212,13 @@ final class AuthController extends BaseController
 
         $redis = RedisClient::get();
         $key = RedisKey::captcha($captchaId);
-        $storedCode = $redis->get($key);
+
+        // 原子取删：无论校验成败验证码都作废，且并发请求只有一个能取到值
+        $script = "local v = redis.call('GET', KEYS[1]); if v then redis.call('DEL', KEYS[1]); end; return v";
+        $storedCode = $redis->eval($script, 1, $key);
         if (!$storedCode || strtolower((string) $storedCode) !== strtolower($captchaCode)) {
             throw new BusinessException(ResultCode::USER_VERIFICATION_CODE_ERROR);
         }
-
-        $redis->del($key);
     }
 
     /**

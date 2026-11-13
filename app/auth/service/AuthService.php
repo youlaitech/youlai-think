@@ -5,6 +5,7 @@ namespace app\auth\service;
 use app\common\exception\BusinessException;
 use app\common\util\VerifyCodeHelper;
 use extend\jwt\JwtTokenManager;
+use extend\jwt\JwtClaimConstants;
 use app\common\web\ResultCode;
 use app\system\model\User;
 use app\system\service\RoleService;
@@ -143,13 +144,15 @@ final class AuthService
      */
     public function refresh(string $refreshToken): array
     {
-        $token = $this->jwt->refreshToken($refreshToken);
+        // 校验刷新令牌后按用户 ID 回查状态，重新构建角色与数据权限再签发
+        $claims = $this->jwt->validateRefreshToken($refreshToken);
+        $userId = (int) ($claims[JwtClaimConstants::USER_ID] ?? 0);
+        $user = User::where('id', $userId)->where('is_deleted', 0)->find();
+        if (!$user) {
+            throw new BusinessException(ResultCode::ACCESS_TOKEN_INVALID, '登录状态已失效');
+        }
 
-        return [
-            'access_token' => $token->accessToken,
-            'refresh_token' => $token->refreshToken,
-            'token_type' => $token->tokenType,
-            'expires_in' => $token->expiresIn,
-        ];
+        $this->jwt->invalidate(null, $refreshToken);
+        return $this->buildTokenResponse($user);
     }
 }

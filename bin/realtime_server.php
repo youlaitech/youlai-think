@@ -55,23 +55,23 @@ $host = getenv('REALTIME_HOST') ?: '0.0.0.0';
 $port = (int) (getenv('REALTIME_PORT') ?: 8002);
 $workerCount = (int) (getenv('REALTIME_WORKER_NUM') ?: 4);
 
-// 注册事件处理接口，供 GatewayWorker 回调
+// 注册事件处理类，供 GatewayWorker 回调
 require_once __DIR__ . '/../extend/realtime/RealtimeEventHandler.php';
-GatewayLib::registerInterface('RealtimeEventHandler');
 
 $gateway = new Gateway("ws://{$host}:{$port}");
 $gateway->name = 'youlai-realtime';
 $gateway->count = 1;
-$gateway->registerAddress('127.0.0.1:1238');
+$gateway->registerAddress = '127.0.0.1:1238';
 $gateway->pingInterval = 25;
 $gateway->pingNotResponseLimit = 2;
 
 $worker = new BusinessWorker();
 $worker->name = 'youlai-realtime-business';
 $worker->count = $workerCount;
-$worker->registerAddress('127.0.0.1:1238');
+$worker->registerAddress = '127.0.0.1:1238';
+$worker->eventHandler = \extend\realtime\RealtimeEventHandler::class;
 $worker->onWorkerStart = function ($worker) {
-    GatewayLib::addTimer(25, function () {
+    \Workerman\Timer::add(25, function () {
         RealtimeService::getInstance()->sendHeartbeat();
     });
 };

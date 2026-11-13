@@ -91,9 +91,8 @@ class ExceptionHandle extends Handle
             return $this->fail($resultCode);
         }
 
-        // 兜底系统异常
-        $msg = $this->app->isDebug() ? $e->getMessage() : ResultCode::SYSTEM_ERROR->getMsg();
-        return $this->fail(ResultCode::SYSTEM_ERROR, $msg, 500);
+        // 兜底系统异常：内部信息只进日志，不回显客户端
+        return $this->fail(ResultCode::SYSTEM_ERROR, '', 500);
     }
 
     /**

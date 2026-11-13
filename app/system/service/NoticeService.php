@@ -252,7 +252,7 @@ final class NoticeService
             }
         });
 
-        // SSE通知在线用户
+        // 通知在线用户
         $this->broadcastNoticePublished((int) $notice['id'], $notice);
 
         return true;

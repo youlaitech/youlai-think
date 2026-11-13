@@ -45,7 +45,7 @@
 
 - 📦 **Complete modules** — users, roles, menus, departments, dictionaries, files, message center, operation logs
 
-- 🔌 **Real-time communication** — SSE push: online user count, dictionary sync, notification broadcast
+- 🔌 **Real-time communication** — WebSocket push: online user count, dictionary sync, notification broadcast
 
 
 
@@ -175,7 +175,7 @@ youlai-think/
 
 │   ├── file/                       # File management module
 
-│   ├── message/                    # SSE push
+│   ├── message/                    # Realtime push
 
 │   ├── common/                     # Common module (model/enum/exception/middleware/event)
 

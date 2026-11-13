@@ -64,7 +64,12 @@ final class ConvertCaseMiddleware
             if (is_array($data)) {
                 return $data;
             }
-            $decoded = json_decode(json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), true);
+            // 二进制响应（如代码生成 zip）无法编码为 JSON，直接跳过大小写转换
+            $encoded = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            if ($encoded === false) {
+                return null;
+            }
+            $decoded = json_decode($encoded, true);
             return is_array($decoded) ? $decoded : null;
         }
 

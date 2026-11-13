@@ -149,6 +149,14 @@ Route::group('api/v1', function () {
         Route::get(':dictCode/items', [DictController::class, 'itemPage'])->pattern(['dictCode' => '\w+'])->middleware('perm', 'sys:dict-item:list');
         Route::post(':dictCode/items', [DictController::class, 'createItem'])->pattern(['dictCode' => '\w+'])->middleware('perm', 'sys:dict-item:create');
 
+        Route::put(':dictCode/items/:itemId', [DictController::class, 'updateItem'])->pattern(['dictCode' => '\w+', 'itemId' => '\d+'])->middleware('perm', 'sys:dict-item:update');
+        Route::delete(':dictCode/items/:itemIds', [DictController::class, 'deleteItems'])->pattern(['dictCode' => '\w+'])->middleware('perm', 'sys:dict-item:delete');
+        Route::get('', [DictController::class, 'page'])->middleware('perm', 'sys:dict:list');
+        Route::post('', [DictController::class, 'create'])->middleware('perm', 'sys:dict:create');
+        Route::put(':id', [DictController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:dict:update');
+        Route::delete(':ids', [DictController::class, 'delete'])->middleware('perm', 'sys:dict:delete');
+    });
+
     // 动态表单
     Route::group('forms', function () {
         Route::get('', [FormController::class, 'page'])->middleware('perm', 'form:definition:list');
@@ -173,13 +181,6 @@ Route::group('api/v1', function () {
         Route::post(':form_key/data', [FormController::class, 'submitData']);
         Route::get(':form_key/data/:data_id', [FormController::class, 'dataDetail'])->middleware('perm', 'form:data:list');
         Route::delete(':form_key/data/:ids', [FormController::class, 'deleteData'])->middleware('perm', 'form:data:delete');
-    });
-        Route::put(':dictCode/items/:itemId', [DictController::class, 'updateItem'])->pattern(['dictCode' => '\w+', 'itemId' => '\d+'])->middleware('perm', 'sys:dict-item:update');
-        Route::delete(':dictCode/items/:itemIds', [DictController::class, 'deleteItems'])->pattern(['dictCode' => '\w+'])->middleware('perm', 'sys:dict-item:delete');
-        Route::get('', [DictController::class, 'page'])->middleware('perm', 'sys:dict:list');
-        Route::post('', [DictController::class, 'create'])->middleware('perm', 'sys:dict:create');
-        Route::put(':id', [DictController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:dict:update');
-        Route::delete(':ids', [DictController::class, 'delete'])->middleware('perm', 'sys:dict:delete');
     });
 
     // 文件管理

@@ -56,17 +56,20 @@ class RealtimeTicketService
      */
     public function consume(string $ticket): ?array
     {
-        if ($ticket === '' || strlen($ticket) < 43 || strlen($ticket) > 256) {
+        // 票据固定为 48 位十六进制字符串
+        if (strlen($ticket) !== 48 || !ctype_xdigit($ticket)) {
             return null;
         }
 
         $key = self::KEY_PREFIX . self::digest($ticket);
         $redis = RedisClient::get();
-        $raw = $redis->get($key);
+
+        // GET+DEL 在 Lua 内原子执行，避免并发握手重复消费同一票据
+        $script = "local v = redis.call('GET', KEYS[1]); if v then redis.call('DEL', KEYS[1]); end; return v";
+        $raw = $redis->eval($script, 1, $key);
         if (!$raw) {
             return null;
         }
-        $redis->del($key);
 
         $grant = json_decode((string) $raw, true);
         if (!is_array($grant) || ($grant['expiresAt'] ?? 0) <= time()) {

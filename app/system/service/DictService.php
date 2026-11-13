@@ -119,7 +119,7 @@ final class DictService
             'is_deleted' => 0,
         ]);
 
-        // SSE通知字典变更
+        // 通知字典变更
         $realtimeService = RealtimeService::getInstance();
         $realtimeService->sendDictChange($dictCode);
 
@@ -165,7 +165,7 @@ final class DictService
             }
         });
 
-        // SSE通知字典变更
+        // 通知字典变更
         $realtimeService = RealtimeService::getInstance();
         $realtimeService->sendDictChange($dictCode);
 
@@ -206,7 +206,7 @@ final class DictService
             }
         });
 
-        // SSE通知字典变更
+        // 通知字典变更
         $realtimeService = RealtimeService::getInstance();
         foreach ($dictCodes as $dictCode) {
             $realtimeService->sendDictChange($dictCode);
@@ -322,7 +322,7 @@ final class DictService
             'remark' => $data['remark'] ?? null,
         ]);
 
-        // SSE通知字典变更
+        // 通知字典变更
         $realtimeService = RealtimeService::getInstance();
         $realtimeService->sendDictChange($dictCode);
 
@@ -360,7 +360,7 @@ final class DictService
             'remark' => $data['remark'] ?? null,
         ]);
 
-        // SSE通知字典变更
+        // 通知字典变更
         $realtimeService = RealtimeService::getInstance();
         $realtimeService->sendDictChange($dictCode);
 
@@ -387,7 +387,7 @@ final class DictService
         DictItem::where('dict_code', $dictCode)->whereIn('id', $idList)->where('is_deleted', 0)
             ->update(['is_deleted' => 1, 'update_time' => date('Y-m-d H:i:s')]);
 
-        // SSE通知字典变更
+        // 通知字典变更
         $realtimeService = RealtimeService::getInstance();
         $realtimeService->sendDictChange($dictCode);
 
