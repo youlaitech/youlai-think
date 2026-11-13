@@ -1,13 +1,12 @@
-<?php
+<?php declare(strict_types=1);
 
 return [
     'session_mode' => env('SECURITY_SESSION_MODE', 'jwt'),
-
     'token_type' => 'Bearer',
     'token_header' => 'Authorization',
     'token_prefix' => 'Bearer ',
 
-    // 认证白名单：命中则跳过 JWT 校验（支持 * 通配符），匿名接口必须在此登记
+    // 命中则跳过 JWT 校验，支持 * 通配符；匿名接口必须在此登记
     'ignore_urls' => [
         '/api/v1/forms/public/*/render',
         '/api/v1/forms/public/*/data',
@@ -16,8 +15,9 @@ return [
     'jwt' => [
         'secret' => env('JWT_SECRET', 'SecretKey012345678901234567890123456789012345678901234567890123456789'),
         'issuer' => env('JWT_ISSUER', 'youlai-think'),
-        'access_ttl' => (int) env('JWT_ACCESS_TTL', 7200),
-        'refresh_ttl' => (int) env('JWT_REFRESH_TTL', 604800),
+        // 令牌有效期（秒）
+        'access_token_ttl' => (int) env('JWT_ACCESS_TTL', 7200),
+        'refresh_token_ttl' => (int) env('JWT_REFRESH_TTL', 604800),
     ],
 
     'redis' => [
