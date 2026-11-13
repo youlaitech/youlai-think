@@ -1,7 +1,7 @@
 {
   "name": "youlai/think",
-  "version": "0.2.0",
-  "description": "the new thinkphp framework",
+  "version": "0.2.1",
+  "description": "基于 ThinkPHP 8 的企业级权限管理后端，vue3-element-admin 的官方 PHP 实现。",
   "type": "project",
   "keywords": [
     "framework",
@@ -17,7 +17,7 @@
     }
   ],
   "require": {
-    "php": ">=8.0.0",
+    "php": ">=8.3.0",
     "topthink/framework": "^8.0",
     "topthink/think-orm": "^3.0|^4.0",
     "topthink/think-filesystem": "^2.0|^3.0",
@@ -47,10 +47,7 @@
     }
   },
   "config": {
-    "preferred-install": "dist",
-    "audit": {
-      "block-insecure": false
-    }
+    "preferred-install": "dist"
   },
   "scripts": {
     "post-autoload-dump": [
