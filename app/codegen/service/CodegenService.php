@@ -912,7 +912,7 @@ ORDER BY ORDINAL_POSITION ASC
                 continue;
             }
             $name = trim((string) ($fc['field_name'] ?? ''));
-            if ($name === '') {
+            if ($name === '' || $name === 'id') {
                 continue;
             }
             $comment = trim((string) ($fc['field_comment'] ?? ''));
@@ -934,7 +934,7 @@ ORDER BY ORDINAL_POSITION ASC
                 continue;
             }
             $name = trim((string) ($fc['field_name'] ?? ''));
-            if ($name === '') {
+            if ($name === '' || $name === 'id') {
                 continue;
             }
             $comment = trim((string) ($fc['field_comment'] ?? ''));
@@ -964,9 +964,14 @@ ORDER BY ORDINAL_POSITION ASC
             $type = (string) ($fc['field_type'] ?? 'string');
             $tsType = $this->tsTypeByPhpType($type);
             $queryType = (int) ($fc['query_type'] ?? 0);
+            $formType = (int) ($fc['form_type'] ?? 0);
             $lines[] = "  /** {$comment} */";
-            if ($this->isDateFormType((int) ($fc['form_type'] ?? 0)) && $queryType === 4) {
+            if ($this->isDateFormType($formType) && $queryType === 4) {
                 $lines[] = "  {$name}?: [string, string];";
+            } elseif ($queryType === 3) {
+                $lines[] = "  {$name}?: string[];";
+            } elseif ($queryType === 4) {
+                $lines[] = "  {$name}: [{$tsType} | null, {$tsType} | null];";
             } else {
                 $lines[] = "  {$name}?: {$tsType};";
             }
@@ -1140,15 +1145,44 @@ ORDER BY ORDINAL_POSITION ASC
             if (!is_array($fc) || ($fc['is_show_in_query'] ?? 0) != 1) {
                 continue;
             }
-            $dictType = trim((string) ($fc['dict_type'] ?? ''));
             $fieldName = (string) ($fc['field_name'] ?? '');
-            if ($dictType === '' || $fieldName === '') {
+            if ($fieldName === '') {
                 continue;
             }
-            $type = $this->dictSelectType((int) ($fc['form_type'] ?? 0));
-            $lines[] = "      <template #search-{$fieldName}=\"{ formData, prop, attrs }\">";
-            $lines[] = "        <DictSelect v-model=\"formData[prop]\" code=\"{$dictType}\" type=\"{$type}\" v-bind=\"attrs\" />";
-            $lines[] = "      </template>";
+            $dictType = trim((string) ($fc['dict_type'] ?? ''));
+            $formType = (int) ($fc['form_type'] ?? 0);
+            $queryType = (int) ($fc['query_type'] ?? 0);
+            if ($queryType === 3) {
+                if ($dictType !== '') {
+                    $lines[] = "      <template #search-{$fieldName}=\"{ formData, prop, attrs }\">";
+                    $lines[] = "        <DictSelect v-model=\"formData[prop]\" type=\"checkbox\" code=\"{$dictType}\" v-bind=\"attrs\" />";
+                    $lines[] = "      </template>";
+                }
+                continue;
+            }
+            if ($queryType === 4 && !$this->isDateFormType($formType)) {
+                $tsType = $this->tsTypeByPhpType((string) ($fc['field_type'] ?? 'string'));
+                $lines[] = "      <template #search-{$fieldName}=\"{ formData, prop, attrs }\">";
+                $lines[] = "        <div class=\"flex w-full items-center gap-2\" v-bind=\"attrs\">";
+                if ($tsType === 'number') {
+                    $lines[] = "          <el-input-number v-model=\"formData[prop][0]\" placeholder=\"最小值\" class=\"flex-1\" />";
+                    $lines[] = "          <span class=\"text-[var(--el-text-color-placeholder)]\">~</span>";
+                    $lines[] = "          <el-input-number v-model=\"formData[prop][1]\" placeholder=\"最大值\" class=\"flex-1\" />";
+                } else {
+                    $lines[] = "          <el-input v-model=\"formData[prop][0]\" placeholder=\"开始值\" clearable class=\"flex-1\" />";
+                    $lines[] = "          <span class=\"text-[var(--el-text-color-placeholder)]\">~</span>";
+                    $lines[] = "          <el-input v-model=\"formData[prop][1]\" placeholder=\"结束值\" clearable class=\"flex-1\" />";
+                }
+                $lines[] = "        </div>";
+                $lines[] = "      </template>";
+                continue;
+            }
+            if ($dictType !== '') {
+                $type = $this->dictSelectType($formType);
+                $lines[] = "      <template #search-{$fieldName}=\"{ formData, prop, attrs }\">";
+                $lines[] = "        <DictSelect v-model=\"formData[prop]\" code=\"{$dictType}\" type=\"{$type}\" v-bind=\"attrs\" />";
+                $lines[] = "      </template>";
+            }
         }
 
         return implode("\n", $lines);
@@ -1215,22 +1249,45 @@ ORDER BY ORDINAL_POSITION ASC
             $lines[] = "    {";
             $lines[] = "      prop: \"{$fieldName}\",";
             $lines[] = "      label: \"{$label}\",";
-            if ($dictType !== '') {
+            if ($queryType === 3) {
+                if ($dictType !== '') {
+                    $lines[] = "      type: \"custom\",";
+                    $lines[] = "      initialValue: [],";
+                    $lines[] = "      attrs: { clearable: true },";
+                } else {
+                    $lines[] = "      type: \"input-tag\",";
+                    $lines[] = "      attrs: { clearable: true },";
+                }
+            } elseif ($queryType === 4) {
+                if ($this->isDateFormType($formType)) {
+                    $lines[] = "      type: \"date-picker\",";
+                    $lines[] = "      initialValue: [],";
+                    $lines[] = "      attrs: {";
+                    $lines[] = $formType === 9
+                        ? "        type: \"datetimerange\","
+                        : "        type: \"daterange\",";
+                    $lines[] = $formType === 9
+                        ? "        valueFormat: \"YYYY-MM-DD HH:mm:ss\","
+                        : "        valueFormat: \"YYYY-MM-DD\",";
+                    $lines[] = $formType === 9
+                        ? "        startPlaceholder: \"开始时间\","
+                        : "        startPlaceholder: \"开始日期\",";
+                    $lines[] = $formType === 9
+                        ? "        endPlaceholder: \"结束时间\","
+                        : "        endPlaceholder: \"结束日期\",";
+                    $lines[] = "      },";
+                } else {
+                    $lines[] = "      type: \"custom\",";
+                    $lines[] = "      initialValue: [null, null],";
+                }
+            } elseif ($dictType !== '') {
                 $lines[] = "      type: \"custom\",";
                 $lines[] = "      attrs: { clearable: true },";
             } elseif ($this->isDateFormType($formType)) {
                 $lines[] = "      type: \"date-picker\",";
-                if ($queryType === 4) {
-                    $lines[] = "      initialValue: [],";
-                    $lines[] = "      attrs: {";
-                    $lines[] = "        type: \"daterange\",";
-                    $lines[] = "        valueFormat: \"YYYY-MM-DD\",";
-                    $lines[] = "        startPlaceholder: \"开始日期\",";
-                    $lines[] = "        endPlaceholder: \"结束日期\",";
-                    $lines[] = "      },";
-                } else {
-                    $lines[] = "      attrs: { type: \"date\", valueFormat: \"YYYY-MM-DD\", clearable: true },";
-                }
+                $lines[] = $formType === 9
+                    ? "      attrs: { type: \"datetime\", valueFormat: \"YYYY-MM-DD HH:mm:ss\", clearable: true },"
+                    : "      attrs: { type: \"date\", valueFormat: \"YYYY-MM-DD\", clearable: true },";
             } elseif ($formType === 5) {
                 $lines[] = "      type: \"input-number\",";
                 $lines[] = "      attrs: { clearable: true },";
@@ -1314,6 +1371,9 @@ ORDER BY ORDINAL_POSITION ASC
                 $lines[] = "      attrs: { type: \"textarea\", rows: 3 },";
             } else {
                 $lines[] = "      type: \"input\",";
+                if (stripos($fieldName, 'password') !== false || stripos($fieldName, 'pwd') !== false) {
+                    $lines[] = "      attrs: { type: \"password\", showPassword: true },";
+                }
             }
             $lines[] = "    },";
         }

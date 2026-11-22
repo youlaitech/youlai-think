@@ -2,7 +2,8 @@ import type { PageQuery } from "@/api/common";
 
 /** 列表对象 */
 export interface {$entityName}Item {
-  id?: string;
+  /** 稳定主键，不受列表显示配置影响 */
+  id: string;
 {$listFieldsTs}
 }
 
