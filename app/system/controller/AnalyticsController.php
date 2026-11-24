@@ -6,7 +6,7 @@ use app\controller\BaseController;
 use app\system\service\LogService;
 
 /**
- * @OA\Tag(name="10.统计接口")
+ * @OA\Tag(name="15.统计接口")
  */
 final class AnalyticsController extends BaseController
 {
