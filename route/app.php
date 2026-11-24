@@ -192,8 +192,13 @@ Route::group('api/v1', function () {
     // 日志管理
     Route::group('logs', function () {
         Route::get('', [LogController::class, 'page'])->middleware('perm', 'sys:log:list');
-        Route::get('analytics/trend', [LogController::class, 'viewsTrend'])->middleware('perm', 'sys:log:list');
-        Route::get('analytics/overview', [LogController::class, 'views'])->middleware('perm', 'sys:log:list');
+    });
+
+    // 统计
+    Route::group('analytics', function () {
+        Route::get('visits/summary', [\app\system\controller\AnalyticsController::class, 'visitSummary']);
+        Route::get('visits/trend', [\app\system\controller\AnalyticsController::class, 'visitTrend']);
+        Route::get('users/summary', [\app\system\controller\AnalyticsController::class, 'userSummary']);
     });
 
     // 代码生成

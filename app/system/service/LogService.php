@@ -136,57 +136,53 @@ final class LogService
             $ipMap[(string) ($r['date'] ?? '')] = (int) ($r['count'] ?? 0);
         }
 
-        $pvList = [];
-        $uvList = [];
+        $points = [];
         foreach ($dates as $d) {
-            $pvList[] = $pvMap[$d] ?? 0;
-            $uvList[] = $ipMap[$d] ?? 0;
+            $points[] = [
+                'date' => $d,
+                'pv' => $pvMap[$d] ?? 0,
+                'uv' => $ipMap[$d] ?? 0,
+            ];
         }
 
         return [
-            'dates' => $dates,
-            'pv_list' => $pvList,
-            'uv_list' => $uvList,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'points' => $points,
         ];
     }
 
-    public function getVisitStats(): array
+    public function getVisitSummary(): array
     {
         $today = date('Y-m-d');
-        $nowTime = date('H:i:s');
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
 
         $pvTotal = (int) Db::name('sys_log')->count('id');
         $pvToday = (int) Db::name('sys_log')->whereBetweenTime('create_time', $today . ' 00:00:00', $today . ' 23:59:59')->count('id');
-
-        $pvYesterdayTillNow = (int) Db::name('sys_log')
-            ->whereBetweenTime('create_time', date('Y-m-d', strtotime('-1 day')) . ' 00:00:00', date('Y-m-d', strtotime('-1 day')) . ' ' . $nowTime)
-            ->count('id');
-
-        $pvGrowth = 0.0;
-        if ($pvYesterdayTillNow > 0) {
-            $pvGrowth = round(($pvToday - $pvYesterdayTillNow) / $pvYesterdayTillNow, 2);
-        }
+        $pvYesterday = (int) Db::name('sys_log')->whereBetweenTime('create_time', $yesterday . ' 00:00:00', $yesterday . ' 23:59:59')->count('id');
 
         $uvTotal = (int) Db::name('sys_log')->distinct(true)->count('ip');
         $uvToday = (int) Db::name('sys_log')->whereBetweenTime('create_time', $today . ' 00:00:00', $today . ' 23:59:59')->distinct(true)->count('ip');
+        $uvYesterday = (int) Db::name('sys_log')->whereBetweenTime('create_time', $yesterday . ' 00:00:00', $yesterday . ' 23:59:59')->distinct(true)->count('ip');
 
-        $uvYesterdayTillNow = (int) Db::name('sys_log')
-            ->whereBetweenTime('create_time', date('Y-m-d', strtotime('-1 day')) . ' 00:00:00', date('Y-m-d', strtotime('-1 day')) . ' ' . $nowTime)
-            ->distinct(true)
-            ->count('ip');
-
-        $uvGrowth = 0.0;
-        if ($uvYesterdayTillNow > 0) {
-            $uvGrowth = round(($uvToday - $uvYesterdayTillNow) / $uvYesterdayTillNow, 2);
-        }
+        $rate = fn(int $todayCount, int $yesterdayCount) => $yesterdayCount > 0
+            ? round(($todayCount - $yesterdayCount) / $yesterdayCount, 4)
+            : null;
 
         return [
-            'today_uv_count' => $uvToday,
-            'total_uv_count' => $uvTotal,
-            'uv_growth_rate' => $uvGrowth,
-            'today_pv_count' => $pvToday,
-            'total_pv_count' => $pvTotal,
-            'pv_growth_rate' => $pvGrowth,
+            'todayUv' => $uvToday,
+            'yesterdayUv' => $uvYesterday,
+            'totalUv' => $uvTotal,
+            'todayPv' => $pvToday,
+            'yesterdayPv' => $pvYesterday,
+            'totalPv' => $pvTotal,
+            'uvGrowthRate' => $rate($uvToday, $uvYesterday),
+            'pvGrowthRate' => $rate($pvToday, $pvYesterday),
         ];
+    }
+
+    public function getUserSummary(): array
+    {
+        return ['total' => (int) Db::name('sys_user')->where('is_deleted', 0)->count('id')];
     }
 }
