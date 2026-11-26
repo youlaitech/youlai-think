@@ -114,7 +114,7 @@ final class NoticeService
         $level = (string) ($data['level'] ?? 'L');
         $targetType = (int) ($data['target_type'] ?? 1);
         // 支持数组/逗号分隔字符串
-        $targetUserIds = $this->normalizeTargetUserIds($data['target_users'] ?? null);
+        $targetUserIds = $this->normalizeTargetUserIds($data['target_user_ids'] ?? null);
 
         if ($title === '' || trim(strip_tags($content)) === '') {
             throw new BusinessException('标题或内容不能为空');
@@ -157,7 +157,7 @@ final class NoticeService
         $level = (string) ($data['level'] ?? 'L');
         $targetType = (int) ($data['target_type'] ?? 1);
         // 支持数组/逗号分隔字符串
-        $targetUserIds = $this->normalizeTargetUserIds($data['target_users'] ?? null);
+        $targetUserIds = $this->normalizeTargetUserIds($data['target_user_ids'] ?? null);
 
         if ($title === '' || trim(strip_tags($content)) === '') {
             throw new BusinessException('标题或内容不能为空');
@@ -218,11 +218,11 @@ final class NoticeService
             // 仅给启用用户生成通知
             $userQuery = Db::name('sys_user')->where('is_deleted', 0)->where('status', 1);
             if ($targetType === 2) {
-                $ids = array_values(array_filter(array_map('trim', explode(',', $targetUserIds)), fn($v) => $v !== ''));
-                $ids = array_values(array_filter(array_map('intval', $ids), fn($v) => $v > 0));
-                if (!empty($ids)) {
-                    $userQuery = $userQuery->whereIn('id', $ids);
+                $ids = array_values(array_filter(array_map('intval', explode(',', $targetUserIds)), fn($v) => $v > 0));
+                if (empty($ids)) {
+                    throw new BusinessException('推送指定用户不能为空');
                 }
+                $userQuery = $userQuery->whereIn('id', $ids);
             }
 
             $users = $userQuery->field('id')->select()->toArray();
@@ -351,9 +351,9 @@ final class NoticeService
     }
 
     /**
-     * 阅读通知详情（同时标记已读）
+     * 管理端预览通知详情，不修改阅读状态
      */
-    public function getNoticeDetail(int $userId, int $id): array
+    public function getNoticePreview(int $id): array
     {
         $row = Db::name('sys_notice')
             ->alias('n')
@@ -367,15 +367,6 @@ final class NoticeService
             throw new BusinessException('通知公告不存在');
         }
 
-        // 标记已读
-        $now = date('Y-m-d H:i:s');
-        Db::name('sys_user_notice')
-            ->where('notice_id', $id)
-            ->where('user_id', $userId)
-            ->where('is_deleted', 0)
-            ->where('is_read', 0)
-            ->update(['is_read' => 1, 'read_time' => $now, 'update_time' => $now]);
-
         return [
             'id' => (string) ($row['id'] ?? ''),
             'title' => $row['title'] ?? null,
@@ -386,6 +377,25 @@ final class NoticeService
             'publish_status' => (int) ($row['publish_status'] ?? 0),
             'publish_time' => $row['publish_time'] ?? null,
         ];
+    }
+
+    /**
+     * 阅读通知详情（同时标记已读）
+     */
+    public function getNoticeDetail(int $userId, int $id): array
+    {
+        $data = $this->getNoticePreview($id);
+
+        // 标记已读
+        $now = date('Y-m-d H:i:s');
+        Db::name('sys_user_notice')
+            ->where('notice_id', $id)
+            ->where('user_id', $userId)
+            ->where('is_deleted', 0)
+            ->where('is_read', 0)
+            ->update(['is_read' => 1, 'read_time' => $now, 'update_time' => $now]);
+
+        return $data;
     }
 
     /**
@@ -445,30 +455,21 @@ final class NoticeService
      */
     private function normalizeTargetUserIds(mixed $value): array
     {
-        if ($value === null) {
+        if (is_string($value)) {
+            $value = explode(',', $value);
+        }
+        if (!is_array($value)) {
             return [];
         }
 
-        if (is_string($value)) {
-            $value = trim($value);
-            if ($value === '') {
-                return [];
+        $ids = [];
+        foreach ($value as $item) {
+            $item = trim((string) $item);
+            if (ctype_digit($item) && (int) $item > 0) {
+                $ids[] = (string) (int) $item;
             }
-            return array_values(array_filter(array_map('trim', explode(',', $value)), fn($v) => $v !== ''));
         }
-
-        if (is_array($value)) {
-            $ids = [];
-            foreach ($value as $v) {
-                $v = trim((string) $v);
-                if ($v !== '') {
-                    $ids[] = $v;
-                }
-            }
-            return array_values(array_unique($ids));
-        }
-
-        return [];
+        return array_values(array_unique($ids));
     }
 
     /**

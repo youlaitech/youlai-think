@@ -80,6 +80,26 @@ final class NoticeController extends BaseController
     }
 
     /**
+     * 管理端预览通知公告
+     *
+     * @OA\Get(
+     *     path="/api/v1/notices/{id}/preview",
+     *     summary="管理端预览通知公告",
+     *     tags={"08.通知公告"},
+     *     @OA\Parameter(name="id", in="path", description="通知公告ID", required=true),
+     *     @OA\Response(response=200, description="OK")
+     * )
+     *
+     * @param int $id 公告ID
+     * @return \think\Response
+     */
+    public function preview(int $id): \think\Response
+    {
+        $data = $this->service(NoticeService::class)->getNoticePreview($id);
+        return $this->success($data);
+    }
+
+    /**
      * 阅读并获取通知公告详情
      *
      * @OA\Get(
