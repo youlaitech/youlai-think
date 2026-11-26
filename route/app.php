@@ -113,7 +113,7 @@ Route::group('api/v1', function () {
         Route::get(':id/form', [DeptController::class, 'form'])->pattern(['id' => '\d+']);
         Route::post('', [DeptController::class, 'create'])->middleware('perm', 'sys:dept:create');
         Route::put(':id', [DeptController::class, 'update'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:dept:update');
-        Route::delete(':id', [DeptController::class, 'delete'])->middleware('perm', 'sys:dept:delete');
+        Route::delete(':ids', [DeptController::class, 'delete'])->pattern(['ids' => '\d+(,\d+)*'])->middleware('perm', 'sys:dept:delete');
     });
 
     // 通知公告
@@ -121,6 +121,7 @@ Route::group('api/v1', function () {
         Route::get('my', [NoticeController::class, 'my']);
         Route::put('read-all', [NoticeController::class, 'readAll']);
         Route::get(':id/form', [NoticeController::class, 'form'])->pattern(['id' => '\d+']);
+        Route::get(':id/preview', [NoticeController::class, 'preview'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:notice:list');
         Route::get(':id/detail', [NoticeController::class, 'detail'])->pattern(['id' => '\d+']);
         Route::put(':id/publish', [NoticeController::class, 'publish'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:notice:publish');
         Route::put(':id/revoke', [NoticeController::class, 'revoke'])->pattern(['id' => '\d+'])->middleware('perm', 'sys:notice:revoke');
@@ -174,7 +175,7 @@ Route::group('api/v1', function () {
         Route::get(':id/menu', [FormController::class, 'getMenu'])->middleware('perm', 'form:definition:list');
         Route::post(':id/menu', [FormController::class, 'saveMenu'])->middleware('perm', 'form:definition:update');
         Route::put(':id', [FormController::class, 'update'])->middleware('perm', 'form:definition:update');
-        Route::delete(':id', [FormController::class, 'remove'])->middleware('perm', 'form:definition:delete');
+        Route::delete(':ids', [FormController::class, 'remove'])->middleware('perm', 'form:definition:delete');
 
         Route::get(':form_key/render', [FormController::class, 'render'])->middleware('perm', 'form:definition:list');
         Route::get(':form_key/data', [FormController::class, 'dataPage'])->middleware('perm', 'form:data:list');
