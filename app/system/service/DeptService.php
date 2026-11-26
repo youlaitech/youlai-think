@@ -109,6 +109,16 @@ final class DeptService
     }
 
     /**
+     * 批量删除部门
+     */
+    public function deleteByIds(array $ids): void
+    {
+        foreach ($ids as $id) {
+            $this->delete((int) $id);
+        }
+    }
+
+    /**
      * 删除部门
      */
     public function delete(int $id): bool

@@ -114,18 +114,22 @@ final class DeptController extends BaseController
      * 删除部门
      *
      * @OA\Delete(
-     *     path="/api/v1/depts/{id}",
+     *     path="/api/v1/depts/{ids}",
      *     summary="删除部门",
      *     tags={"05.部门管理"},
-     *     @OA\Parameter(name="id", in="path", description="部门ID", required=true),
+     *     @OA\Parameter(name="ids", in="path", description="部门ID，逗号分隔", required=true),
      *     @OA\Response(response="200", description="成功")
      * )
      */
     #[Log(actionType: ActionType::DEPT_DELETE)]
     public function delete(): \think\response\Json
     {
-        $id = $this->getIdParam();
-        $this->service(DeptService::class)->delete($id);
+        $ids = $this->getIdsParam();
+        if (empty($ids)) {
+            return $this->fail('A0410', '请选择要删除的部门');
+        }
+
+        $this->service(DeptService::class)->deleteByIds($ids);
 
         return $this->success(null, '删除成功');
     }
